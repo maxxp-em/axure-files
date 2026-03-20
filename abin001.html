@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>场馆维护开关</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-size:13px;color:#1f2937}
+.page{background:#f0f2f5;padding:16px;border-radius:10px}
+.topbar{background:#1a3c6e;color:#fff;padding:0 16px;height:44px;display:flex;align-items:center;gap:8px;font-size:13px;border-radius:8px 8px 0 0}
+.wbar{background:#fef3c7;border:1px solid #fcd34d;padding:10px 14px;font-size:12px;color:#92400e}
+.wbar-row{display:flex;align-items:flex-start;gap:6px;line-height:1.6}
+.wbar-row+.wbar-row{margin-top:4px}
+.wbar-icon{flex-shrink:0;margin-top:1px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:9px 16px;background:#fff;border-bottom:1px solid #e5e7eb;align-items:flex-start}
+.lt{font-size:11px;color:#6b7280;font-weight:500;line-height:22px;flex-shrink:0}
+.li{display:flex;flex-direction:column;gap:1px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+.bo{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.bg{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.do{background:#d97706}
+.ld{font-size:10px;color:#9ca3af;padding:0 4px}
+.tabs{display:flex;border-bottom:1px solid #e5e7eb;background:#fff;padding:0 16px}
+.tab{padding:8px 16px;font-size:12px;cursor:pointer;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
+.ct{padding:12px 0 0}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:0 0 8px 8px;overflow:hidden}
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+.tbl th{background:#f8fafc;font-weight:500;font-size:11px;color:#6b7280;padding:9px 10px;border-bottom:1px solid #e5e7eb;text-align:center}
+.tbl td{padding:9px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle;text-align:center;font-size:12px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafafa}
+.vn{font-weight:500;color:#111827;text-align:left!important;font-size:12px}
+.tc{font-size:11px;color:#6b7280;line-height:1.7;text-align:left!important}
+.teb{font-size:10px;color:#2563eb;border:none;background:transparent;cursor:pointer;padding:1px 4px;border-radius:4px;margin-top:2px}
+.teb:hover{background:#eff6ff}
+.sw{position:relative;width:32px;height:18px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw-t{position:absolute;inset:0;border-radius:9px;background:#d1d5db;cursor:pointer;transition:background .2s}
+.sw input:checked+.sw-t{background:#2563eb}
+.sw-k{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none}
+.sw input:checked~.sw-k{transform:translateX(14px)}
+.sw input:disabled+.sw-t{opacity:.35;cursor:not-allowed}
+.rr{display:flex;align-items:center;justify-content:center;gap:10px}
+.ro{display:flex;align-items:center;gap:3px;font-size:12px;color:#6b7280;cursor:pointer;padding:3px 5px;border-radius:5px;user-select:none}
+.ro:hover{background:#f3f4f6}
+.ro.sel{color:#111827;font-weight:500}
+.rc{width:13px;height:13px;border-radius:50%;border:1.5px solid #d1d5db;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.rc.on{border-color:#2563eb}
+.rc.on::after{content:'';width:5px;height:5px;border-radius:50%;background:#2563eb;display:block}
+.cb{font-size:11px;padding:3px 9px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#6b7280;cursor:pointer;margin-top:4px;white-space:nowrap}
+.cb:hover{background:#f3f4f6}
+.cb.has{border-color:#2563eb;color:#2563eb;background:#eff6ff}
+.cb.exp{border-color:#9ca3af;color:#9ca3af;background:#f9fafb}
+.sc{display:flex;flex-direction:column;align-items:center;gap:3px}
+.stc{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:10px;width:380px;max-width:96%}
+.mh{padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+.mh h3{font-size:14px;font-weight:600;color:#111827}
+.mb{padding:16px 18px}
+.mf{padding:10px 18px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px}
+.xb{width:26px;height:26px;border-radius:50%;border:none;background:transparent;cursor:pointer;font-size:16px;color:#9ca3af}
+.xb:hover{background:#f3f4f6}
+.bp{padding:6px 18px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer;font-weight:500}
+.bp:hover{background:#1d4ed8}
+.bc{padding:6px 14px;background:#fff;color:#6b7280;border:1px solid #d1d5db;border-radius:7px;font-size:13px;cursor:pointer}
+.bc:hover{background:#f9fafb}
+.ci{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px}
+.ciw{background:#fef3c7}.ciok{background:#dcfce7}.cier{background:#fee2e2}
+.scd{border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;background:#f9fafb}
+.scd.now{border-color:#f59e0b;background:#fffbeb}
+.scd.expc{border-color:#d1d5db;opacity:.75}
+.dti{width:100%;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:11px;color:#1f2937;background:#fff;font-family:inherit;outline:none}
+.dti:focus{border-color:#2563eb}
+.fl{font-size:10px;color:#6b7280;margin-bottom:3px;font-weight:500}
+.ni{font-size:11px;color:#1e40af;background:#eff6ff;border-left:3px solid #2563eb;padding:7px 10px;border-radius:0 6px 6px 0;line-height:1.6}
+.nw{font-size:11px;color:#92400e;background:#fffbeb;border-left:3px solid #f59e0b;padding:7px 10px;border-radius:0 6px 6px 0;line-height:1.6}
+.ng{font-size:11px;color:#6b7280;background:#f3f4f6;border-left:3px solid #d1d5db;padding:7px 10px;border-radius:0 6px 6px 0;line-height:1.6}
+.nr{font-size:11px;color:#991b1b;background:#fee2e2;border-left:3px solid #ef4444;padding:7px 10px;border-radius:0 6px 6px 0;line-height:1.6}
+.tcb{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;font-size:12px;color:#374151;line-height:2;margin:10px 0}
+.vnl{font-size:13px;font-weight:600;color:#111827;margin-bottom:4px}
+</style>
+
+<div class="page">
+  <div class="topbar">
+    <span style="font-weight:600;font-size:13px">达富/否吧/恒行3/亚体/启航/500 后台管理</span>
+    <span style="opacity:.35;margin:0 2px">—</span>
+    <span style="font-weight:500">场馆维护开关</span>
+  </div>
+
+  <div class="wbar">
+    <div class="wbar-row"><span class="wbar-icon">⚠</span><span><strong>手动维护：</strong>调整维护时间后需重新点选「维护」状态并保存，方可在前台生效。</span></div>
+    <div class="wbar-row"><span class="wbar-icon">⏱</span><span><strong>定时维护：</strong>配置时间段后需开启定时维护开关，到达开始时间后自动触发。</span></div>
+  </div>
+
+  <div class="legend">
+    <span class="lt">状态说明：</span>
+    <span class="li"><span class="badge bo"><span class="dot do"></span>定时中</span><span class="ld">定时自动维护，可手动覆盖</span></span>
+    <span class="li"><span class="badge bg">定时已配置</span><span class="ld">时间段已设置但未触发</span></span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="swTab('admin',this)">后台管理视图</div>
+    <div class="tab" onclick="swTab('user',this)">前台用户视图（开发参考）</div>
+  </div>
+
+  <div id="va" class="ct">
+    <div class="card">
+      <table class="tbl">
+        <colgroup><col style="width:12%"><col style="width:24%"><col style="width:16%"><col style="width:48%"></colgroup>
+        <thead><tr>
+          <th style="text-align:left">场馆</th>
+          <th style="text-align:left">维护时间</th>
+          <th>定时维护</th>
+          <th>状态</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="vu" class="ct" style="display:none">
+    <div class="card" style="padding:14px 16px">
+      <div class="ni" style="margin-bottom:14px"><strong>仅供开发参考</strong> · 括号内为字段说明，不在前台展示</div>
+      <div id="ug" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px"></div>
+    </div>
+  </div>
+</div>
+<div id="md"></div>
+
+<script>
+var SL=['正常','维护','下架'];
+var SBG=['#dcfce7','#fef3c7','#fee2e2'],STX=['#166534','#92400e','#991b1b'];
+var CLR=['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#0284c7'];
+var NOW='2026-03-20 10:00:00';
+
+var venues=[
+  {id:1,n:'PT娱乐 (1)',    c:CLR[0],ms:'2026-03-20 01:00:00',me:'2026-03-20 23:00:00',se:true, st:0,ip:true, bdg:'active_schedule',sc:{s:'2026-03-20 01:00:00',e:'2026-03-20 23:00:00'},exp:false},
+  {id:2,n:'BBIN娱乐 (2)', c:CLR[1],ms:'2026-04-01 00:00:00',me:'2026-04-01 06:00:00',se:true, st:0,ip:false,bdg:'scheduled',sc:{s:'2026-04-01 00:00:00',e:'2026-04-01 06:00:00'},exp:false},
+  {id:3,n:'PA娱乐 (4)',   c:CLR[2],ms:'2025-01-03 00:00:00',me:'2025-01-04 04:04:00',se:false,st:0,ip:false,bdg:'normal',sc:{s:'2026-05-01 00:00:00',e:'2026-05-01 06:00:00'},exp:false},
+  {id:4,n:'KGAME (6)',    c:CLR[3],ms:'2026-04-01 00:00:00',me:'2026-04-01 06:00:00',se:false,st:1,ip:false,bdg:'normal',sc:null,exp:false},
+  {id:5,n:'熊猫体育 (10)',c:CLR[4],ms:'2026-02-15 15:00:00',me:'2027-03-15 20:00:00',se:false,st:2,ip:false,bdg:'normal',sc:null,exp:false},
+  {id:6,n:'BTI体育 (11)', c:CLR[5],ms:'2025-01-03 00:00:00',me:'2025-01-04 04:04:00',se:false,st:0,ip:false,bdg:'normal',sc:null,exp:false},
+  {id:7,n:'AUG娱乐 (12)',c:CLR[6],ms:'2025-01-01 00:00:00',me:'2025-12-31 00:00:00',se:false,st:0,ip:false,bdg:'normal',sc:{s:'2026-03-01 00:00:00',e:'2026-03-18 23:59:00'},exp:true},
+];
+
+function eff(v){if(!v.se||v.st!==0)return v.st;if(v.ip)return 1;return v.st;}
+function cur(v){if(v.se&&v.ip&&v.st===0)return 1;return v.st;}
+function bdgH(v){
+  if(v.bdg==='active_schedule')return '<span class="badge bo"><span class="dot do"></span>定时中</span>';
+  if(v.bdg==='scheduled')return '<span class="badge bg">定时已配置</span>';
+  return '';
+}
+function isNormal(v){return v.st===0;}
+function cbLabel(v){if(!v.sc)return '未配置';if(v.exp)return '已过期';return '已配置';}
+function cbCls(v){if(!v.sc)return 'cb';if(v.exp)return 'cb exp';return 'cb has';}
+function getCombo(v){
+  if(!v.sc)return null;
+  var started=v.sc.s<=NOW,ended=v.sc.e<=NOW;
+  if(!started&&!ended)return 'A';
+  if(started&&!ended)return 'B';
+  return 'C';
+}
+
+function rT(){
+  document.getElementById('tb').innerHTML=venues.map(function(v){
+    var c=cur(v),can=isNormal(v);
+    var radios=SL.map(function(l,i){return '<div class="ro'+(c===i?' sel':'')+'" onclick="ask('+v.id+','+i+')">'+'<span class="rc'+(c===i?' on':'')+'"></span>'+l+'</div>';}).join('');
+    var b=bdgH(v);
+    return '<tr><td class="vn">'+v.n+'</td>'
+      +'<td class="tc">'+v.ms+'<br>~ '+v.me+'<br><button class="teb" onclick="oTime('+v.id+')">✎ 修改时间</button></td>'
+      +'<td><div class="sc">'
+        +(can
+          ?'<label class="sw"><input type="checkbox"'+(v.se?' checked':'')+' onchange="tSched('+v.id+',this.checked)"><span class="sw-t"></span><span class="sw-k"></span></label>'
+            +'<button class="'+cbCls(v)+'" onclick="oSched('+v.id+')">'+cbLabel(v)+'</button>'
+          :'<label class="sw"><input type="checkbox" disabled><span class="sw-t"></span><span class="sw-k"></span></label>'
+            +'<div style="font-size:10px;color:#d1d5db;margin-top:4px">仅正常状态可用</div>'
+        )
+        +(v.se&&v.exp?'<div style="font-size:10px;color:#9ca3af;margin-top:2px">时间段已过期</div>':'')
+      +'</div></td>'
+      +'<td><div class="stc">'+(b?'<div>'+b+'</div>':'')+'<div class="rr">'+radios+'</div></div></td></tr>';
+  }).join('');
+}
+
+function rU(){
+  document.getElementById('ug').innerHTML=venues.map(function(v){
+    var e=eff(v),usc=v.se&&v.ip&&v.sc&&v.st===0;
+    var tS=usc?v.sc.s:v.ms,tE=usc?v.sc.e:v.me,fn=usc?'时间取：定时配置字段':'时间取：维护时间字段';
+    if(e===2)return '<div><div style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;background:#fff;opacity:.4"><div style="height:68px;background:'+v.c+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff">'+v.n.split('(')[0].trim()+'</div><div style="padding:6px 8px;font-size:11px;color:#6b7280">'+v.n+'</div></div><div style="font-size:10px;color:#9ca3af;margin-top:5px;padding:0 2px">（下架：前台不展示）</div></div>';
+    var im=e===1;
+    return '<div><div style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;background:#fff;position:relative;'+(im?'':'cursor:pointer')+'"><div style="height:68px;background:'+v.c+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;'+(im?'filter:grayscale(1);opacity:.55':'')+'">'
+      +v.n.split('(')[0].trim()+'</div>'
+      +(im?'<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;border-radius:10px"><div style="font-size:16px;margin-bottom:4px">⚙</div><div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:5px 8px;width:100%"><div style="font-size:9px;color:#fef3c7;line-height:1.9">平台于：'+tS+'<br>维护至：'+tE+'</div></div></div>':'')
+      +'<div style="padding:6px 8px"><div style="font-size:11px;font-weight:500;color:'+(im?'#6b7280':'#111827')+'">'+v.n+'</div></div></div>'
+      +'<div style="font-size:10px;color:#9ca3af;margin-top:5px;line-height:1.5;padding:0 2px">'+(im?'（维护中：置灰不可点击<br>'+fn+'）':'（正常：可点击进入）')+'</div></div>';
+  }).join('');
+}
+
+function swTab(tab,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('va').style.display=tab==='admin'?'block':'none';
+  document.getElementById('vu').style.display=tab==='user'?'block':'none';
+  if(tab==='user')rU();
+}
+
+function tSched(id,val){
+  var v=venues.find(function(x){return x.id===id;});
+  if(!isNormal(v)){rT();return;}
+  if(!val){v.se=false;v.bdg='normal';rT();return;}
+  // 拦截：未配置时间段
+  if(!v.sc){
+    document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this){ca();rT();}"><div class="modal"><div class="mh"><h3>无法开启</h3><button class="xb" onclick="ca();rT()">&#x2715;</button></div><div class="mb" style="text-align:center;padding:16px 18px"><div class="ci cier">✕</div><div style="font-size:13px;color:#374151;margin-bottom:12px">请先配置时间段</div><div class="ng">定时维护需要先完成时间段配置，再开启开关方可生效。</div></div><div class="mf"><button class="bp" onclick="ca();oSched('+id+')">去配置时间段</button></div></div></div>';
+    setTimeout(function(){rT();},50);
+    return;
+  }
+  var combo=getCombo(v);
+  // 拦截：全部过期
+  if(combo==='C'){
+    document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this){ca();rT();}"><div class="modal"><div class="mh"><h3>无法开启</h3><button class="xb" onclick="ca();rT()">&#x2715;</button></div><div class="mb" style="text-align:center;padding:16px 18px"><div class="ci cier">✕</div><div style="font-size:13px;color:#374151;margin-bottom:12px">配置的时间段已全部过期</div><div class="ng">请先修改时间段，再开启定时维护开关。</div></div><div class="mf"><button class="bp" onclick="ca();oSched('+id+')">修改时间段</button></div></div></div>';
+    setTimeout(function(){rT();},50);
+    return;
+  }
+  // 组合A / B：二次确认
+  var extraNote=combo==='B'?'<div class="nw" style="margin-top:10px;text-align:left">当前时间已在维护时间段内，开启后前台将立即触发维护状态。</div>':'';
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this){ca();rT();}"><div class="modal"><div class="mh"><h3>确认开启定时维护</h3><button class="xb" onclick="ca();rT()">&#x2715;</button></div>'
+    +'<div class="mb"><div class="vnl">'+v.n+'，确认开启定时维护？</div>'
+    +'<div class="tcb">定时设置：'+v.sc.s+' ~ '+v.sc.e+'</div>'
+    +extraNote+'</div>'
+    +'<div class="mf"><button class="bc" onclick="ca();rT()">取消</button><button class="bp" onclick="doOpen('+id+',\''+combo+'\')">确定</button></div></div></div>';
+}
+
+function doOpen(id,combo){
+  var v=venues.find(function(x){return x.id===id;});
+  v.se=true;
+  if(combo==='B'){v.ip=true;v.bdg='active_schedule';}
+  else{v.ip=false;v.bdg='scheduled';}
+  ca();rT();
+}
+
+function ask(vid,s){
+  var v=venues.find(function(x){return x.id===vid;});
+  if(cur(v)===s)return;
+  var hasplan=v.se&&v.sc&&!v.exp&&s!==0;
+  var inPeriod=v.se&&v.ip&&v.st===0&&s!==0;
+  var needClose=hasplan||inPeriod;
+  var redNote='';
+  if(inPeriod||hasplan){
+    var msg=inPeriod?'当前处于定时维护时间段内，手动操作将覆盖定时。':'已配置定时维护时间段，切换后定时计划将暂停。';
+    redNote='<div class="nr" style="margin-top:10px;text-align:left">'+msg+'<br>确认后定时开关将关闭，时间段配置保留。</div>';
+  }
+  var sl=s===0?'正常':s===1?'维护（'+v.ms+' ~ '+v.me+'）':'下架';
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this)ca()"><div class="modal"><div class="mh"><h3>操作确认</h3><button class="xb" onclick="ca()">&#x2715;</button></div>'
+    +'<div class="mb"><div class="vnl">'+v.n+'，确认修改？</div>'
+    +'<div class="tcb">状态设置：'+sl+'</div>'
+    +redNote+'</div>'
+    +'<div class="mf"><button class="bc" onclick="ca()">取消</button><button class="bp" onclick="doSet('+vid+','+s+','+needClose+')">确定</button></div></div></div>';
+}
+
+function doSet(vid,s,needClose){
+  var v=venues.find(function(x){return x.id===vid;});
+  v.st=s;v.ip=false;
+  if(needClose)v.se=false;
+  v.bdg=s===0?(v.se&&v.sc&&!v.exp?'scheduled':'normal'):'normal';
+  ca();rT();
+  var extra=needClose?'<div class="ng" style="margin-top:10px;text-align:left">定时开关已关闭，时间段配置已保留。如需继续使用定时维护，请重新开启开关。</div>':'';
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this)ca()"><div class="modal"><div class="mh"><h3>操作结果</h3><button class="xb" onclick="ca()">&#x2715;</button></div><div class="mb" style="text-align:center;padding:20px 18px"><div class="ci ciok">✅</div><div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:6px">设置成功</div><div style="font-size:12px;color:#6b7280;line-height:1.7">场馆 <strong style="color:#111827">'+v.n+'</strong><br>已成功切换为 <span style="display:inline-block;padding:1px 8px;border-radius:8px;background:'+SBG[s]+';color:'+STX[s]+';font-weight:600;font-size:12px">'+SL[s]+'</span></div>'+extra+'</div><div class="mf"><button class="bp" onclick="ca()">确定</button></div></div></div>';
+}
+
+function oTime(id){
+  var v=venues.find(function(x){return x.id===id;});
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this)ca()"><div class="modal" style="width:420px"><div class="mh"><h3>修改维护时间 — '+v.n+'</h3><button class="xb" onclick="ca()">&#x2715;</button></div><div class="mb"><div class="nw" style="margin-bottom:12px">调整时间后需重新点选「维护」状态并确认保存，新时间才会在前台生效。</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><div class="fl">开始时间</div><input class="dti" type="datetime-local" id="ms" value="'+v.ms.replace(' ','T')+'"></div><div><div class="fl">结束时间</div><input class="dti" type="datetime-local" id="me" value="'+v.me.replace(' ','T')+'"></div></div></div><div class="mf"><button class="bc" onclick="ca()">取消</button><button class="bp" onclick="sTime('+id+')">保存</button></div></div></div>';
+}
+function sTime(id){
+  var v=venues.find(function(x){return x.id===id;});
+  var s=document.getElementById('ms').value.replace('T',' '),e=document.getElementById('me').value.replace('T',' ');
+  if(!s||!e){alert('请填写起止时间');return;}
+  if(e<=s){alert('结束时间必须晚于开始时间');return;}
+  v.ms=s;v.me=e;ca();rT();toast('维护时间已保存，请重新点选状态使其生效');
+}
+
+function oSched(id){
+  var v=venues.find(function(x){return x.id===id;});
+  if(!isNormal(v))return;
+  var sc=v.sc||{s:'',e:''},isNow=v.ip&&v.sc&&v.se,isExp=v.exp;
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this)ca()"><div class="modal" style="width:420px"><div class="mh"><h3>定时维护配置 — '+v.n+'</h3><button class="xb" onclick="ca()">&#x2715;</button></div><div class="mb"><div class="ni" style="margin-bottom:12px">每个场馆限配置一个定时维护时间段<br>配置后需开启定时维护开关方可生效</div>'
+    +(isExp?'<div class="ng" style="margin-bottom:10px">此时间段已过期，可修改为新时间后保存。</div>':'')
+    +'<div class="scd'+(isNow?' now':isExp?' expc':'')+'"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +(isNow?'<div style="grid-column:1/-1;margin-bottom:6px"><span style="font-size:10px;background:#f59e0b;color:#fff;padding:1px 7px;border-radius:8px;font-weight:600">进行中</span></div>':'')
+      +(isExp?'<div style="grid-column:1/-1;margin-bottom:6px"><span style="font-size:10px;background:#9ca3af;color:#fff;padding:1px 7px;border-radius:8px;font-weight:600">已过期</span></div>':'')
+      +'<div><div class="fl">开始时间</div><input class="dti" type="datetime-local" id="ss" value="'+(sc.s?sc.s.replace(' ','T'):'')+'"></div>'
+      +'<div><div class="fl">结束时间</div><input class="dti" type="datetime-local" id="se" value="'+(sc.e?sc.e.replace(' ','T'):'')+'"></div>'
+    +'</div></div>'
+    +'<div class="ng" style="margin-top:10px">定时自然结束后开关自动关闭，配置保留。<br>人工介入修改状态后，开关自动关闭，配置保留。</div>'
+    +'</div><div class="mf"><button class="bc" onclick="ca()">取消</button><button class="bp" onclick="'+(isNow?'preSave':'sSched')+'('+id+')">保存</button></div></div></div>';
+}
+
+function preSave(id){
+  var v=venues.find(function(x){return x.id===id;});
+  var ns=document.getElementById('ss').value.replace('T',' '),ne=document.getElementById('se').value.replace('T',' ');
+  if(!ns||!ne){alert('请填写起止时间');return;}
+  if(ne<=ns){alert('结束时间必须晚于开始时间');return;}
+  var msg='';
+  if(ns>NOW) msg='修改后当前维护将立即中断，前台恢复正常，将于 '+ns+' 重新触发，请确认。';
+  else if(ne<v.sc.e) msg='修改后维护将提前结束，前台将于 '+ne+' 恢复正常，请确认。';
+  else msg='修改后维护将延长至 '+ne+'，请确认。';
+  document.getElementById('md').innerHTML='<div class="ov"><div class="modal"><div class="mh"><h3>确认修改时间段</h3><button class="xb" onclick="ca()">&#x2715;</button></div><div class="mb" style="text-align:center;padding:16px 18px"><div class="ci ciw">⚠️</div><div style="font-size:13px;color:#374151;line-height:1.7">'+msg+'</div></div><div class="mf"><button class="bc" onclick="ca()">取消</button><button class="bp" onclick="doSaveSched('+id+',\''+ns+'\',\''+ne+'\')">确认</button></div></div></div>';
+}
+function doSaveSched(id,s,e){
+  var v=venues.find(function(x){return x.id===id;});
+  v.sc={s:s,e:e};v.exp=false;ca();rT();toast('定时配置已更新');
+}
+function sSched(id){
+  var v=venues.find(function(x){return x.id===id;});
+  var s=document.getElementById('ss').value.replace('T',' '),e=document.getElementById('se').value.replace('T',' ');
+  if(!s||!e){alert('请填写起止时间');return;}
+  if(e<=s){alert('结束时间必须晚于开始时间');return;}
+  v.sc={s:s,e:e};v.exp=false;
+  if(v.se&&!v.ip)v.bdg='scheduled';
+  ca();rT();
+  document.getElementById('md').innerHTML='<div class="ov" onclick="if(event.target===this)ca()"><div class="modal"><div class="mh"><h3>保存成功</h3><button class="xb" onclick="ca()">&#x2715;</button></div><div class="mb" style="text-align:center;padding:20px 18px"><div class="ci ciok">✅</div><div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:10px">定时配置已保存</div><div class="tcb" style="text-align:left">开始：'+s+'<br>结束：'+e+'</div>'+(v.se?'<div style="margin-top:8px;font-size:11px;color:#6b7280">定时开关已开启，到达配置时间后将自动触发</div>':'<div class="nw" style="margin-top:10px;text-align:left">请记得开启定时维护开关以使配置生效</div>')+'</div><div class="mf"><button class="bp" onclick="ca()">确定</button></div></div></div>';
+}
+
+function toast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#111827;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;z-index:200;opacity:0;transition:opacity .2s';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='1';},10);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
+}
+function ca(){document.getElementById('md').innerHTML='';}
+rT();
+</script>
+
+</html>
