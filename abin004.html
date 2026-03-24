@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>世界杯专题页 · H5原型 v0.9</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0E1117; --card:#161B26; --card2:#1C2333;
+  --border:rgba(255,255,255,0.07); --border-md:rgba(255,255,255,0.13);
+  --text:#EFEFEF; --text-muted:#8A8F9E; --text-dim:#454C60;
+  --gold:#C8971A; --green:#1A6B3C; --green-light:#22A05A;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;font-size:14px;line-height:1.6;max-width:480px;margin:0 auto;}
+
+/* PROTO BAR */
+.proto-bar{background:#080A0F;border-bottom:1px solid var(--border);padding:6px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:8px;flex-wrap:wrap;}
+.proto-info{font-size:10px;color:#444;letter-spacing:.2px;}
+.proto-tabs{display:flex;gap:3px;flex-wrap:wrap;}
+.ptab{background:none;border:1px solid #2A2A2A;color:#444;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:10px;font-family:inherit;transition:all .15s;}
+.ptab:hover{color:#AAA;border-color:#555;}
+.ptab.active{background:#EFEFEF;color:#0A0C10;border-color:#EFEFEF;font-weight:500;}
+
+/* STATUS BAR */
+.status-bar{background:var(--card);height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;}
+.status-time{font-size:15px;font-weight:600;color:var(--text);}
+.status-icons{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+
+/* WEBVIEW NAV */
+.webview-nav{background:var(--card);border-bottom:1px solid var(--border);height:44px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:44px;z-index:89;}
+.webview-back{display:none;align-items:center;gap:4px;background:none;border:none;color:var(--text-muted);font-size:14px;font-family:inherit;cursor:pointer;padding:0;}
+.webview-back.show{display:flex;}
+.webview-back-icon{font-size:20px;line-height:1;color:var(--text-muted);}
+.webview-title{font-size:15px;font-weight:600;color:var(--text);flex:1;text-align:center;}
+.webview-right{width:48px;}
+
+/* PAGE */
+.page{display:none;}
+.page.active{display:block;}
+
+/* PLACEHOLDER */
+.ph{background:var(--card2);border:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.ph::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom right,transparent calc(50% - .5px),var(--border-md) calc(50% - .5px),var(--border-md) calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to top right,transparent calc(50% - .5px),var(--border-md) calc(50% - .5px),var(--border-md) calc(50% + .5px),transparent calc(50% + .5px));}
+.ph-label{position:relative;z-index:1;font-size:10px;color:var(--text-dim);background:var(--card2);padding:2px 6px;border-radius:2px;text-align:center;line-height:1.5;}
+
+/* NOTE */
+.note{background:rgba(200,151,26,.05);border:1px solid rgba(200,151,26,.18);border-left:3px solid var(--gold);border-radius:3px;padding:8px 12px;font-size:11px;color:#C0A050;line-height:1.8;margin:8px 0;}
+.note strong{color:#DDB840;}
+
+/* SECTION */
+.sec{padding:20px 16px;border-bottom:1px solid var(--border);}
+.sec:last-child{border-bottom:none;}
+.sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.sec-title{font-size:13px;font-weight:600;letter-spacing:.3px;}
+.sec-line{flex:1;height:1px;background:var(--border);}
+.sec-num{font-size:10px;color:var(--text-dim);}
+
+/* BANNER */
+.banner-ph{width:100%;height:160px;}
+
+/* MATCH CARDS */
+.match-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;}
+.mc-body{display:grid;grid-template-columns:1fr 72px 1fr;align-items:center;padding:16px 14px 12px;gap:8px;}
+.team-side{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.t-logo{width:40px;height:40px;border-radius:50%;flex-shrink:0;}
+.t-name{font-size:13px;font-weight:600;text-align:center;line-height:1.3;}
+.vs-blk{text-align:center;}
+.vs-txt{display:block;font-size:16px;font-weight:700;color:var(--text-dim);letter-spacing:2px;}
+.vs-time{display:block;font-size:10px;color:var(--text-muted);margin-top:4px;letter-spacing:.3px;}
+.mc-meta-row{padding:7px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--text-dim);}
+.bet-row{padding:12px 16px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);display:flex;flex-direction:column;gap:8px;}
+.bet-row-note{font-size:10px;color:var(--text-dim);text-align:center;}
+.btn-bet{background:var(--green);color:#FFF;border:none;border-radius:6px;padding:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;letter-spacing:.5px;font-weight:500;-webkit-appearance:none;}
+.btn-bet:active{background:var(--green-light);}
+.state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;}
+.state-cell{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:8px 6px;}
+.state-label{font-size:9px;color:var(--text-dim);letter-spacing:.3px;margin-bottom:3px;}
+.state-desc{font-size:10px;color:var(--text-muted);line-height:1.4;}
+
+/* NAV STRIP */
+.nav-strip{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card);}
+.ns-entry{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 8px;cursor:pointer;background:none;border:none;border-right:1px solid var(--border);font-family:inherit;transition:background .15s;}
+.ns-entry:last-child{border-right:none;}
+.ns-entry:active{background:var(--card2);}
+.ns-center{cursor:default;}
+.ns-center:active{background:none;}
+.ns-icon-ph{width:28px;height:28px;border-radius:4px;margin-bottom:6px;}
+.ns-label{font-size:12px;font-weight:600;color:var(--text);text-align:center;line-height:1.3;}
+.ns-hint{font-size:10px;color:var(--text-dim);margin-top:2px;text-align:center;line-height:1.3;}
+.ns-badge{font-size:9px;color:var(--text-dim);border:1px dashed rgba(255,255,255,.12);padding:1px 6px;border-radius:2px;margin-bottom:5px;letter-spacing:.2px;}
+.ns-main{font-size:13px;font-weight:700;letter-spacing:.5px;text-align:center;}
+
+/* ── 活动卡片：横版长方形 ── */
+.act-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;}
+.act-img-h{width:100%;height:108px;} /* 515×210 比例约 2.45:1，108px高度适配375px宽 */
+.act-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,.18);}
+.act-note{font-size:10px;color:var(--text-dim);}
+.btn-detail{background:none;border:1px solid var(--border-md);color:var(--text-muted);padding:6px 14px;border-radius:4px;font-size:12px;font-family:inherit;cursor:pointer;-webkit-appearance:none;}
+.btn-detail:active{border-color:rgba(255,255,255,.28);color:var(--text);}
+
+/* SUB HEADER */
+.sub-hd{background:var(--card);border-bottom:1px solid var(--border);padding:20px 16px;}
+.sub-eye{font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;}
+.sub-title{font-size:20px;font-weight:700;}
+.sub-desc{font-size:12px;color:var(--text-muted);margin-top:4px;}
+
+/* ══════════════════════════════════════
+   X形竖向淘汰赛晋级图
+   上半区从上往下收窄 → 中间决赛 ← 下半区从下往上收窄
+══════════════════════════════════════ */
+.bracket-section{background:var(--card);border-bottom:1px solid var(--border);padding:16px 0 20px;}
+.bracket-section-hd{display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:0 16px;}
+.bracket-section-title{font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.8px;}
+.bracket-section-line{flex:1;height:1px;background:var(--border);}
+.bracket-fixed-hint{font-size:10px;color:var(--text-dim);}
+.bracket-hint-row{font-size:10px;color:var(--text-dim);padding:0 16px;margin-bottom:14px;line-height:1.5;}
+
+/* X形树的容器 */
+.xb-tree{padding:0 10px;}
+
+/* 每一轮：轮次标签（左侧竖排）+ 场次网格 */
+.xb-row{display:flex;align-items:stretch;margin-bottom:0;}
+.xb-row-label{
+  writing-mode:vertical-rl;text-orientation:mixed;
+  font-size:9px;font-weight:600;color:var(--text-dim);letter-spacing:.8px;
+  display:flex;align-items:center;justify-content:center;
+  min-width:18px;flex-shrink:0;padding:4px 0;
+}
+
+/* 场次网格区 */
+.xb-matches{flex:1;display:grid;gap:6px;padding:6px 0;}
+
+/* 各轮场次列数：轮次越靠近决赛列数越少，宽度越宽 */
+.xb-r32  .xb-matches{grid-template-columns:repeat(4,1fr);}  /* 8场×2队 → 4列 */
+.xb-r16  .xb-matches{grid-template-columns:repeat(2,1fr);}  /* 4场 → 2列 */
+.xb-qf   .xb-matches{grid-template-columns:repeat(2,1fr);}  /* 2场 → 2列 */
+.xb-sf   .xb-matches{grid-template-columns:repeat(2,1fr);}  /* 2场 → 2列 */
+.xb-final .xb-matches{grid-template-columns:1fr;max-width:180px;margin:0 auto;}
+
+/* 分隔线：轮次之间 */
+.xb-divider{height:1px;background:var(--border);margin:2px 0 2px 24px;}
+
+/* 决赛分隔：特殊处理 */
+.xb-divider-final{
+  display:flex;align-items:center;gap:8px;
+  margin:6px 0 6px 24px;
+}
+.xb-divider-final-line{flex:1;height:1px;background:rgba(200,151,26,.3);}
+.xb-divider-final-tag{
+  font-size:9px;font-weight:600;
+  color:var(--gold);letter-spacing:.8px;white-space:nowrap;
+}
+
+/* 场次卡片 */
+.xb-match{background:var(--bg);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.xb-match.champion{border-color:rgba(200,151,26,.45);background:rgba(200,151,26,.05);}
+.xb-team{display:flex;align-items:center;justify-content:space-between;padding:5px 7px;font-size:11px;border-bottom:1px solid var(--border);line-height:1.3;}
+.xb-team:last-child{border-bottom:none;}
+.xb-team.win{font-weight:600;color:var(--text);}
+.xb-team.tbd{color:var(--text-dim);font-style:italic;font-size:10px;}
+.xb-score{font-size:10px;color:var(--text-dim);margin-left:2px;flex-shrink:0;}
+.xb-score.w{color:var(--gold);font-weight:700;}
+
+/* 中间分界线（上半区/下半区） */
+.xb-mid-label{
+  display:flex;align-items:center;gap:8px;
+  margin:8px 0 8px 24px;
+}
+.xb-mid-line{flex:1;height:1px;background:var(--border-md);}
+.xb-mid-tag{
+  font-size:9px;color:var(--text-dim);
+  letter-spacing:.5px;white-space:nowrap;
+  border:1px solid var(--border-md);padding:1px 6px;border-radius:2px;
+}
+
+/* ── 赛段 Tab ── */
+.stage-bar{background:var(--card);border-bottom:1px solid var(--border);}
+.stage-tabs{display:flex;overflow-x:auto;padding:0 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.stage-tabs::-webkit-scrollbar{display:none;}
+.stage-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:12px 14px;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:all .15s;margin-bottom:-1px;flex-shrink:0;}
+.stage-tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500;}
+.stage-panel{display:none;}
+.stage-panel.active{display:block;}
+
+/* 小组子 Tab */
+.group-tab-bar{display:flex;gap:6px;flex-wrap:wrap;padding:14px 16px 0;}
+.group-tab{background:none;border:1px solid var(--border-md);color:var(--text-muted);padding:4px 12px;border-radius:3px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .15s;}
+.group-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:500;}
+.group-panel{display:none;}
+.group-panel.active{display:block;}
+
+/* 积分榜 */
+.standings-block{margin-bottom:20px;}
+.block-label{font-size:11px;font-weight:600;color:var(--text-dim);letter-spacing:.8px;margin-bottom:8px;padding-top:2px;}
+.standings-tbl{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:12px;}
+.standings-tbl thead th{font-size:9px;color:var(--text-dim);letter-spacing:.2px;padding:7px 6px;border-bottom:1px solid var(--border);text-align:center;font-weight:500;}
+.standings-tbl thead th:nth-child(2){text-align:left;padding-left:8px;}
+.standings-tbl tbody tr{border-bottom:1px solid var(--border);}
+.standings-tbl tbody tr:last-child{border-bottom:none;}
+.standings-tbl tbody tr.qualify{background:rgba(34,160,90,.07);}
+.standings-tbl tbody td{padding:8px 6px;font-size:12px;color:var(--text-muted);text-align:center;}
+.standings-tbl tbody td:nth-child(2){text-align:left;padding-left:8px;}
+.td-rank{width:20px;font-size:11px;color:var(--text-dim);font-weight:600;}
+.td-team{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--text);}
+.td-flag{width:16px;height:11px;flex-shrink:0;border-radius:1px;}
+.td-pts{font-size:13px;font-weight:700;color:var(--text);}
+.qualify-note{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green-light);margin-top:7px;}
+.q-dot{width:8px;height:8px;background:rgba(34,160,90,.15);border:1px solid rgba(34,160,90,.35);border-radius:1px;flex-shrink:0;}
+
+/* 赛程行 */
+.sch-row{display:grid;grid-template-columns:52px 1fr 40px 1fr 60px;align-items:center;gap:6px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;}
+.sch-time{font-size:11px;color:var(--text-muted);line-height:1.3;}
+.sch-team{font-size:12px;font-weight:500;}
+.sch-team.r{text-align:right;}
+.sch-vs{font-size:11px;color:var(--text-dim);text-align:center;}
+.sch-st{font-size:10px;text-align:right;padding:2px 6px;border-radius:2px;}
+.s-live{background:rgba(192,57,43,.15);color:#E07070;border:1px solid rgba(192,57,43,.28);}
+.s-soon{background:rgba(200,151,26,.1);color:var(--gold);border:1px solid rgba(200,151,26,.22);}
+.s-end{color:var(--text-dim);}
+
+/* 球星页 */
+.star-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.star-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.star-img{width:100%;height:160px;}
+.star-foot{padding:10px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,.18);}
+.star-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.star-info{font-size:10px;color:var(--text-muted);}
+.blk-label{display:flex;align-items:center;gap:10px;margin:20px 0 14px;}
+.blk-line{flex:1;height:1px;background:var(--border);}
+.blk-txt{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:1px;white-space:nowrap;}
+.sc-head{display:grid;grid-template-columns:32px 1fr 52px 32px 32px 40px;padding:0 12px 6px;gap:6px;}
+.sc-head span{font-size:10px;color:var(--text-dim);letter-spacing:.2px;}
+.sc-head span:nth-child(n+4){text-align:center;}
+.sc-row{background:var(--card);border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:32px 1fr 52px 32px 32px 40px;align-items:center;padding:10px 12px;gap:6px;margin-bottom:6px;}
+.sc-rank{font-size:14px;font-weight:700;color:var(--text-dim);text-align:center;}
+.sc-rank.g{color:#C8971A;}.sc-rank.s{color:#888;}.sc-rank.b{color:#8B5A2B;}
+.sc-player{display:flex;align-items:center;gap:8px;}
+.sc-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;}
+.sc-name{font-size:12px;font-weight:500;}
+.sc-nat{font-size:11px;color:var(--text-muted);}
+.sc-stat{font-size:12px;color:var(--text-muted);text-align:center;}
+.sc-goals{font-size:15px;font-weight:700;text-align:center;}
+
+/* MODAL 底部弹出 */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-wrap.show{display:flex;}
+.modal{background:var(--card);border-top:1px solid var(--border-md);border-radius:16px 16px 0 0;padding:20px 20px calc(20px + var(--safe-bottom));width:100%;max-width:480px;}
+.modal-handle{width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:8px;}
+.modal-desc{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
+.mbtc{flex:1;background:none;border:1px solid var(--border-md);color:var(--text-muted);padding:12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;}
+.mbto{flex:2;background:var(--green);color:#FFF;border:none;padding:12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;}
+.mbto:active{background:var(--green-light);}
+
+.page-footer{text-align:center;padding:20px 16px calc(20px + var(--safe-bottom));font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);letter-spacing:.3px;}
+</style>
+</head>
+<body>
+
+<!-- PROTO BAR -->
+<div class="proto-bar">
+  <span class="proto-info">H5原型 v0.9 · 375px · WebView嵌入</span>
+  <div class="proto-tabs">
+    <button class="ptab active" onclick="gotoPage('page-main',this)">专题页</button>
+    <button class="ptab" onclick="gotoPage('page-guide',this)">观赛指南</button>
+    <button class="ptab" onclick="gotoPage('page-stars',this)">球星汇聚</button>
+  </div>
+</div>
+
+<!-- 模拟状态栏 -->
+<div class="status-bar">
+  <div class="status-time">9:41</div>
+  <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+</div>
+
+<!-- WebView 导航栏 -->
+<div class="webview-nav">
+  <button class="webview-back" id="webviewBack" onclick="backToMain()">
+    <span class="webview-back-icon">‹</span>
+    <span style="font-size:14px">返回</span>
+  </button>
+  <div class="webview-title" id="webviewTitle">世界杯专题</div>
+  <div class="webview-right"></div>
+</div>
+
+
+<!-- ══════════════════
+     主专题页
+══════════════════ -->
+<div class="page active" id="page-main">
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">① BANNER</div><div class="sec-line"></div><div class="sec-num">1/4</div></div>
+    <div class="banner-ph ph"><span class="ph-label">Banner · H5规格 515×210px · UI整图输出</span></div>
+    <div class="note">纯展示，不可点击，无跳转。</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">② 即将开赛</div><div class="sec-line"></div><div class="sec-num">2/4</div></div>
+    <div class="note">
+      <strong>数据逻辑（待对齐）</strong><br>
+      · 接口读取最近场次 · 2条→2张，1条→1张，0条→隐藏模块<br>
+      · <strong>⚠️ 待确认：</strong>动态渲染能力当前系统已支持还是需等重构版？
+    </div>
+    <div class="match-card">
+      <div class="mc-body">
+        <div class="team-side">
+          <div class="t-logo ph" style="width:40px;height:40px;border-radius:50%"><span class="ph-label">Logo</span></div>
+          <div class="t-name">主队名称</div>
+        </div>
+        <div class="vs-blk"><span class="vs-txt">VS</span><span class="vs-time">06/18<br>20:00</span></div>
+        <div class="team-side">
+          <div class="t-logo ph" style="width:40px;height:40px;border-radius:50%"><span class="ph-label">Logo</span></div>
+          <div class="t-name">客队名称</div>
+        </div>
+      </div>
+      <div class="mc-meta-row">小组赛 · X组 · 第X轮</div>
+    </div>
+    <div class="match-card">
+      <div class="mc-body">
+        <div class="team-side">
+          <div class="t-logo ph" style="width:40px;height:40px;border-radius:50%"><span class="ph-label">Logo</span></div>
+          <div class="t-name">主队名称</div>
+        </div>
+        <div class="vs-blk"><span class="vs-txt">VS</span><span class="vs-time">06/18<br>23:00</span></div>
+        <div class="team-side">
+          <div class="t-logo ph" style="width:40px;height:40px;border-radius:50%"><span class="ph-label">Logo</span></div>
+          <div class="t-name">客队名称</div>
+        </div>
+      </div>
+      <div class="mc-meta-row">小组赛 · X组 · 第X轮</div>
+    </div>
+    <div class="bet-row">
+      <div class="bet-row-note">两场共用同一入口，跳转目标相同</div>
+      <button class="btn-bet" onclick="showModal()">前往世界杯专区</button>
+    </div>
+    <div class="state-grid">
+      <div class="state-cell"><div class="state-label">未登录</div><div class="state-desc">弹出登录窗口</div></div>
+      <div class="state-cell"><div class="state-label">已登录</div><div class="state-desc">跳转世界杯专区</div></div>
+      <div class="state-cell"><div class="state-label">场馆维护</div><div class="state-desc">弹窗提示维护中</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">③ 导航入口区</div><div class="sec-line"></div><div class="sec-num">3/4</div></div>
+    <div class="nav-strip">
+      <button class="ns-entry" onclick="gotoPage('page-guide',null,true)">
+        <div class="ns-icon-ph ph"></div>
+        <div class="ns-label">观赛指南</div>
+        <div class="ns-hint">赛程·积分·晋级图</div>
+      </button>
+      <div class="ns-entry ns-center">
+        <div class="ns-badge">纯展示</div>
+        <div class="ns-main">世界杯<br>活动合集</div>
+        <div class="ns-hint">待UI视觉设计</div>
+      </div>
+      <button class="ns-entry" onclick="gotoPage('page-stars',null,true)">
+        <div class="ns-icon-ph ph"></div>
+        <div class="ns-label">球星汇聚</div>
+        <div class="ns-hint">球星·进球榜</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">④ 福利活动</div><div class="sec-line"></div><div class="sec-num">4/4</div></div>
+    <div class="note">· 横版整图 515×210px · UI输出后前端写死 · 数量/排序/图片/链接全部写死，改动需发版</div>
+    <div class="act-card"><div class="act-img-h ph"><span class="ph-label">活动横版整图 515×210px · UI输出 · 写死</span></div><div class="act-foot"><span class="act-note">活动 01 · 链接写死</span><button class="btn-detail">查看详情</button></div></div>
+    <div class="act-card"><div class="act-img-h ph"><span class="ph-label">活动横版整图 515×210px · UI输出 · 写死</span></div><div class="act-foot"><span class="act-note">活动 02 · 链接写死</span><button class="btn-detail">查看详情</button></div></div>
+    <div class="act-card"><div class="act-img-h ph"><span class="ph-label">活动横版整图 515×210px · UI输出 · 写死</span></div><div class="act-foot"><span class="act-note">活动 03 · 链接写死</span><button class="btn-detail">查看详情</button></div></div>
+    <div class="act-card"><div class="act-img-h ph"><span class="ph-label">活动横版整图 515×210px · UI输出 · 写死</span></div><div class="act-foot"><span class="act-note">活动 04 · 链接写死</span><button class="btn-detail">查看详情</button></div></div>
+    <div class="act-card"><div class="act-img-h ph"><span class="ph-label">活动横版整图 515×210px · UI输出 · 写死</span></div><div class="act-foot"><span class="act-note">活动 05 · 链接写死</span><button class="btn-detail">查看详情</button></div></div>
+  </div>
+
+  <div class="page-footer">世界杯专题页 H5 · 原型 v0.8 · WebView嵌入 · 内容均为占位示意</div>
+</div>
+
+
+<!-- ══════════════════
+     观赛指南
+══════════════════ -->
+<div class="page" id="page-guide">
+  <div class="sub-hd">
+    <div class="sub-eye">独立页面 · 新建 · WebView</div>
+    <div class="sub-title">观赛指南</div>
+    <div class="sub-desc">晋级图 / 赛程 / 积分榜</div>
+  </div>
+
+  <!-- X形竖向淘汰赛晋级图：固定顶部 -->
+  <div class="bracket-section">
+    <div class="bracket-section-hd">
+      <div class="bracket-section-title">淘汰赛晋级图</div>
+      <div class="bracket-section-line"></div>
+      <span class="bracket-fixed-hint">固定展示</span>
+    </div>
+    <div class="bracket-hint-row">上下两端向中间汇聚 · 加粗 = 已晋级 · 斜体 = 待定</div>
+
+    <div class="xb-tree">
+
+      <!-- ── 上半区（从宽到窄，向下收） ── -->
+
+      <!-- 三十二强 上半区：4列×2场=8场 -->
+      <div class="xb-row xb-r32">
+        <div class="xb-row-label">三十二强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team win">A1<span class="xb-score w">2</span></div><div class="xb-team">B2<span class="xb-score">1</span></div></div>
+          <div class="xb-match"><div class="xb-team win">C1<span class="xb-score w">1</span></div><div class="xb-team">D2<span class="xb-score">0</span></div></div>
+          <div class="xb-match"><div class="xb-team win">E1<span class="xb-score w">2</span></div><div class="xb-team">F2<span class="xb-score">0</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">G1<span class="xb-score">—</span></div><div class="xb-team tbd">H2<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 十六强 上半区：2列×2场=4场 -->
+      <div class="xb-row xb-r16">
+        <div class="xb-row-label">十六强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team win">A1<span class="xb-score w">2</span></div><div class="xb-team">C1<span class="xb-score">1</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 八强 上半区：2列×1场 -->
+      <div class="xb-row xb-qf">
+        <div class="xb-row-label">八强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team win">A1<span class="xb-score w">1</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 半决赛 上半区：2列×1场 -->
+      <div class="xb-row xb-sf">
+        <div class="xb-row-label">半决赛</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+          <div class="xb-match" style="visibility:hidden"></div>
+        </div>
+      </div>
+
+      <!-- 决赛居中 -->
+      <div class="xb-divider-final">
+        <div class="xb-divider-final-line"></div>
+        <div class="xb-divider-final-tag">决赛</div>
+        <div class="xb-divider-final-line"></div>
+      </div>
+      <div class="xb-row xb-final">
+        <div class="xb-row-label" style="color:var(--gold)">冠军</div>
+        <div class="xb-matches">
+          <div class="xb-match champion">
+            <div class="xb-team tbd">待定<span class="xb-score">—</span></div>
+            <div class="xb-team tbd">待定<span class="xb-score">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 半决赛 下半区 -->
+      <div class="xb-divider-final">
+        <div class="xb-divider-final-line"></div>
+      </div>
+
+      <!-- 半决赛 下半区：2列×1场 -->
+      <div class="xb-row xb-sf">
+        <div class="xb-row-label">半决赛</div>
+        <div class="xb-matches">
+          <div class="xb-match" style="visibility:hidden"></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 八强 下半区 -->
+      <div class="xb-row xb-qf">
+        <div class="xb-row-label">八强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 十六强 下半区 -->
+      <div class="xb-row xb-r16">
+        <div class="xb-row-label">十六强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+      <div class="xb-divider"></div>
+
+      <!-- 三十二强 下半区：4列×4场 -->
+      <div class="xb-row xb-r32">
+        <div class="xb-row-label">三十二强</div>
+        <div class="xb-matches">
+          <div class="xb-match"><div class="xb-team tbd">I1<span class="xb-score">—</span></div><div class="xb-team tbd">J2<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">K1<span class="xb-score">—</span></div><div class="xb-team tbd">L2<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+          <div class="xb-match"><div class="xb-team tbd">待定<span class="xb-score">—</span></div><div class="xb-team tbd">待定<span class="xb-score">—</span></div></div>
+        </div>
+      </div>
+
+    </div><!-- /xb-tree -->
+  </div>
+
+  <!-- 赛段 Tab -->
+  <div class="stage-bar">
+    <div class="stage-tabs">
+      <button class="stage-tab active" onclick="switchStage('sg-group',this)">分组赛</button>
+      <button class="stage-tab" onclick="switchStage('sg-r32',this)">三十二强</button>
+      <button class="stage-tab" onclick="switchStage('sg-r16',this)">十六强</button>
+      <button class="stage-tab" onclick="switchStage('sg-qf',this)">半准决赛</button>
+      <button class="stage-tab" onclick="switchStage('sg-sf',this)">准决赛</button>
+      <button class="stage-tab" onclick="switchStage('sg-3rd',this)">季军赛</button>
+      <button class="stage-tab" onclick="switchStage('sg-final',this)">决赛</button>
+    </div>
+  </div>
+
+  <!-- 分组赛 -->
+  <div class="stage-panel active" id="sg-group">
+    <div class="group-tab-bar">
+      <button class="group-tab active" onclick="switchGroup('gg-A',this)">A</button>
+      <button class="group-tab" onclick="switchGroup('gg-B',this)">B</button>
+      <button class="group-tab" onclick="switchGroup('gg-C',this)">C</button>
+      <button class="group-tab" onclick="switchGroup('gg-D',this)">D</button>
+      <button class="group-tab" onclick="switchGroup('gg-E',this)">E</button>
+      <button class="group-tab" onclick="switchGroup('gg-F',this)">F</button>
+      <button class="group-tab" onclick="switchGroup('gg-G',this)">G</button>
+      <button class="group-tab" onclick="switchGroup('gg-H',this)">H</button>
+      <button class="group-tab" onclick="switchGroup('gg-I',this)">I</button>
+      <button class="group-tab" onclick="switchGroup('gg-J',this)">J</button>
+      <button class="group-tab" onclick="switchGroup('gg-K',this)">K</button>
+      <button class="group-tab" onclick="switchGroup('gg-L',this)">L</button>
+    </div>
+    <div class="group-panel active" id="gg-A">
+      <div style="padding:16px">
+        <div class="standings-block">
+          <div class="block-label">A 组积分榜</div>
+          <table class="standings-tbl">
+            <thead><tr><th style="text-align:left;padding-left:8px">#</th><th>球队</th><th>总</th><th>胜</th><th>平</th><th>负</th><th>净</th><th>积分</th></tr></thead>
+            <tbody>
+              <tr class="qualify"><td class="td-rank">1</td><td><div class="td-team"><div class="td-flag ph"></div>球队</div></td><td>3</td><td>2</td><td>1</td><td>0</td><td>+3</td><td class="td-pts">7</td></tr>
+              <tr class="qualify"><td class="td-rank">2</td><td><div class="td-team"><div class="td-flag ph"></div>球队</div></td><td>3</td><td>2</td><td>0</td><td>1</td><td>+1</td><td class="td-pts">6</td></tr>
+              <tr><td class="td-rank">3</td><td><div class="td-team"><div class="td-flag ph"></div>球队</div></td><td>3</td><td>1</td><td>0</td><td>2</td><td>-1</td><td class="td-pts">3</td></tr>
+              <tr><td class="td-rank">4</td><td><div class="td-team"><div class="td-flag ph"></div>球队</div></td><td>3</td><td>0</td><td>1</td><td>2</td><td>-3</td><td class="td-pts">1</td></tr>
+            </tbody>
+          </table>
+          <div class="qualify-note"><div class="q-dot"></div>绿色底色 = 直接晋级（每组前 2 名）</div>
+        </div>
+        <div class="block-label">A 组赛程</div>
+        <div class="sch-row"><div class="sch-time">06/12<br>03:00</div><div class="sch-team">球队名</div><div class="sch-vs">2–0</div><div class="sch-team r">球队名</div><div class="sch-st s-end">已结束</div></div>
+        <div class="sch-row"><div class="sch-time">06/12<br>10:00</div><div class="sch-team">球队名</div><div class="sch-vs">VS</div><div class="sch-team r">球队名</div><div class="sch-st s-live">● 直播</div></div>
+        <div class="sch-row"><div class="sch-time">06/19<br>00:00</div><div class="sch-team">球队名</div><div class="sch-vs">VS</div><div class="sch-team r">球队名</div><div class="sch-st s-soon">即将</div></div>
+        <div class="sch-row"><div class="sch-time">06/19<br>09:00</div><div class="sch-team">球队名</div><div class="sch-vs">VS</div><div class="sch-team r">球队名</div><div class="sch-st s-soon">即将</div></div>
+        <div class="sch-row"><div class="sch-time">06/25<br>09:00</div><div class="sch-team">球队名</div><div class="sch-vs">VS</div><div class="sch-team r">球队名</div><div class="sch-st s-soon">即将</div></div>
+        <div class="sch-row"><div class="sch-time">06/25<br>09:00</div><div class="sch-team">球队名</div><div class="sch-vs">VS</div><div class="sch-team r">球队名</div><div class="sch-st s-soon">即将</div></div>
+      </div>
+    </div>
+    <script>
+    ['B','C','D','E','F','G','H','I','J','K','L'].forEach(function(g){
+      document.getElementById('sg-group').insertAdjacentHTML('beforeend',
+        '<div class="group-panel" id="gg-'+g+'"><div style="padding:16px;color:var(--text-muted);font-size:12px">'+g+' 组数据占位 · 结构同 A 组</div></div>'
+      );
+    });
+    </script>
+  </div>
+
+  <div class="stage-panel" id="sg-r32">
+    <div style="padding:16px">
+      <div class="block-label">三十二强赛程</div>
+      <div class="sch-row"><div class="sch-time">07/01<br>03:00</div><div class="sch-team">A1 球队</div><div class="sch-vs">2–1</div><div class="sch-team r">B2 球队</div><div class="sch-st s-end">已结束</div></div>
+      <div class="sch-row"><div class="sch-time">07/01<br>10:00</div><div class="sch-team">C1 球队</div><div class="sch-vs">VS</div><div class="sch-team r">D2 球队</div><div class="sch-st s-live">● 直播</div></div>
+      <div class="sch-row"><div class="sch-time">07/02<br>03:00</div><div class="sch-team">待定</div><div class="sch-vs">VS</div><div class="sch-team r">待定</div><div class="sch-st s-soon">即将</div></div>
+      <div class="note">· 三十二强共 16 场 · 占位示意</div>
+    </div>
+  </div>
+  <div class="stage-panel" id="sg-r16"><div style="padding:16px"><div class="block-label">十六强赛程</div><div class="sch-row"><div class="sch-time">07/06<br>03:00</div><div class="sch-team">晋级队 A</div><div class="sch-vs">VS</div><div class="sch-team r">晋级队 B</div><div class="sch-st s-soon">即将</div></div><div class="note">· 十六强共 8 场 · 占位示意</div></div></div>
+  <div class="stage-panel" id="sg-qf"><div style="padding:16px"><div class="block-label">半准决赛赛程</div><div class="sch-row"><div class="sch-time">07/10<br>03:00</div><div class="sch-team">待定</div><div class="sch-vs">VS</div><div class="sch-team r">待定</div><div class="sch-st s-soon">即将</div></div></div></div>
+  <div class="stage-panel" id="sg-sf"><div style="padding:16px"><div class="block-label">准决赛赛程</div><div class="sch-row"><div class="sch-time">07/14<br>03:00</div><div class="sch-team">待定</div><div class="sch-vs">VS</div><div class="sch-team r">待定</div><div class="sch-st s-soon">即将</div></div></div></div>
+  <div class="stage-panel" id="sg-3rd"><div style="padding:16px"><div class="block-label">季军赛</div><div class="sch-row"><div class="sch-time">07/18<br>03:00</div><div class="sch-team">待定</div><div class="sch-vs">VS</div><div class="sch-team r">待定</div><div class="sch-st s-soon">即将</div></div></div></div>
+  <div class="stage-panel" id="sg-final"><div style="padding:16px"><div class="block-label">决赛</div><div class="sch-row"><div class="sch-time">07/19<br>03:00</div><div class="sch-team">待定</div><div class="sch-vs">VS</div><div class="sch-team r">待定</div><div class="sch-st s-soon">即将</div></div></div></div>
+
+  <div class="page-footer">观赛指南 · H5 · 数据为占位示意</div>
+</div>
+
+
+<!-- ══════════════════
+     球星汇聚
+══════════════════ -->
+<div class="page" id="page-stars">
+  <div class="sub-hd">
+    <div class="sub-eye">独立页面 · 新建 · WebView</div>
+    <div class="sub-title">球星汇聚</div>
+    <div class="sub-desc">热门球星 &amp; 进球排行榜</div>
+  </div>
+  <div style="padding:16px">
+    <div class="blk-label"><div class="blk-line"></div><div class="blk-txt">热门球星</div><div class="blk-line"></div></div>
+    <div class="note">· 球星卡片 UI 整图写死 · 2列布局 · 数量固定 · 改动需发版</div>
+    <div class="star-grid">
+      <div class="star-card"><div class="star-img ph"><span class="ph-label">球星整图<br>UI输出·写死</span></div><div class="star-foot"><div class="star-name">球星姓名 A</div><div class="star-info">国籍 · 位置</div></div></div>
+      <div class="star-card"><div class="star-img ph"><span class="ph-label">球星整图<br>UI输出·写死</span></div><div class="star-foot"><div class="star-name">球星姓名 B</div><div class="star-info">国籍 · 位置</div></div></div>
+      <div class="star-card"><div class="star-img ph"><span class="ph-label">球星整图<br>UI输出·写死</span></div><div class="star-foot"><div class="star-name">球星姓名 C</div><div class="star-info">国籍 · 位置</div></div></div>
+      <div class="star-card"><div class="star-img ph"><span class="ph-label">球星整图<br>UI输出·写死</span></div><div class="star-foot"><div class="star-name">球星姓名 D</div><div class="star-info">国籍 · 位置</div></div></div>
+    </div>
+    <div class="blk-label"><div class="blk-line"></div><div class="blk-txt">进球排行榜</div><div class="blk-line"></div></div>
+    <div class="note">· 数据来源待确认</div>
+    <div class="sc-head"><span>排名</span><span>球员</span><span>国籍</span><span>出场</span><span>助攻</span><span>进球</span></div>
+    <div class="sc-row"><div class="sc-rank g">1</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 A</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">2</div><div class="sc-goals">5</div></div>
+    <div class="sc-row"><div class="sc-rank s">2</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 B</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">1</div><div class="sc-goals">4</div></div>
+    <div class="sc-row"><div class="sc-rank b">3</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 C</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">3</div><div class="sc-goals">3</div></div>
+    <div class="sc-row"><div class="sc-rank">4</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 D</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">2</div><div class="sc-goals">3</div></div>
+    <div class="sc-row"><div class="sc-rank">5</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 E</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">0</div><div class="sc-goals">2</div></div>
+    <div class="sc-row"><div class="sc-rank">6</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 F</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">1</div><div class="sc-goals">2</div></div>
+    <div class="sc-row"><div class="sc-rank">7</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 G</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">2</div><div class="sc-goals">2</div></div>
+    <div class="sc-row"><div class="sc-rank">8</div><div class="sc-player"><div class="sc-avatar ph"></div><div><div class="sc-name">球员 H</div></div></div><div class="sc-nat">国籍</div><div class="sc-stat">3</div><div class="sc-stat">1</div><div class="sc-goals">1</div></div>
+  </div>
+  <div class="page-footer">球星汇聚 · H5 · 数据为占位示意</div>
+</div>
+
+
+<!-- MODAL 底部弹出 -->
+<div class="modal-wrap" id="betModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">前往世界杯专区</div>
+    <div class="modal-desc">即将跳转至场馆世界杯投注专区。<br><span style="font-size:11px;color:var(--text-dim)">原型演示 · 实际跳转至场馆世界杯合集页</span></div>
+    <div class="modal-btns">
+      <button class="mbtc" onclick="hideModal()">取消</button>
+      <button class="mbto" onclick="hideModal()">确认跳转</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const pageConfig = {
+  'page-main':  {title:'世界杯专题', back:false},
+  'page-guide': {title:'观赛指南',   back:true},
+  'page-stars': {title:'球星汇聚',   back:true},
+};
+function gotoPage(id, tabEl, fromNav) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  const map = {'page-main':0,'page-guide':1,'page-stars':2};
+  document.querySelectorAll('.ptab').forEach((t,i) => t.classList.toggle('active', i === map[id]));
+  const cfg = pageConfig[id];
+  document.getElementById('webviewTitle').textContent = cfg.title;
+  document.getElementById('webviewBack').classList.toggle('show', cfg.back);
+}
+function backToMain() { gotoPage('page-main'); }
+function switchStage(id, btn) {
+  document.querySelectorAll('.stage-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function switchGroup(id, btn) {
+  document.querySelectorAll('.group-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.group-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function showModal() { document.getElementById('betModal').classList.add('show'); }
+function hideModal() { document.getElementById('betModal').classList.remove('show'); }
+document.getElementById('betModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('betModal')) hideModal();
+});
+</script>
+</body>
+</html>
