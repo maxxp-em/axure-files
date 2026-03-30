@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>世界杯奖池瓜分 · H5端交互原型</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+:root{
+  --ink:#1a1a1a;--ink2:#444;--ink3:#777;--ink4:#aaa;
+  --ln:#ddd;--ln2:#eee;--bg:#f0f0f0;--wh:#fff;
+  --font:'Noto Sans SC',sans-serif;--r:4px;--pill:99px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:13px;line-height:1.6}
+
+.shell{max-width:960px;margin:0 auto;padding:20px 20px 60px}
+
+/* header */
+.doc-header{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:14px 20px;margin-bottom:14px}
+.doc-header h1{font-size:14px;font-weight:700}
+.doc-header p{font-size:11px;color:var(--ink4);margin-top:2px}
+.ver{background:var(--ink);color:var(--wh);font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--pill);margin-left:6px;vertical-align:middle}
+
+/* state switcher */
+.state-bar{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px}
+.state-bar span{color:var(--ink3)}
+.state-btn{padding:4px 10px;border-radius:var(--pill);border:1px solid var(--ln);background:var(--wh);font-size:11px;cursor:pointer;font-family:var(--font);color:var(--ink2);transition:all .12s}
+.state-btn.active,.state-btn:hover{background:var(--ink);color:var(--wh);border-color:var(--ink)}
+
+/* phones row */
+.phones-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:flex-start;align-items:flex-start}
+.phone-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.phone-lbl{font-size:10px;color:var(--ink3);font-weight:700;text-align:center;letter-spacing:.5px}
+.phone-lbl span{display:block;font-size:9px;color:var(--ink4);font-weight:400;margin-top:1px}
+
+/* phone shell */
+.phone{width:280px;background:var(--wh);border:5px solid #111;border-radius:30px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.14);position:relative}
+.sb{background:#111;padding:6px 14px 3px;display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.28)}
+.h5-page{background:var(--wh)}
+
+/* h5 banner */
+.h5-banner{height:88px;background:var(--ln2);border-bottom:1px solid var(--ln);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative}
+.h5-banner-lbl{font-size:9px;color:var(--ink3);font-weight:500;letter-spacing:1px}
+.h5-banner-title{font-size:14px;font-weight:700;color:var(--ink)}
+.h5-banner-sub{font-size:9px;color:var(--ink4)}
+.h5-banner-tag{position:absolute;bottom:5px;right:8px;font-size:8px;color:var(--ink4);border:1px dashed var(--ln);padding:1px 6px;border-radius:var(--pill)}
+
+/* 3+2 tabs */
+.h5-tabs{background:var(--ln2);padding:5px 7px 0;border-bottom:1px solid var(--ink)}
+.h5-trow{display:flex;gap:3px;margin-bottom:3px}
+.h5-tab{flex:1;padding:5px 2px;border-radius:3px 3px 0 0;font-size:9px;font-weight:700;text-align:center;color:var(--ink3);background:var(--wh);border:1px solid var(--ln);border-bottom:none;white-space:nowrap;cursor:pointer;transition:all .12s}
+.h5-tab.active{background:var(--ink);color:var(--wh);border-color:var(--ink)}
+.tab-note{font-size:8px;color:var(--ink4);text-align:center;padding:2px 0;background:var(--ln2);font-style:italic;border-bottom:1px solid var(--ln)}
+
+/* h5 body */
+.h5-body{padding:10px 11px 14px}
+.h5-time{border:1px solid var(--ln);border-radius:var(--pill);padding:7px 12px;text-align:center;font-size:9px;color:var(--ink);line-height:1.85;margin-bottom:8px;background:var(--wh)}
+.h5-time .lbl{color:var(--ink3);margin-right:3px}
+.h5-time .val{font-weight:700}
+.h5-info{border:1px solid var(--ln);border-radius:var(--pill);padding:5px 11px;text-align:center;font-size:9px;color:var(--ink3);margin-bottom:10px;background:var(--wh);overflow:hidden;white-space:nowrap}
+.h5-info.scrolling .inner{display:inline-block;animation:mq 18s linear infinite}
+@keyframes mq{from{transform:translateX(20%)}to{transform:translateX(-100%)}}
+.h5-info .ib-win{color:var(--ink);font-weight:700}
+.h5-info .ib-dim{color:var(--ink4)}
+.h5-info .ib-acc{font-weight:500}
+
+.h5-pool-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:11px}
+.h5-pool-lbl{font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:7px}
+.h5-ring{width:106px;height:106px;border-radius:50%;border:1px dashed var(--ln);background:var(--wh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.h5-amt{background:var(--wh);border:1px solid var(--ln);border-radius:var(--pill);padding:3px 9px;font-size:10px;font-weight:700}
+.h5-amt.dim{color:var(--ink4);font-size:9px;font-weight:400}
+.h5-sub{font-size:8px;color:var(--ink4)}
+.h5-formula{margin-top:6px;font-size:8px;color:var(--ink3)}
+
+.h5-cta{display:block;width:100%;padding:8px 0;border-radius:var(--pill);border:none;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:8px;cursor:pointer;font-family:var(--font)}
+.h5-cta-active{background:var(--ink);color:var(--wh)}
+.h5-cta-pooling{background:var(--wh);color:var(--ink);border:1px solid var(--ink);cursor:not-allowed}
+.h5-cta-done{background:var(--wh);color:var(--ink2);border:1px solid var(--ln);cursor:default}
+.h5-cta-gray{background:var(--ln2);color:var(--ink4);border:1px solid var(--ln);cursor:not-allowed}
+.h5-btm{display:flex;gap:7px}
+.h5-bb{flex:1;padding:6px 0;border-radius:var(--pill);font-size:9px;font-weight:700;text-align:center;cursor:pointer;border:none;font-family:var(--font)}
+.h5-bb-dark{background:var(--ink);color:var(--wh)}
+.h5-bb-out{background:var(--wh);color:var(--ink2);border:1px solid var(--ln)}
+
+/* h5 modal overlay */
+.h5-mover{display:none;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;border-radius:25px}
+.h5-mover.open{display:flex}
+.h5-modal{background:var(--wh);border-radius:var(--r);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.h5-modal-sm{width:228px}.h5-modal-md{width:245px}
+.h5-mhd{padding:10px 14px;text-align:center;font-size:12px;font-weight:700;border-bottom:1px solid var(--ln);color:var(--ink)}
+.h5-mbd{padding:14px 16px;text-align:center}
+.h5-mbd-l{text-align:left}
+.h5-mft{padding:0 16px 14px;display:flex;gap:7px;justify-content:center}
+.h5-msg{font-size:11px;font-weight:500;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.h5-sub-txt{font-size:10px;color:var(--ink3);margin-bottom:12px;line-height:1.6}
+.h5-coin{font-size:30px;margin-bottom:4px}
+.h5-amt-big{font-size:20px;font-weight:700;margin:8px 0 12px}
+.h5-ft-track{position:relative;height:28px;background:var(--ln2);border-radius:var(--pill);overflow:hidden;border:1px solid var(--ln);margin:10px 0 6px}
+.h5-ft-fill{position:absolute;left:0;top:0;height:100%;background:var(--ink);border-radius:var(--pill);width:0;transition:width 2.8s cubic-bezier(.4,0,.2,1)}
+.h5-ft-ball{position:absolute;top:50%;transform:translateY(-50%);font-size:15px;left:4px;transition:left 2.8s cubic-bezier(.4,0,.2,1)}
+.h5-rec-tbl{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px}
+.h5-rec-tbl th{background:var(--ln2);color:var(--ink2);padding:6px 8px;font-weight:700;text-align:center;border:1px solid var(--ln)}
+.h5-rec-tbl td{padding:6px 8px;text-align:center;border:1px solid var(--ln);color:var(--ink3)}
+.h5-rec-tbl .ok{color:var(--ink);font-weight:700}
+.h5-rec-tbl .nil{color:var(--ln)}
+.h5-empty{text-align:center;padding:12px 0 6px}
+.h5-empty-ico{font-size:28px;margin-bottom:6px;opacity:.3}
+.h5-empty-txt{font-size:11px;color:var(--ink4)}
+.h5-rule-list{list-style:none;max-height:200px;overflow-y:auto;padding-right:2px}
+.h5-rule-list::-webkit-scrollbar{width:2px}
+.h5-rule-list::-webkit-scrollbar-thumb{background:var(--ln)}
+.h5-rule-list li{display:flex;gap:6px;margin-bottom:7px;font-size:10px;line-height:1.65;color:var(--ink2)}
+.h5-rn{min-width:14px;height:14px;border-radius:50%;background:var(--ink2);color:var(--wh);font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.h5-mb-ok{background:var(--ink);color:var(--wh);border:none;padding:6px 20px;border-radius:var(--pill);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.h5-mb-cl{background:var(--wh);color:var(--ink3);border:1px solid var(--ln);padding:6px 16px;border-radius:var(--pill);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font)}
+
+/* annotation */
+.anno{border:1px solid var(--ln);border-left:3px solid var(--ink);border-radius:var(--r);padding:12px 14px;margin-top:14px;font-size:11px;background:var(--wh)}
+.anno h4{font-size:11px;font-weight:700;margin-bottom:8px}
+.ar{display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;color:var(--ink3);line-height:1.6}
+.an{min-width:16px;height:16px;border-radius:50%;background:var(--ink2);color:var(--wh);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.an.r{background:#c0392b}
+.ct{display:inline-block;font-size:9px;font-weight:700;padding:1px 4px;border-radius:2px;margin-right:3px;border:1px solid var(--ln);background:var(--ln2)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+
+
+<!-- 三态并排 -->
+<div id="state-all" class="phones-row">
+
+  <!-- A: 小组赛 已结束 -->
+  <div class="phone-col">
+    <div class="phone-lbl">小组赛<span>已结束</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>●●●</span></div>
+      <div class="h5-page">
+        <div class="h5-banner">
+          <div class="h5-banner-lbl">FIFA WORLD CUP 2026</div>
+          <div class="h5-banner-title">瓜分超级奖池</div>
+          <div class="h5-banner-sub">6月12日 — 7月21日</div>
+        </div>
+        <div class="h5-tabs">
+          <div class="h5-trow">
+            <div class="h5-tab active">小组赛</div>
+            <div class="h5-tab">三十二强赛</div>
+            <div class="h5-tab">十六强赛</div>
+          </div>
+          <div class="h5-trow">
+            <div class="h5-tab">八强赛</div>
+            <div class="h5-tab">半决赛～总决赛</div>
+          </div>
+        </div>
+        <div class="h5-body">
+          <div class="h5-time">
+            <p><span class="lbl">活动时间</span><span class="val">6月12日 — 6月28日</span></p>
+            <p><span class="lbl">奖池瓜分日</span><span class="val">6月29日 09:00—23:59</span></p>
+          </div>
+          <div class="h5-info"><span class="ib-dim">本阶段活动已结束</span></div>
+          <div class="h5-pool-wrap">
+            <div class="h5-pool-lbl">杏彩奖池</div>
+            <div class="h5-ring">
+              <div class="h5-amt dim">奖池已被瓜分空啦！</div>
+            </div>
+          </div>
+          <button class="h5-cta h5-cta-done">已瓜分奖池</button>
+          <div class="h5-btm">
+            <button class="h5-bb h5-bb-dark" onclick="oh5('ha-rec-y')">奖池瓜分记录</button>
+            <button class="h5-bb h5-bb-out" onclick="oh5('ha-rule')">活动规则</button>
+          </div>
+        </div>
+      </div>
+      <!-- modals A -->
+      <div class="h5-mover" id="ha-rec-y">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">奖池瓜分记录</div>
+          <div class="h5-mbd">
+            <table class="h5-rec-tbl">
+              <tr><th>瓜分金额（元）</th><th>日期</th></tr>
+              <tr><td class="ok">8,149.19</td><td>2026-06-29</td></tr>
+              <tr><td class="ok">12,306.50</td><td>2026-07-05</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+            </table>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('ha-rec-y')">关闭</button></div>
+        </div>
+      </div>
+      <div class="h5-mover" id="ha-rule">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">活动规则</div>
+          <div class="h5-mbd h5-mbd-l">
+            <ul class="h5-rule-list">
+              <li><span class="h5-rn">1</span><span>活动对象：全站用户。</span></li>
+              <li><span class="h5-rn">2</span><span>每个赛事阶段，累计有效投注 ≥3,000元 即可参与本阶段奖池瓜分。</span></li>
+              <li><span class="h5-rn">3</span><span>奖池基金：每投注500元增加基金1元，公式：88,888 + 已产生投注 × 0.002。</span></li>
+              <li><span class="h5-rn">4</span><span>瓜分成功后，奖金20分钟内自动到账，保留两位小数。</span></li>
+              <li><span class="h5-rn">5</span><span>瓜分时间：阶段结束次日 09:00–23:59，逾期自动放弃，不作补偿。</span></li>
+              <li><span class="h5-rn">6</span><span>出款流水：礼金×3倍有效投注，彩票场馆不计入。</span></li>
+              <li><span class="h5-rn">7</span><span>有效投注不含走盘、串关、特殊投注及低于指定赔率注单。</span></li>
+              <li><span class="h5-rn">8</span><span>平台对风险投注、对赌行为保留冻结账户权利。</span></li>
+              <li><span class="h5-rn">9</span><span>每人限一个账户，相同信息视为同一账户。</span></li>
+              <li><span class="h5-rn">10</span><span>平台保留最终解释权，有权修改或取消活动。</span></li>
+            </ul>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('ha-rule')">关闭</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: 三十二强赛 瓜分中 -->
+  <div class="phone-col">
+    <div class="phone-lbl">三十二强赛<span>瓜分日·可领取</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>●●●</span></div>
+      <div class="h5-page">
+        <div class="h5-banner">
+          <div class="h5-banner-lbl">FIFA WORLD CUP 2026</div>
+          <div class="h5-banner-title">瓜分超级奖池</div>
+          <div class="h5-banner-sub">6月12日 — 7月21日</div>
+        </div>
+        <div class="h5-tabs">
+          <div class="h5-trow">
+            <div class="h5-tab">小组赛</div>
+            <div class="h5-tab active">三十二强赛</div>
+            <div class="h5-tab">十六强赛</div>
+          </div>
+          <div class="h5-trow">
+            <div class="h5-tab">八强赛</div>
+            <div class="h5-tab">半决赛～总决赛</div>
+          </div>
+        </div>
+        <div class="h5-body">
+          <div class="h5-time">
+            <p><span class="lbl">活动时间</span><span class="val">6月29日 — 7月4日</span></p>
+            <p><span class="lbl">奖池瓜分日</span><span class="val">7月5日 09:00—23:59</span></p>
+          </div>
+          <div class="h5-info scrolling">
+            <span class="inner"><span class="ib-win">恭喜 ***668 成功瓜分 ¥163,728.84 元</span>　<span class="ib-win">恭喜 ***001 成功瓜分 ¥8,149.19 元</span></span>
+          </div>
+          <div class="h5-pool-wrap">
+            <div class="h5-pool-lbl">杏彩奖池</div>
+            <div class="h5-ring">
+              <div class="h5-amt">¥24,819,038</div>
+              <div class="h5-sub">实时奖池，15分钟更新</div>
+            </div>
+          </div>
+          <button class="h5-cta h5-cta-active" onclick="h5Split()">立即瓜分</button>
+          <div class="h5-btm">
+            <button class="h5-bb h5-bb-dark" onclick="oh5('hb-rec-y')">奖池瓜分记录</button>
+            <button class="h5-bb h5-bb-out" onclick="oh5('hb-rule')">活动规则</button>
+          </div>
+        </div>
+      </div>
+      <!-- modals B -->
+      <div class="h5-mover" id="hb-split">
+        <div class="h5-modal h5-modal-sm">
+          <div class="h5-mhd">瓜分奖池</div>
+          <div class="h5-mbd">
+            <div class="h5-msg">正在为您瓜分奖池，请稍候……</div>
+            <div class="h5-ft-track">
+              <div class="h5-ft-fill" id="hb-fill"></div>
+              <div class="h5-ft-ball" id="hb-ball">⚽</div>
+            </div>
+            <div style="font-size:9px;color:var(--ink4);margin-top:4px">动效约5秒，完成后自动弹出结果</div>
+          </div>
+        </div>
+      </div>
+      <div class="h5-mover" id="hb-ok">
+        <div class="h5-modal h5-modal-sm">
+          <div class="h5-mhd">瓜分奖池</div>
+          <div class="h5-mbd">
+            <div class="h5-coin">🪙</div>
+            <div class="h5-msg">恭喜您成功瓜分到</div>
+            <div class="h5-amt-big">¥8,149.19 元礼金！</div>
+            <div class="h5-sub-txt">奖金将在20分钟内自动到账</div>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-ok" onclick="ch5('hb-ok')">好的，知道了</button></div>
+        </div>
+      </div>
+      <div class="h5-mover" id="hb-rec-y">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">奖池瓜分记录</div>
+          <div class="h5-mbd">
+            <table class="h5-rec-tbl">
+              <tr><th>瓜分金额（元）</th><th>日期</th></tr>
+              <tr><td class="ok">8,149.19</td><td>2026-06-29</td></tr>
+              <tr><td class="ok">12,306.50</td><td>2026-07-05</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+            </table>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('hb-rec-y')">关闭</button></div>
+        </div>
+      </div>
+      <div class="h5-mover" id="hb-rule">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">活动规则</div>
+          <div class="h5-mbd h5-mbd-l">
+            <ul class="h5-rule-list">
+              <li><span class="h5-rn">1</span><span>活动对象：全站用户。</span></li>
+              <li><span class="h5-rn">2</span><span>每个赛事阶段，累计有效投注 ≥3,000元 即可参与本阶段奖池瓜分。</span></li>
+              <li><span class="h5-rn">3</span><span>奖池基金：每投注500元增加基金1元，公式：88,888 + 已产生投注 × 0.002。</span></li>
+              <li><span class="h5-rn">4</span><span>瓜分成功后，奖金20分钟内自动到账，保留两位小数。</span></li>
+              <li><span class="h5-rn">5</span><span>瓜分时间：阶段结束次日 09:00–23:59，逾期自动放弃，不作补偿。</span></li>
+              <li><span class="h5-rn">6</span><span>出款流水：礼金×3倍有效投注，彩票场馆不计入。</span></li>
+              <li><span class="h5-rn">7</span><span>有效投注不含走盘、串关及低于指定赔率注单。</span></li>
+              <li><span class="h5-rn">8</span><span>平台对风险投注保留冻结账户权利。</span></li>
+              <li><span class="h5-rn">9</span><span>每人限一个账户，相同信息视为同一账户。</span></li>
+              <li><span class="h5-rn">10</span><span>平台保留最终解释权，有权修改或取消活动。</span></li>
+            </ul>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('hb-rule')">关闭</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: 十六强赛 累积中 -->
+  <div class="phone-col">
+    <div class="phone-lbl">十六强赛<span>投注累积期</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>●●●</span></div>
+      <div class="h5-page">
+        <div class="h5-banner">
+          <div class="h5-banner-lbl">FIFA WORLD CUP 2026</div>
+          <div class="h5-banner-title">瓜分超级奖池</div>
+          <div class="h5-banner-sub">6月12日 — 7月21日</div>
+        </div>
+        <div class="h5-tabs">
+          <div class="h5-trow">
+            <div class="h5-tab">小组赛</div>
+            <div class="h5-tab">三十二强赛</div>
+            <div class="h5-tab active">十六强赛</div>
+          </div>
+          <div class="h5-trow">
+            <div class="h5-tab">八强赛</div>
+            <div class="h5-tab">半决赛～总决赛</div>
+          </div>
+        </div>
+        <div class="h5-body">
+          <div class="h5-time">
+            <p><span class="lbl">活动时间</span><span class="val">7月5日 — 7月8日</span></p>
+            <p><span class="lbl">奖池瓜分日</span><span class="val">7月9日 09:00—23:59</span></p>
+          </div>
+          <div class="h5-info"><span class="ib-acc">已产生投注：¥88,888,888</span></div>
+          <div class="h5-pool-wrap">
+            <div class="h5-pool-lbl">杏彩奖池</div>
+            <div class="h5-ring">
+              <div class="h5-amt">¥xx,xxx,xxx</div>
+              <div class="h5-sub">奖池累积中</div>
+            </div>
+            <div class="h5-formula">公式：88,888 + 已产生投注 × 0.002</div>
+          </div>
+          <button class="h5-cta h5-cta-pooling">奖池积累中</button>
+          <div class="h5-btm">
+            <button class="h5-bb h5-bb-dark" onclick="oh5('hc-rec-y')">奖池瓜分记录</button>
+            <button class="h5-bb h5-bb-out" onclick="oh5('hc-rule')">活动规则</button>
+          </div>
+        </div>
+      </div>
+      <!-- modals C: rec + rule -->
+      <div class="h5-mover" id="hc-rec-y">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">奖池瓜分记录</div>
+          <div class="h5-mbd">
+            <table class="h5-rec-tbl">
+              <tr><th>瓜分金额（元）</th><th>日期</th></tr>
+              <tr><td class="ok">8,149.19</td><td>2026-06-29</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+              <tr><td class="nil">—</td><td>—</td></tr>
+            </table>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('hc-rec-y')">关闭</button></div>
+        </div>
+      </div>
+      <div class="h5-mover" id="hc-rule">
+        <div class="h5-modal h5-modal-md">
+          <div class="h5-mhd">活动规则</div>
+          <div class="h5-mbd h5-mbd-l">
+            <ul class="h5-rule-list">
+              <li><span class="h5-rn">1</span><span>活动对象：全站用户。</span></li>
+              <li><span class="h5-rn">2</span><span>每个赛事阶段，累计有效投注 ≥3,000元 即可参与本阶段奖池瓜分。</span></li>
+              <li><span class="h5-rn">3</span><span>奖池基金：每投注500元增加基金1元，公式：88,888 + 已产生投注 × 0.002。</span></li>
+              <li><span class="h5-rn">4</span><span>瓜分成功后，奖金20分钟内自动到账，保留两位小数。</span></li>
+              <li><span class="h5-rn">5</span><span>瓜分时间：阶段结束次日 09:00–23:59，逾期自动放弃，不作补偿。</span></li>
+              <li><span class="h5-rn">6</span><span>出款流水：礼金×3倍有效投注，彩票场馆不计入。</span></li>
+              <li><span class="h5-rn">7</span><span>有效投注不含走盘、串关及低于指定赔率注单。</span></li>
+              <li><span class="h5-rn">8</span><span>平台对风险投注保留冻结账户权利。</span></li>
+              <li><span class="h5-rn">9</span><span>每人限一个账户，相同信息视为同一账户。</span></li>
+              <li><span class="h5-rn">10</span><span>平台保留最终解释权，有权修改或取消活动。</span></li>
+            </ul>
+          </div>
+          <div class="h5-mft"><button class="h5-mb-cl" onclick="ch5('hc-rule')">关闭</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /state-all -->
+
+<!-- 预热期 -->
+<div id="state-preheat" style="display:none" class="phones-row">
+  <div class="phone-col">
+    <div class="phone-lbl">预热期<span>活动显示时间起，投注期前</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>●●●</span></div>
+      <div class="h5-page">
+        <div class="h5-banner">
+          <div class="h5-banner-lbl">FIFA WORLD CUP 2026</div>
+          <div class="h5-banner-title">瓜分超级奖池</div>
+          <div class="h5-banner-sub">6月12日 — 7月21日</div>
+        </div>
+        <div class="h5-tabs">
+          <div class="h5-trow">
+            <div class="h5-tab active">小组赛</div>
+            <div class="h5-tab">三十二强赛</div>
+            <div class="h5-tab">十六强赛</div>
+          </div>
+          <div class="h5-trow">
+            <div class="h5-tab">八强赛</div>
+            <div class="h5-tab">半决赛～总决赛</div>
+          </div>
+        </div>
+        <div class="h5-body">
+          <div class="h5-time">
+            <p><span class="lbl">活动时间</span><span class="val">6月12日 — 6月28日</span></p>
+            <p><span class="lbl">奖池瓜分日</span><span class="val">6月29日 09:00—23:59</span></p>
+          </div>
+          <div class="h5-info"><span class="ib-dim">活动尚未开始，敬请期待</span></div>
+          <div class="h5-pool-wrap">
+            <div class="h5-pool-lbl">杏彩奖池</div>
+            <div class="h5-ring">
+              <div class="h5-amt dim">¥ 0</div>
+              <div class="h5-sub">本阶段奖池尚未开放</div>
+            </div>
+          </div>
+          <button class="h5-cta h5-cta-gray">暂未开始</button>
+          <div class="h5-btm">
+            <button class="h5-bb h5-bb-dark">奖池瓜分记录</button>
+            <button class="h5-bb h5-bb-out">活动规则</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 未开始 -->
+<div id="state-notstart" style="display:none" class="phones-row">
+  <div class="phone-col">
+    <div class="phone-lbl">八强赛<span>投注期尚未到达</span></div>
+    <div class="phone">
+      <div class="sb"><span>9:41</span><span>●●●</span></div>
+      <div class="h5-page">
+        <div class="h5-banner">
+          <div class="h5-banner-lbl">FIFA WORLD CUP 2026</div>
+          <div class="h5-banner-title">瓜分超级奖池</div>
+          <div class="h5-banner-sub">6月12日 — 7月21日</div>
+        </div>
+        <div class="h5-tabs">
+          <div class="h5-trow">
+            <div class="h5-tab">小组赛</div>
+            <div class="h5-tab">三十二强赛</div>
+            <div class="h5-tab">十六强赛</div>
+          </div>
+          <div class="h5-trow">
+            <div class="h5-tab active">八强赛</div>
+            <div class="h5-tab">半决赛～总决赛</div>
+          </div>
+        </div>
+        <div class="h5-body">
+          <div class="h5-time">
+            <p><span class="lbl">活动时间</span><span class="val">7月10日 — 7月12日</span></p>
+            <p><span class="lbl">奖池瓜分日</span><span class="val">7月13日 09:00—23:59</span></p>
+          </div>
+          <div class="h5-info"><span class="ib-dim">活动尚未开始，敬请期待</span></div>
+          <div class="h5-pool-wrap">
+            <div class="h5-pool-lbl">杏彩奖池</div>
+            <div class="h5-ring">
+              <div class="h5-amt dim">¥ 0</div>
+              <div class="h5-sub">本阶段奖池尚未开放</div>
+            </div>
+          </div>
+          <button class="h5-cta h5-cta-gray">暂未开始</button>
+          <div class="h5-btm">
+            <button class="h5-bb h5-bb-dark">奖池瓜分记录</button>
+            <button class="h5-bb h5-bb-out">活动规则</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- annotation -->
+<div class="anno" style="margin-top:14px">
+  <h4>📋 H5端交互说明</h4>
+  <div class="ar"><div class="an">1</div><div><span class="ct">新增</span>Tab从4个增至5个，新增「三十二强赛」。H5端采用两行3+2排列：第1行小组赛/三十二强赛/十六强赛，第2行八强赛/半决赛～总决赛。最终排版由UI确认。</div></div>
+  <div class="ar"><div class="an">2</div><div><span class="ct">交互</span>三十二强赛瓜分日：点击「立即瓜分」→ 足球进度条动效（约5秒）→ 自动弹瓜分成功弹窗。后端判断未达条件则弹未达提示，按钮文案相同。</div></div>
+  <div class="ar"><div class="an">3</div><div><span class="ct">复用</span>「奖池瓜分记录」通用弹窗，5行对应5个阶段，仅展示已完成记录。「活动规则」各阶段通用，样式沿用旧模板。</div></div>
+  <div class="ar"><div class="an r">!</div><div><span class="ct">注意</span>「奖池积累中」按钮为亮色但不可点击，与「暂未开始」（灰色）区分。开发实现时注意cursor:not-allowed但背景色有别。</div></div>
+</div>
+
+</div>
+
+<script>
+function oh5(id){document.getElementById(id).classList.add('open')}
+function ch5(id){document.getElementById(id).classList.remove('open')}
+function h5Split(){
+  oh5('hb-split');
+  const f=document.getElementById('hb-fill'),b=document.getElementById('hb-ball');
+  f.style.transition='none';f.style.width='0';b.style.transition='none';b.style.left='4px';
+  void f.offsetWidth;
+  f.style.transition='width 2.8s cubic-bezier(.4,0,.2,1)';f.style.width='88%';
+  b.style.transition='left 2.8s cubic-bezier(.4,0,.2,1)';b.style.left='calc(88% - 20px)';
+  setTimeout(()=>{ch5('hb-split');oh5('hb-ok')},3000);
+}
+function showState(key){
+  document.querySelectorAll('.state-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes("'"+key+"'")));
+  document.getElementById('state-all').style.display=key==='all'?'flex':'none';
+  document.getElementById('state-preheat').style.display=key==='preheat'?'flex':'none';
+  document.getElementById('state-notstart').style.display=key==='notstart'?'flex':'none';
+}
+</script>
+</body>
+</html>
