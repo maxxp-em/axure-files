@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人工活动自动化 · 决策页</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#0F172A;color:#F8FAFC;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px}
+  .page{width:100%;max-width:900px}
+
+  /* Header */
+  .header{margin-bottom:36px}
+  .tag{font-size:11px;color:#64748B;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .title{font-size:28px;font-weight:700;color:#F8FAFC;margin-bottom:6px}
+  .sub{font-size:14px;color:#64748B}
+
+  /* Why */
+  .why{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+  .why-card{background:#1E293B;border-radius:10px;padding:16px 18px;border:1px solid #334155}
+  .why-card .n{font-size:26px;font-weight:700;color:#F8FAFC;line-height:1}
+  .why-card .n span{font-size:14px;font-weight:400;color:#475569}
+  .why-card .l{font-size:12px;color:#64748B;margin-top:6px}
+
+  /* Decision strip */
+  .decision{background:#1D4ED8;border-radius:12px;padding:20px 24px;margin-bottom:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .dec-item{padding:0 20px;border-right:1px solid rgba(255,255,255,.15)}
+  .dec-item:first-child{padding-left:0}
+  .dec-item:last-child{border-right:none}
+  .dec-label{font-size:11px;color:#93C5FD;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+  .dec-value{font-size:14px;color:#fff;line-height:1.6}
+  .dec-value strong{font-weight:600}
+
+  /* Phases */
+  .phases-title{font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+  .phases{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px}
+  .phase{background:#1E293B;border-radius:10px;overflow:hidden;border:1px solid #334155}
+  .phase-head{padding:10px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+  .ph1 .phase-head{background:#7F1D1D;color:#FCA5A5}
+  .ph2 .phase-head{background:#78350F;color:#FCD34D}
+  .ph3 .phase-head{background:#064E3B;color:#6EE7B7}
+  .phase-head .vol{font-size:11px;font-weight:400;opacity:.8}
+  .phase-body{padding:10px 14px}
+  .phase-row{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-bottom:1px solid #0F172A}
+  .phase-row:last-child{border-bottom:none}
+  .phase-row-name{font-size:12px;color:#CBD5E1}
+  .phase-row-meta{font-size:11px;color:#475569;white-space:nowrap;margin-left:8px}
+  .phase-note{margin-top:8px;font-size:11px;color:#475569;line-height:1.5;padding-top:8px;border-top:1px solid #1E3A5F}
+
+  /* Modules */
+  .modules-title{font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+  .modules{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
+  .mod{background:#1E293B;border-radius:8px;padding:12px 14px;border:1px solid #334155}
+  .mod-name{font-size:12px;font-weight:600;color:#94A3B8;margin-bottom:6px}
+  .mod-build{font-size:11px;color:#F8FAFC;margin-bottom:4px}
+  .mod-reuse{font-size:11px;color:#475569;line-height:1.5}
+  .mod-reuse span{color:#64748B}
+
+  /* Skip */
+  .skip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+  .skip-tag{font-size:11px;color:#475569;background:#1E293B;border:1px solid #334155;border-radius:4px;padding:4px 10px}
+  .skip-tag span{color:#334155;margin:0 4px}
+
+  /* Phase row meta */
+  .phase-row-id{font-size:10px;color:#334155;background:#0F172A;border-radius:3px;padding:1px 5px;margin-left:6px;white-space:nowrap}
+  .phase-row-data{font-size:11px;color:#475569;white-space:nowrap;margin-left:4px}
+  .footer{font-size:11px;color:#334155;text-align:center;padding-top:20px;border-top:1px solid #1E293B}
+
+  @media(max-width:700px){
+    .why{grid-template-columns:repeat(2,1fr)}
+    .phases{grid-template-columns:1fr}
+    .modules{grid-template-columns:repeat(2,1fr)}
+    .decision{grid-template-columns:1fr;gap:12px}
+    .dec-item{padding:0;border-right:none;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:12px}
+    .dec-item:last-child{border-bottom:none;padding-bottom:0}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="tag">杏彩体育 · 运营中台 · 2026年4月</div>
+    <div class="title">人工活动自动化改造</div>
+    <div class="sub">20个人工活动 · 评估路径 · 分阶段实施</div>
+  </div>
+
+  <!-- Why: background numbers -->
+  <div class="why">
+    <div class="why-card">
+      <div class="n">719<span> 次</span></div>
+      <div class="l">3月人工派彩次数</div>
+    </div>
+    <div class="why-card">
+      <div class="n">241<span> 人</span></div>
+      <div class="l">3月参与人数（去重）</div>
+    </div>
+    <div class="why-card">
+      <div class="n">12<span>/20</span></div>
+      <div class="l">活动具备自动化条件</div>
+    </div>
+    <div class="why-card">
+      <div class="n">42<span>%</span></div>
+      <div class="l">阶段一可覆盖派彩量</div>
+    </div>
+  </div>
+
+  <!-- Decision strip -->
+  <div class="decision">
+    <div class="dec-item">
+      <div class="dec-label">结论</div>
+      <div class="dec-value">优先建设 <strong>4个核心模块</strong>，作为自动化基础设施，覆盖12个活动</div>
+    </div>
+    <div class="dec-item">
+      <div class="dec-label">投入</div>
+      <div class="dec-value">阶段一集中完成模块建设，后续活动<strong>直接复用</strong>，边际开发成本较低</div>
+    </div>
+    <div class="dec-item">
+      <div class="dec-label">收益</div>
+      <div class="dec-value">减少人工派彩 <strong>≈299次/月</strong>，优先释放高频活动客服人力</div>
+    </div>
+  </div>
+
+  <!-- Phases -->
+  <div class="phases-title">分阶段计划</div>
+  <div class="phases">
+    <div class="phase ph1">
+      <div class="phase-head">
+        <span>阶段一 · 立即启动</span>
+        <span class="vol">≈299次/月 · 42%</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-row">
+          <span class="phase-row-name">杏彩体育会员日<span class="phase-row-id">174</span></span>
+          <span class="phase-row-data">后端小改</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">USDT充值返利<span class="phase-row-id">312</span></span>
+          <span class="phase-row-data">148次 · 24人</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">USDT取款加赠0.5%<span class="phase-row-id">281</span></span>
+          <span class="phase-row-data">79次 · 14人</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">极限救援·畅享电子<span class="phase-row-id">250</span></span>
+          <span class="phase-row-data">72次 · 23人</span>
+        </div>
+        <div class="phase-note">充值/取款监听、负盈利查询模块在此阶段完成建设</div>
+      </div>
+    </div>
+    <div class="phase ph2">
+      <div class="phase-head">
+        <span>阶段二 · 中期推进</span>
+        <span class="vol">≈180次/月</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-row">
+          <span class="phase-row-name">彩票专属回馈计划<span class="phase-row-id">364</span></span>
+          <span class="phase-row-data">活动开发中</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">彩票迎新礼<span class="phase-row-id">363</span></span>
+          <span class="phase-row-data">活动开发中</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">小额提款·专属福利<span class="phase-row-id">243</span></span>
+          <span class="phase-row-data">41次 · 9人</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">幸运注单·福利派送<span class="phase-row-id">218</span></span>
+          <span class="phase-row-data">25次 · 14人</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">下注体育·连赢彩金<span class="phase-row-id">193</span></span>
+          <span class="phase-row-data">27次 · 16人</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">奥丁电子·三重挑战礼<span class="phase-row-id">349</span></span>
+          <span class="phase-row-data">46次 · 18人</span>
+        </div>
+        <div class="phase-note">大部分复用阶段一模块，连赢识别/里程碑需专项新建</div>
+      </div>
+    </div>
+    <div class="phase ph3">
+      <div class="phase-head">
+        <span>阶段三 · 收尾补全</span>
+        <span class="vol">≈21次/月</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-row">
+          <span class="phase-row-name">真人连赢·好运不停<span class="phase-row-id">186</span></span>
+          <span class="phase-row-data">11次 · 8人 · AI审核</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">王者归来·谁与争锋<span class="phase-row-id">184</span></span>
+          <span class="phase-row-data">6次 · 6人 · AI审核</span>
+        </div>
+        <div class="phase-row">
+          <span class="phase-row-name">串关加奖15%<span class="phase-row-id">217</span></span>
+          <span class="phase-row-data">4次 · 3人 · 规则</span>
+        </div>
+        <div class="phase-note">量级小，规则复杂，AI辅助审核为主，人工兜底</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div class="modules-title">核心模块（一次建设，多活动复用）</div>
+  <div class="modules">
+    <div class="mod">
+      <div class="mod-name">充值监听模块</div>
+      <div class="mod-build">新建 → USDT充值返利</div>
+      <div class="mod-reuse"><span>复用</span> 取款加赠、彩票迎新礼</div>
+    </div>
+    <div class="mod">
+      <div class="mod-name">取款监听模块</div>
+      <div class="mod-build">新建 → USDT取款加赠</div>
+      <div class="mod-reuse"><span>复用</span> 小额提款福利</div>
+    </div>
+    <div class="mod">
+      <div class="mod-name">负盈利查询模块</div>
+      <div class="mod-build">新建 → 极限救援电子</div>
+      <div class="mod-reuse"><span>复用</span> 彩票专属回馈</div>
+    </div>
+    <div class="mod">
+      <div class="mod-name">连赢识别模块</div>
+      <div class="mod-build">新建 → 下注体育连赢</div>
+      <div class="mod-reuse"><span>复用</span> 真人连赢（AI版）</div>
+    </div>
+  </div>
+
+  <!-- Skip -->
+  <div class="phases-title">暂不处理（6个）</div>
+  <div class="skip-row">
+    <div class="skip-tag">NBA逐梦征程 <span>·</span> ID:342 <span>·</span> 3月:92次 16人 <span>·</span> 6月结束</div>
+    <div class="skip-tag">五大联赛·热血再燃 <span>·</span> ID:334 <span>·</span> 3月:25次 8人 <span>·</span> 5月结束</div>
+    <div class="skip-tag">欧冠之夜·星耀全城 <span>·</span> ID:339 <span>·</span> 3月:10次 6人 <span>·</span> 5月结束</div>
+    <div class="skip-tag">首存送实物礼品 <span>·</span> ID:49 <span>·</span> 3月:3次 3人 <span>·</span> 计划下架</div>
+    <div class="skip-tag">电维团队·周累计存款 <span>·</span> ID:无 <span>·</span> 3月:38次 13人 <span>·</span> OL后台无配置</div>
+    <div class="skip-tag">杏彩贺新春·龙行大运 <span>·</span> ID:236 <span>·</span> 3月:36次 4人 <span>·</span> SEO人工活动</div>
+  </div>
+
+  <!-- Detail table -->
+  <div class="phases-title" style="margin-top:32px">活动明细</div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:32px">
+    <thead>
+      <tr>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155;width:148px">活动名称</th>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155;width:48px">ID</th>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155;width:80px">3月派彩</th>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155;width:80px">3月参与人</th>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155;width:96px">路径</th>
+        <th style="background:#1E293B;color:#64748B;font-size:11px;font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid #334155">核心依赖 / 关键判断</th>
+      </tr>
+    </thead>
+    <tbody id="detail-tbody"></tbody>
+  </table>
+
+  <div class="footer">杏彩体育 · 运营产品中台 · 2026年4月 · 详细方案见完整版</div>
+</div>
+
+<script>
+const details = [
+  { name:"杏彩体育会员日",       id:"174", vol:"—",    ppl:"—",   path:"后端小改",   pc:"#1D4ED8", note:"奖品映射为金额直接入账，前端文案同步更新，无需自动化开发。" },
+  { name:"USDT充值返利",         id:"312", vol:"148次", ppl:"24人", path:"模板·配置",  pc:"#0D9488", note:"存款≥100 → 1%加赠（上限1888），48h派发。新建充值监听模块，后续复用。" },
+  { name:"USDT取款加赠0.5%",     id:"281", vol:"79次",  ppl:"14人", path:"模板·配置",  pc:"#0D9488", note:"取款≥100 → 0.5%加赠（上限888）。复用充值监听架构，改触发源+比率参数。" },
+  { name:"极限救援·畅享电子",    id:"250", vol:"72次",  ppl:"23人", path:"模板·规则",  pc:"#065F46", note:"电子场馆当日负盈利分档，VIP1+，最高10888。新建负盈利查询模块，完成后带动#364复用。" },
+  { name:"彩票专属回馈计划",      id:"364", vol:"—",    ppl:"—",   path:"模板·规则",  pc:"#065F46", note:"彩票场馆每日负盈利分档，5倍流水，有效投注超80%限制。复用极限救援负盈利模块。", remark:"活动开发中" },
+  { name:"彩票迎新礼",            id:"363", vol:"—",    ppl:"—",   path:"模板·配置",  pc:"#0D9488", note:"新用户首存≥100 → 30%彩金（上限288），(本金+彩金)*10倍流水，20分钟内自动派。", remark:"活动开发中" },
+  { name:"小额提款·专属福利",    id:"243", vol:"41次",  ppl:"9人",  path:"模板·配置",  pc:"#0D9488", note:"凌晨00:00–06:59取款≤500 → 4%返现（上限100元/日），复用取款模块+时间窗口过滤。" },
+  { name:"幸运注单·福利派送",    id:"218", vol:"25次",  ppl:"14人", path:"模板·配置",  pc:"#0D9488", note:"有效投注≥200，注单尾号连8即触发，VIP1+，每日18点前自动派前日结果。" },
+  { name:"下注体育·连赢彩金",    id:"193", vol:"27次",  ppl:"16人", path:"模板·规则",  pc:"#065F46", note:"同场馆≥5场连赢，按最低单笔分档，48h内结算。新建连赢识别模块，本阶段最重开发项。", remark:"建议单独排期" },
+  { name:"奥丁电子·三重挑战礼",  id:"349", vol:"46次",  ppl:"18人", path:"模板·规则",  pc:"#065F46", note:"三子活动：①当日投注分档；②累计里程碑解锁；③单笔中奖≥500加赠。需里程碑模块+中奖事件监听。", remark:"复杂度高，建议单独排期" },
+  { name:"真人连赢·好运不停",    id:"186", vol:"11次",  ppl:"8人",  path:"AI审核派彩", pc:"#6D28D9", note:"百家乐庄/闲连赢8场，每局≥100，期间不可切换玩法。规则细节复杂，AI辅助审核+人工兜底。" },
+  { name:"王者归来·谁与争锋",    id:"184", vol:"6次",   ppl:"6人",  path:"AI审核派彩", pc:"#6D28D9", note:"≥15天未登录回归按VIP发彩金；回归3天内首存分档，与其他存款活动互斥。" },
+  { name:"串关加奖15%",           id:"217", vol:"4次",   ppl:"3人",  path:"模板·规则",  pc:"#065F46", note:"赛前串关全赢，2–10串1按比例加奖，VIP决定每日申请次数。赛前自动标记+全赢后计算派彩。" },
+  { name:"礼尚往来·相约杏彩",    id:"53",  vol:"56次",  ppl:"56人", path:"已完成",     pc:"#16A34A", note:"已完成自动化，现有方案可作为同类活动复用参考。" },
+];
+
+const tbody = document.getElementById('detail-tbody');
+details.forEach((d, i) => {
+  const bg = i % 2 === 0 ? '#1E293B' : '#162032';
+  tbody.innerHTML += `<tr>
+    <td style="padding:9px 12px;font-size:12px;font-weight:600;color:#CBD5E1;border-bottom:1px solid #0F172A;background:${bg}">${d.name}</td>
+    <td style="padding:9px 12px;font-size:11px;color:#475569;border-bottom:1px solid #0F172A;background:${bg}">${d.id}</td>
+    <td style="padding:9px 12px;font-size:12px;font-weight:600;color:#94A3B8;border-bottom:1px solid #0F172A;background:${bg}">${d.vol}</td>
+    <td style="padding:9px 12px;font-size:12px;color:#64748B;border-bottom:1px solid #0F172A;background:${bg}">${d.ppl}</td>
+    <td style="padding:9px 12px;border-bottom:1px solid #0F172A;background:${bg}"><span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap;background:${d.pc}22;color:${d.pc};border:1px solid ${d.pc}55">${d.path}</span></td>
+    <td style="padding:9px 12px;font-size:11px;color:#64748B;line-height:1.6;border-bottom:1px solid #0F172A;background:${bg}">${d.note}${d.remark ? `<span style="display:inline-block;margin-left:6px;font-size:10px;padding:1px 6px;border-radius:3px;background:#78350F44;color:#FCD34D">${d.remark}</span>` : ''}</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
