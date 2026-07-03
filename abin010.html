@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交互原型 · 用户详情页冻结操作入口</title>
+<style>
+  :root{
+    --navy:#1c3a63;
+    --navy-dark:#152c4d;
+    --blue:#2f6fb0;
+    --blue-light:#eaf2fb;
+    --blue-border:#b9d2ec;
+    --link:#2f6fb0;
+    --text:#1f2d3d;
+    --text-sub:#5b6b7c;
+    --border:#dde4ec;
+    --bg:#f4f6f9;
+    --panel:#ffffff;
+    --danger:#c0392b;
+    --success:#2e7d32;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+  }
+  .topbar{
+    background:linear-gradient(180deg,var(--navy),var(--navy-dark));
+    color:#fff;
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar .title{font-size:17px;font-weight:600;letter-spacing:.5px;}
+  .topbar .user{font-size:12px;color:#bcd0e8;}
+
+  .proto-banner{
+    background:#fff8e1;
+    border-bottom:1px solid #f0d98c;
+    padding:10px 24px;
+    font-size:12.5px;
+    color:#8a6d1a;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+  .proto-banner b{color:#6b5312;}
+  .proto-controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .seg{
+    display:inline-flex;
+    border:1px solid #e0c877;
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .seg button{
+    border:none;
+    background:#fff;
+    padding:5px 12px;
+    font-size:12px;
+    cursor:pointer;
+    color:#8a6d1a;
+  }
+  .seg button.active{
+    background:#e0c877;
+    color:#3d2f04;
+    font-weight:600;
+  }
+  .seg button:not(:last-child){border-right:1px solid #e0c877;}
+
+  .container{
+    max-width:1180px;
+    margin:22px auto;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 1px 3px rgba(20,40,70,.06);
+  }
+  .breadcrumb{
+    max-width:1180px;
+    margin:16px auto 0;
+    padding:0 2px;
+    font-size:12.5px;
+    color:var(--text-sub);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .breadcrumb .seg-item{color:var(--text-sub);}
+  .breadcrumb .seg-item.current{color:var(--blue);font-weight:600;}
+  .breadcrumb .sep{color:#c2ccd6;}
+
+  .acct-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+  }
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 0;
+  }
+  .search-box input{
+    width:200px;
+    padding:6px 10px;
+    border:1px solid var(--border);
+    border-radius:3px;
+    font-size:12.5px;
+    color:var(--text);
+  }
+  .search-box .btn{padding:6px 16px;font-size:12.5px;}
+
+  .acct-header{
+    padding:16px 24px;
+    border-bottom:1px solid var(--border);
+    font-size:15px;
+    font-weight:600;
+    color:var(--navy-dark);
+    background:#fbfcfe;
+  }
+  .tabs{
+    display:flex;
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+    background:#fff;
+  }
+  .tab{
+    padding:12px 20px;
+    font-size:14px;
+    color:var(--text-sub);
+    cursor:default;
+    border-bottom:2px solid transparent;
+  }
+  .tab.active{
+    color:var(--blue);
+    font-weight:600;
+    border-bottom-color:var(--blue);
+  }
+  .panel-body{padding:22px 26px 28px;}
+
+  .freeze-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 16px;
+    background:var(--blue-light);
+    border:1px solid var(--blue-border);
+    border-radius:var(--radius);
+    margin-bottom:22px;
+  }
+  .freeze-row .label{font-size:14px;color:var(--text);}
+  .freeze-row .status-value{font-weight:700;}
+  .status-value.frozen{color:var(--danger);}
+  .status-value.normal{color:var(--success);}
+  .freeze-row .spacer{flex:1;}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 18px;
+    border-radius:3px;
+    font-size:13px;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:filter .15s ease;
+    font-weight:500;
+  }
+  .btn:hover{filter:brightness(0.96);}
+  .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .btn-danger{background:#fff;color:var(--danger);border-color:#e3b3ac;}
+  .btn-ghost{background:#fff;color:var(--text-sub);border-color:var(--border);}
+  .btn-confirm{background:var(--blue);color:#fff;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:18px 28px;
+  }
+  .field .k{font-size:12.5px;color:var(--text-sub);margin-bottom:4px;}
+  .field .v{font-size:14px;color:var(--text);}
+  .mask-link{color:var(--link);text-decoration:none;font-size:12.5px;}
+  .mask-link:hover{text-decoration:underline;}
+
+  .omit-note{
+    text-align:center;
+    color:#9aa7b5;
+    font-size:12.5px;
+    padding:14px 0;
+    margin-bottom:18px;
+    border-top:1px dashed var(--border);
+    border-bottom:1px dashed var(--border);
+  }
+
+  .btn-static{cursor:default;pointer-events:none;}
+  .static-input{cursor:default;background:#fafbfc;color:#9aa7b5;}
+  .mask-link{pointer-events:none;cursor:default;}
+
+  .hint-hidden-demo{
+    margin-top:18px;
+    padding:10px 14px;
+    border:1px dashed #cbd5e0;
+    border-radius:4px;
+    font-size:12.5px;
+    color:var(--text-sub);
+    background:#fafbfc;
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(20,32,50,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:#fff;
+    width:520px;
+    max-width:92vw;
+    border-radius:6px;
+    box-shadow:0 12px 40px rgba(10,20,40,.25);
+    overflow:hidden;
+    animation:pop .16s ease;
+  }
+  @keyframes pop{from{transform:scale(.96);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .modal-head{
+    padding:14px 20px;
+    background:var(--navy);
+    color:#fff;
+    font-size:14.5px;
+    font-weight:600;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .modal-head .x{cursor:pointer;opacity:.8;font-size:16px;}
+  .modal-head .x:hover{opacity:1;}
+  .modal-body{padding:20px 22px;max-height:60vh;overflow:auto;}
+  .modal-foot{
+    padding:14px 22px;
+    border-top:1px solid var(--border);
+    display:flex;
+    gap:10px;
+    justify-content:flex-start;
+    background:#fbfcfe;
+  }
+  .form-row{margin-bottom:16px;}
+  .form-row .flabel{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:8px;
+  }
+  .radio-opt{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    padding:6px 0;
+    font-size:13px;
+    line-height:1.5;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .radio-opt input{margin-top:3px;}
+  .radio-opt .note{color:var(--danger);font-size:12px;}
+  textarea{
+    width:100%;
+    min-height:70px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+    resize:vertical;
+  }
+  textarea:focus,{outline:2px solid var(--blue-border);}
+
+  /* confirm dialog (nested) */
+  .confirm-overlay{
+    position:fixed;inset:0;
+    background:rgba(20,32,50,.35);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+  }
+  .confirm-overlay.show{display:flex;}
+  .confirm-box{
+    background:#fff;
+    width:360px;
+    border-radius:6px;
+    box-shadow:0 12px 40px rgba(10,20,40,.3);
+    padding:22px 24px;
+    text-align:center;
+    animation:pop .16s ease;
+  }
+  .confirm-box .q{font-size:14.5px;margin-bottom:20px;color:var(--text);}
+  .confirm-box .row{display:flex;gap:10px;justify-content:center;}
+  .confirm-box .row .btn{min-width:84px;justify-content:center;}
+
+  /* toast */
+  .toast{
+    position:fixed;
+    top:24px;left:50%;
+    transform:translateX(-50%) translateY(-12px);
+    background:#2e7d32;
+    color:#fff;
+    padding:10px 22px;
+    border-radius:4px;
+    font-size:13.5px;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s ease;
+    z-index:300;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .proto-notes{
+    max-width:1180px;
+    margin:20px auto 44px;
+    padding:16px 22px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-left:3px solid #e0c877;
+    border-radius:4px;
+  }
+  .proto-notes .nt-title{
+    font-size:13px;
+    font-weight:700;
+    color:#8a6d1a;
+    margin-bottom:10px;
+  }
+  .proto-notes ul{
+    margin:0;
+    padding-left:18px;
+  }
+  .proto-notes li{
+    font-size:12.5px;
+    color:var(--text-sub);
+    line-height:1.9;
+  }
+  .proto-notes li b{color:var(--text);font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">管理后台</div>
+  <div class="user">退出系统 - abin003</div>
+</div>
+
+<div class="proto-banner">
+  <span><b>交互原型说明：</b>下方控制条仅用于演示不同前提条件，非最终产品界面的一部分。</span>
+  <div class="proto-controls">
+    <span style="color:#8a6d1a;">当前用户状态：</span>
+    <div class="seg" id="stateSeg">
+      <button data-state="normal" class="active">未冻结</button>
+      <button data-state="frozen">已冻结(仅冻结充值)</button>
+    </div>
+    <span style="color:#8a6d1a;margin-left:6px;">冻结/解冻权限：</span>
+    <div class="seg" id="permSeg">
+      <button data-perm="yes" class="active">有权限</button>
+      <button data-perm="no">无权限</button>
+    </div>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <span class="seg-item">管理后台</span><span class="sep">/</span>
+  <span class="seg-item">用户管理</span><span class="sep">/</span>
+  <span class="seg-item">用户列表</span><span class="sep">/</span>
+  <span class="seg-item current">详情（新）</span>
+</div>
+
+<div class="container">
+  <div class="acct-header">用户账户：abin002@as</div>
+  <div class="acct-toolbar">
+    <div class="tabs" style="border-bottom:none;padding:0;">
+      <div class="tab active">基础信息</div>
+      <div class="tab">账户信息</div>
+    </div>
+    <div class="search-box">
+      <input type="text" placeholder="输入用户名搜索" readonly class="static-input">
+      <button class="btn btn-primary btn-static">搜索</button>
+      <button class="btn btn-ghost btn-static">返回用户列表</button>
+    </div>
+  </div>
+  <div class="panel-body">
+
+    <div class="freeze-row">
+      <span class="label">冻结状态：</span>
+      <span class="status-value normal" id="statusText">未冻结</span>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="freezeEntryBtn">冻结</button>
+    </div>
+
+    <div class="grid">
+      <div class="field"><div class="k">用户账号</div><div class="v">abin002@as</div></div>
+      <div class="field"><div class="k">用户昵称</div><div class="v">abin002</div></div>
+      <div class="field"><div class="k">用户性质</div><div class="v">非测试用户</div></div>
+
+      <div class="field"><div class="k">真实姓名</div><div class="v">&nbsp;</div></div>
+      <div class="field"><div class="k">电话号码</div><div class="v">155*****966 <a href="javascript:void(0)" class="mask-link">[显示]</a></div></div>
+      <div class="field"><div class="k">邮箱地址</div><div class="v">ca****@c*******.com <a href="javascript:void(0)" class="mask-link">[显示]</a></div></div>
+
+      <div class="field"><div class="k">生日</div><div class="v">0000-00-00</div></div>
+      <div class="field"><div class="k">VIP等级</div><div class="v">7</div></div>
+      <div class="field"><div class="k">风险标记</div><div class="v" style="color:var(--danger);">+风险账号+同设备多账号+同IP多账号</div></div>
+
+      <div class="field" style="grid-column:span 3;"><div class="k">用户层级</div><div class="v">zfqd2001@as&raquo;zfqd2002@as</div></div>
+    </div>
+
+    <div class="omit-note">⋯ 其余基础信息字段省略，原型聚焦于上方新增的「冻结状态」模块 ⋯</div>
+
+    <div class="hint-hidden-demo" id="permHint">
+      当前「无权限」演示下，操作入口将从「冻结状态」行中完全隐藏（而非置灰），与用户列表操作列的现有权限渲染规则保持一致。
+    </div>
+  </div>
+</div>
+
+<div class="proto-notes">
+  <div class="nt-title">原型说明</div>
+  <ul>
+    <li><b>入口位置：</b>操作按钮位于「基础信息」Tab 内「冻结状态」文本行最右侧，随当前状态展示【冻结】或【解冻】。</li>
+    <li><b>无历史记录：</b>弹窗内只承载操作表单，冻结/解冻历史记录表格仍保留在原「用户冻结」「用户解冻」独立页面，不在此弹窗展示。</li>
+    <li><b>权限规则：</b>无「用户冻结/解冻」权限时，入口直接隐藏，不做置灰，与用户列表操作列的现有权限渲染规则一致。</li>
+    <li><b>二次确认与反馈：</b>提交前弹出「您确定要冻结/解冻用户吗？」二次确认，提交成功后自动关闭弹窗、刷新页面冻结状态，并展示 Toast 提示。</li>
+    <li><b>状态字段拼接规则：</b>「冻结状态」展示内容 = 冻结方式 + 冻结备注；备注留空时兜底显示为「人工冻结」，备注有内容则直接展示备注原文（此为现有系统既有逻辑，非本次新增）。</li>
+    <li><b>顶部黄色控制条</b>仅用于本原型演示不同前提条件（用户状态 / 是否有权限），不是最终产品界面的一部分。</li>
+  </ul>
+</div>
+
+<!-- 冻结/解冻 操作弹窗 -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span id="modalTitle">冻结用户</span>
+      <span class="x" id="closeFormBtn">✕</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- content injected by JS -->
+    </div>
+    <div class="modal-foot" id="modalFoot">
+      <!-- buttons injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- 二次确认弹窗 -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="q" id="confirmText">您确定要冻结用户吗？</div>
+    <div class="row">
+      <button class="btn btn-ghost" id="confirmCancel">取消</button>
+      <button class="btn btn-confirm" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ <span id="toastText">操作成功</span></div>
+
+<script>
+let currentState = "normal"; // 'normal' | 'frozen'
+let currentPerm = "yes";     // 'yes' | 'no'
+let pendingAction = null;    // 'freeze' | 'unfreeze'
+let frozenDetailText = "仅冻结充值 人工冻结"; // 展示规则：冻结方式 + 备注（备注为空时兜底显示"人工冻结"）
+
+const statusText = document.getElementById("statusText");
+const freezeEntryBtn = document.getElementById("freezeEntryBtn");
+const permHint = document.getElementById("permHint");
+
+const formOverlay = document.getElementById("formOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalFoot = document.getElementById("modalFoot");
+const closeFormBtn = document.getElementById("closeFormBtn");
+
+const confirmOverlay = document.getElementById("confirmOverlay");
+const confirmText = document.getElementById("confirmText");
+const confirmCancel = document.getElementById("confirmCancel");
+const confirmOk = document.getElementById("confirmOk");
+
+const toast = document.getElementById("toast");
+const toastText = document.getElementById("toastText");
+
+function renderTopState(){
+  if(currentState === "normal"){
+    statusText.textContent = "未冻结";
+    statusText.className = "status-value normal";
+  } else {
+    statusText.textContent = frozenDetailText;
+    statusText.className = "status-value frozen";
+  }
+
+  if(currentPerm === "no"){
+    freezeEntryBtn.style.display = "none";
+    permHint.style.display = "block";
+  } else {
+    freezeEntryBtn.style.display = "inline-flex";
+    permHint.style.display = "none";
+    if(currentState === "normal"){
+      freezeEntryBtn.textContent = "冻结";
+      freezeEntryBtn.className = "btn btn-primary";
+    } else {
+      freezeEntryBtn.textContent = "解冻";
+      freezeEntryBtn.className = "btn btn-danger";
+    }
+  }
+}
+
+function freezeFormHTML(){
+  return `
+    <div class="form-row">
+      <div class="flabel">用户账号</div>
+      <div style="font-size:13px;color:#5b6b7c;">abin002@as</div>
+    </div>
+    <div class="form-row">
+      <div class="flabel">冻结范围</div>
+      <label class="radio-opt"><input type="radio" name="scope" checked> 仅冻结此用户，不冻结其下级</label>
+      <label class="radio-opt"><input type="radio" name="scope"> 冻结此用户和所有下级</label>
+    </div>
+    <div class="form-row">
+      <div class="flabel">冻结方式</div>
+      <label class="radio-opt"><input type="radio" name="method" checked> 完全冻结</label>
+      <label class="radio-opt"><input type="radio" name="method"> 可登录，不可投注，不可提款，不可充值</label>
+      <label class="radio-opt"><input type="radio" name="method"> 不可投注，可充值，可提款</label>
+      <label class="radio-opt"><input type="radio" name="method"> 可登录，不可投注，可充值，不可提款 <span class="note">(注：会被发放下级契约分红后自动解)</span></label>
+      <label class="radio-opt"><input type="radio" name="method"> 可登录，可投注，不可充值，不可提款</label>
+      <label class="radio-opt"><input type="radio" name="method"> 仅冻结充值</label>
+      <label class="radio-opt"><input type="radio" name="method"> 可登入，可投注，可充值，不可提款，不可转入下级，不可转入信用钱包</label>
+    </div>
+    <div class="form-row">
+      <div class="flabel">冻结备注</div>
+      <textarea placeholder="选填"></textarea>
+    </div>
+  `;
+}
+
+function unfreezeFormHTML(){
+  return `
+    <div class="form-row">
+      <div class="flabel">用户账号</div>
+      <div style="font-size:13px;color:#5b6b7c;">abin002@as</div>
+    </div>
+    <div class="form-row">
+      <div class="flabel">当前冻结状态</div>
+      <div style="font-size:13px;color:#c0392b;font-weight:600;" id="currentFrozenDetail"></div>
+    </div>
+    <div class="form-row">
+      <div class="flabel">解冻行为</div>
+      <label class="radio-opt"><input type="radio" name="unfreeze" checked> 仅解冻此会员，不解冻其下级</label>
+      <label class="radio-opt"><input type="radio" name="unfreeze"> 解冻此会员和所有下级</label>
+    </div>
+    <div class="form-row">
+      <div class="flabel">解冻备注</div>
+      <textarea placeholder="选填"></textarea>
+    </div>
+  `;
+}
+
+function openForm(){
+  if(currentState === "normal"){
+    pendingAction = "freeze";
+    modalTitle.textContent = "冻结用户";
+    modalBody.innerHTML = freezeFormHTML();
+    modalFoot.innerHTML = `
+      <button class="btn btn-primary" id="submitBtn">用户冻结</button>
+      <button class="btn btn-ghost" id="resetBtn">重置冻结</button>
+    `;
+  } else {
+    pendingAction = "unfreeze";
+    modalTitle.textContent = "解冻用户";
+    modalBody.innerHTML = unfreezeFormHTML();
+    modalFoot.innerHTML = `
+      <button class="btn btn-primary" id="submitBtn">用户解冻</button>
+      <button class="btn btn-ghost" id="resetBtn">重置解冻</button>
+    `;
+    const detailEl = document.getElementById("currentFrozenDetail");
+    if(detailEl) detailEl.textContent = frozenDetailText;
+  }
+  formOverlay.classList.add("show");
+  document.getElementById("submitBtn").addEventListener("click", openConfirm);
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    modalBody.querySelectorAll('input[type=radio]').forEach((el,i)=>{ el.checked = false; });
+    modalBody.querySelectorAll('textarea').forEach(t=>t.value="");
+    // re-check first radio of each group
+    const groups = {};
+    modalBody.querySelectorAll('input[type=radio]').forEach(r=>{
+      if(!groups[r.name]){ groups[r.name]=r; r.checked=true; }
+    });
+  });
+}
+
+function closeForm(){
+  formOverlay.classList.remove("show");
+}
+closeFormBtn.addEventListener("click", closeForm);
+formOverlay.addEventListener("click", (e)=>{ if(e.target === formOverlay) closeForm(); });
+
+freezeEntryBtn.addEventListener("click", openForm);
+
+function openConfirm(){
+  confirmText.textContent = pendingAction === "freeze" ? "您确定要冻结用户吗？" : "您确定要解冻用户吗？";
+  confirmOverlay.classList.add("show");
+}
+confirmCancel.addEventListener("click", ()=> confirmOverlay.classList.remove("show"));
+confirmOverlay.addEventListener("click", (e)=>{ if(e.target === confirmOverlay) confirmOverlay.classList.remove("show"); });
+
+confirmOk.addEventListener("click", ()=>{
+  // 提交前先读取表单内容（此时 modalBody 尚未被清空）
+  let capturedDetail = null;
+  if(pendingAction === "freeze"){
+    const checkedMethod = modalBody.querySelector('input[name="method"]:checked');
+    let methodLabel = "完全冻结";
+    if(checkedMethod){
+      const labelEl = checkedMethod.closest('label');
+      const clone = labelEl.cloneNode(true);
+      const noteEl = clone.querySelector('.note');
+      if(noteEl) noteEl.remove();
+      methodLabel = clone.textContent.trim();
+    }
+    const remarkEl = modalBody.querySelector('textarea');
+    const remark = (remarkEl && remarkEl.value.trim()) ? remarkEl.value.trim() : "人工冻结";
+    capturedDetail = methodLabel + " " + remark;
+  }
+
+  confirmOverlay.classList.remove("show");
+  closeForm();
+  // simulate state change + refresh + toast
+  if(pendingAction === "freeze"){
+    currentState = "frozen";
+    frozenDetailText = capturedDetail;
+    showToast("冻结成功");
+  } else {
+    currentState = "normal";
+    showToast("解冻成功");
+  }
+  syncSeg();
+  renderTopState();
+});
+
+function showToast(msg){
+  toastText.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(()=> toast.classList.remove("show"), 2200);
+}
+
+// demo controls
+const stateSeg = document.getElementById("stateSeg");
+const permSeg = document.getElementById("permSeg");
+
+stateSeg.addEventListener("click",(e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  currentState = btn.dataset.state;
+  if(currentState === "frozen"){
+    frozenDetailText = "仅冻结充值 人工冻结"; // 演示预设，重置为默认展示文案
+  }
+  syncSeg();
+  renderTopState();
+});
+permSeg.addEventListener("click",(e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  currentPerm = btn.dataset.perm;
+  syncSeg();
+  renderTopState();
+});
+
+function syncSeg(){
+  stateSeg.querySelectorAll("button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.state === currentState);
+  });
+  permSeg.querySelectorAll("button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.perm === currentPerm);
+  });
+}
+
+renderTopState();
+</script>
+
+</body>
+</html>
