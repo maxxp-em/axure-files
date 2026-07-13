@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>会员详情(新) - 支付宝模块 交互原型</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+    background: #eef1f5;
+    color: #333;
+    font-size: 13px;
+  }
+
+  .proto-banner {
+    background: #2b3a55;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .proto-banner .title { font-weight: bold; }
+  .proto-banner select {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    background: #fff;
+    color: #2b3a55;
+  }
+  .switch-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,.08);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+  .switch-group label { font-size: 12px; opacity: .9; }
+
+  .page {
+    max-width: 1200px;
+    margin: 16px auto;
+    background: #fff;
+    border: 1px solid #c9d3e0;
+  }
+
+  .account-bar {
+    background: #f4f6f9;
+    border-bottom: 1px solid #dfe4ec;
+    padding: 12px 18px;
+    font-size: 14px;
+    color: #1f2d3d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .account-bar .back-btn {
+    background: #5b8def;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: default;
+  }
+
+  .top-tabs {
+    display: flex;
+    border-bottom: 1px solid #dfe4ec;
+    background: #fafbfc;
+  }
+  .top-tabs div {
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #5a6a7e;
+    cursor: default;
+    border-right: 1px solid #eef1f5;
+  }
+  .top-tabs div.active {
+    background: #fff;
+    color: #2b6cd4;
+    font-weight: bold;
+    border-bottom: 2px solid #2b6cd4;
+    margin-bottom: -1px;
+  }
+
+  .info-grid {
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 30px;
+    border-bottom: 1px solid #eef1f5;
+  }
+  .info-grid .item { font-size: 13px; color: #444; line-height: 1.8; }
+  .info-grid .item .label { color: #8a94a3; margin-right: 4px; }
+  .info-grid .item .val { color: #1f2d3d; }
+  .info-grid .item .val.green { color: #2e9e5b; font-weight: bold; }
+
+  .info-collapsed {
+    text-align: center;
+    padding: 6px;
+    font-size: 12px;
+    color: #a7b0bd;
+    background: #fbfcfd;
+    border-bottom: 1px solid #eef1f5;
+  }
+
+  .sub-tab-bar {
+    display: flex;
+    gap: 8px;
+    padding: 14px 22px 0 22px;
+    flex-wrap: wrap;
+  }
+  .sub-tab {
+    padding: 8px 18px;
+    font-size: 13px;
+    border: 1px solid #d6dde8;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    background: #f4f6f9;
+    color: #5a6a7e;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+  }
+  .sub-tab:hover { background: #eaf0fb; color: #2b6cd4; }
+  .sub-tab.active {
+    background: #fff;
+    color: #2b6cd4;
+    font-weight: bold;
+    border-color: #2b6cd4;
+    border-bottom: 1px solid #fff;
+    position: relative;
+    top: 1px;
+  }
+  .sub-tab .focus-flag {
+    display: inline-block;
+    background: #ff6b57;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+    transform: translateY(-1px);
+  }
+
+  .sub-panel-wrap {
+    border: 1px solid #d6dde8;
+    margin: 0 22px 22px 22px;
+    border-top: 1px solid #2b6cd4;
+  }
+
+  .placeholder-panel {
+    padding: 60px 0;
+    text-align: center;
+    color: #a7b0bd;
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 6px 20px;
+    border-radius: 3px;
+    font-size: 13px;
+    border: 1px solid #d6dde8;
+    cursor: pointer;
+    background: #fff;
+    color: #5a6a7e;
+  }
+  .btn:hover { opacity: .85; }
+
+  footer {
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+    font-size: 12px;
+    color: #9aa5b4;
+    padding: 0 4px;
+    line-height: 1.8;
+  }
+  footer b { color: #6b7686; }
+
+  /* ---------- 支付宝模块（本次移植内容） ---------- */
+  .ali-panel { padding: 0 0 4px 0; }
+  .section-title{
+    margin:16px 16px 0;
+    padding:8px 12px;
+    font-size:14px;
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title.bound{color:#2e9e5b;background:#eaf6ea;border-left:4px solid #2e9e5b;}
+  .section-title.unbound{color:#d9534f;background:#fdecea;border-left:4px solid #d9534f;}
+  .section-title .count{font-weight:normal;font-size:12px;color:#8a94a3;}
+
+  table.ali-table{
+    width:calc(100% - 32px);
+    margin:8px 16px 18px;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.ali-table thead th{
+    background:#eef2f8;
+    color:#4a5568;
+    padding:9px 8px;
+    text-align:center;
+    font-weight:bold;
+    border-bottom:1px solid #dfe4ec;
+    white-space:nowrap;
+  }
+  table.ali-table tbody td{
+    padding:9px 8px;
+    text-align:center;
+    border-bottom:1px solid #eef1f5;
+    color:#333;
+  }
+  table.ali-table tbody tr:hover{background:#f8fafc;}
+  .row-action{ color:#2b6cd4; cursor:pointer; margin:0 3px; }
+  .row-action:hover{text-decoration:underline;}
+  .row-action.danger{color:#d9534f;}
+  .mask-cell{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+  .empty-row td{padding:34px 8px;color:#a7b0bd;font-size:13px;}
+  .qr-thumb{
+    display:inline-block;
+    width:26px;height:26px;
+    border:1px solid #d6dde8;
+    border-radius:3px;
+    background:
+      linear-gradient(45deg,#dfe4ec 25%,transparent 25%) -3px 0/6px 6px,
+      linear-gradient(-45deg,#dfe4ec 25%,transparent 25%) -3px 0/6px 6px,
+      #fff;
+    vertical-align:middle;
+    margin-right:4px;
+  }
+
+  /* Toast */
+  .toast{
+    position:fixed; top:70px; left:50%;
+    transform:translateX(-50%) translateY(-10px);
+    background:#2c3e50; color:#fff;
+    padding:9px 20px; border-radius:4px; font-size:13px;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:2000; box-shadow:0 4px 14px rgba(0,0,0,.2);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* 帐号反查弹窗 */
+  .modal-mask{
+    position:fixed;inset:0; background:rgba(20,30,50,.45);
+    display:none; align-items:center; justify-content:center; z-index:1500;
+  }
+  .modal-mask.show{display:flex;}
+  .modal{ background:#fff; width:820px; max-width:92vw; border-radius:4px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.25); }
+  .modal-head{
+    background:#3f5a86; color:#fff; padding:12px 16px; font-size:14px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-head .x{cursor:pointer;font-size:16px;opacity:.8;}
+  .modal-head .x:hover{opacity:1;}
+  .modal-body{padding:16px 20px;font-size:13px;line-height:1.8;}
+  .modal-foot{
+    padding:12px 16px; display:flex; justify-content:flex-end; gap:10px;
+    background:#f7f9fb; border-top:1px solid #eef1f5;
+  }
+
+  /* ---------- 旧系统子页面：用户绑定的支付宝信息，原样还原 ---------- */
+  .legacy-topbar{ background:#3d5a8a; color:#fff; padding:10px 16px; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+  .legacy-topbar .legacy-sep{margin:0 4px;color:#cfe0f2;}
+  .legacy-topbar .legacy-back{ cursor:pointer; color:#cfe0f2; font-size:12px; }
+  .legacy-topbar .legacy-back:hover{ color:#fff; text-decoration:underline; }
+  .legacy-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .legacy-table tr:nth-child(odd) .legacy-label, .legacy-table tr:nth-child(odd) .legacy-value{background:#eef1f5;}
+  .legacy-table tr:nth-child(even) .legacy-label, .legacy-table tr:nth-child(even) .legacy-value{background:#fff;}
+  .legacy-label{ width:170px; text-align:right; padding:12px 16px; color:#333; border-bottom:1px solid #dfe4ec; vertical-align:middle; }
+  .legacy-value{ padding:12px 16px; color:#333; border-bottom:1px solid #dfe4ec; vertical-align:middle; }
+  .legacy-file-btn{ border:1px solid #c9d3e0; background:#f4f6f9; padding:4px 12px; font-size:12px; border-radius:2px; color:#333; margin-right:8px; cursor:not-allowed; }
+  .legacy-file-hint{color:#8a95a3;font-size:12px;}
+  .legacy-textarea{ width:400px; max-width:90%; height:70px; border:1px solid #c9d3e0; padding:8px; font-size:13px; font-family:inherit; resize:vertical; }
+  .legacy-btn{ border:1px solid #b6c1cf; background:#eef1f5; padding:5px 18px; font-size:12.5px; color:#333; border-radius:2px; cursor:pointer; margin-right:8px; }
+  .legacy-btn:hover{background:#e2e7ee;}
+  .legacy-qr-box{
+    width:80px;height:80px;
+    border:1px solid #d6dde8;
+    border-radius:3px;
+    background:
+      linear-gradient(45deg,#dfe4ec 25%,transparent 25%) 0 0/10px 10px,
+      linear-gradient(-45deg,#dfe4ec 25%,transparent 25%) 0 0/10px 10px,
+      #fff;
+  }
+
+  .legacy-alert-mask{
+    position:fixed;inset:0; background:rgba(20,30,50,.35);
+    display:none; align-items:flex-start; justify-content:center; z-index:2500;
+  }
+  .legacy-alert-mask.show{display:flex;}
+  .legacy-alert-box{ margin-top:70px; background:#fff; width:600px; max-width:90vw; padding:22px 26px 18px; box-shadow:0 8px 26px rgba(0,0,0,.28); border-radius:2px; }
+  .legacy-alert-msg{font-size:14px;color:#333;margin-bottom:26px;}
+  .legacy-alert-actions{display:flex;justify-content:flex-end;}
+  .legacy-alert-actions button{ background:#3d7bd6; color:#fff; border:none; padding:7px 22px; border-radius:3px; font-size:13px; cursor:pointer; }
+  .legacy-alert-actions button:hover{background:#2f66b8;}
+</style>
+</head>
+<body>
+
+<div class="proto-banner">
+  <div class="title">🔧 交互原型 · 会员详情(新) - 支付宝模块</div>
+  <div class="switch-group">
+    <label>切换演示账号:</label>
+    <select id="userSelect" onchange="switchUser()">
+      <option value="hasData">abin001@as（存在绑定/解绑记录）</option>
+      <option value="noData">newuser203@as（无任何记录）</option>
+    </select>
+  </div>
+</div>
+
+<div class="page">
+  <div class="account-bar">
+    <div class="acc-name">用户账号：<b id="accName">abin001@as</b></div>
+    <button class="back-btn">返回用户列表</button>
+  </div>
+
+  <div class="top-tabs">
+    <div class="active">基础信息</div>
+    <div>账户信息</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="item"><span class="label">冻结状态：</span><span class="val" style="color:#2e9e5b">未冻结</span></div>
+    <div class="item"><span class="label">用户昵称：</span><span class="val">abin001</span></div>
+    <div class="item"><span class="label">用户性质：</span><span class="val">非测试用户</span></div>
+    <div class="item"><span class="label">VIP等级：</span><span class="val">1</span></div>
+    <div class="item"><span class="label">总有效流水：</span><span class="val">336930.75</span></div>
+    <div class="item"><span class="label">净输赢：</span><span class="val green">79807.75（平台盈利）</span></div>
+  </div>
+  <div class="info-collapsed">⋯ 其余基础信息字段省略，原型聚焦于下方「支付宝」模块的优化效果 ⋯</div>
+
+  <div class="sub-tab-bar" id="subTabBar">
+    <div class="sub-tab" data-tab="bank">银行卡信息</div>
+    <div class="sub-tab" data-tab="crypto">虚拟币地址</div>
+    <div class="sub-tab active" data-tab="alipay">支付宝<span class="focus-flag">本次</span></div>
+    <div class="sub-tab" data-tab="wechat">微信支付</div>
+    <div class="sub-tab" data-tab="kyc">用户KYC</div>
+  </div>
+
+  <div class="sub-panel-wrap">
+
+    <div class="sub-panel placeholder-panel" id="panel-bank" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-crypto" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-wechat" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-kyc" style="display:none">（原有模块，原型省略）</div>
+
+    <!-- ★ 本次改造：支付宝 ★ -->
+    <div class="sub-panel" id="panel-alipay" style="display:block">
+
+      <!-- 主视图：绑定中/已解绑 列表 -->
+      <div id="aliMainView" class="ali-panel">
+        <div class="section-title bound">
+          绑定中的支付宝收款码 <span class="count" id="aBoundCount"></span>
+        </div>
+        <table class="ali-table" id="aBoundTable">
+          <thead>
+            <tr>
+              <th>用户名</th><th>支付宝昵称</th><th>支付宝姓名</th><th>支付宝账号</th>
+              <th>支付宝收款码</th><th>状态</th><th>绑定时间</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="aBoundBody"></tbody>
+        </table>
+
+        <div class="section-title unbound">
+          已解绑的支付宝收款码 <span class="count" id="aUnboundCount"></span>
+        </div>
+        <table class="ali-table" id="aUnboundTable">
+          <thead>
+            <tr>
+              <th>用户名</th><th>支付宝昵称</th><th>支付宝姓名</th><th>支付宝账号</th>
+              <th>支付宝收款码</th><th>状态</th><th>绑定时间 / 解绑时间</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="aUnboundBody"></tbody>
+        </table>
+
+      </div>
+
+      <!-- 子视图：用户绑定的支付宝信息（沿用旧系统 user_deluserwxzfb.html 页面，原样还原） -->
+      <div id="aliUnbindLegacyView" style="display:none;">
+        <div class="legacy-topbar">
+          <span>达富/杏吧/恒行3/亚体/启航/500 后台管理 <span class="legacy-sep">-</span> <b>用户绑定的支付宝信息</b></span>
+          <span class="legacy-back" onclick="cancelAliUnbind()">‹ 返回</span>
+        </div>
+        <table class="legacy-table">
+          <tr><td class="legacy-label">用户名称</td><td class="legacy-value" id="algUser"></td></tr>
+          <tr><td class="legacy-label">支付宝昵称</td><td class="legacy-value" id="algNickname1"></td></tr>
+          <tr><td class="legacy-label">支付宝姓名</td><td class="legacy-value" id="algRealname"></td></tr>
+          <tr><td class="legacy-label">支付宝账号</td><td class="legacy-value" id="algAccount"></td></tr>
+          <tr><td class="legacy-label">支付宝收款码</td><td class="legacy-value"><div class="legacy-qr-box"></div></td></tr>
+          <tr><td class="legacy-label">支付宝绑定时间</td><td class="legacy-value" id="algTime"></td></tr>
+          <tr>
+            <td class="legacy-label">相关截图</td>
+            <td class="legacy-value">
+              <button class="legacy-file-btn" disabled>选择文件</button>
+              <span class="legacy-file-hint">未选择任何文件</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="legacy-label">备注说明</td>
+            <td class="legacy-value"><textarea id="algNote" class="legacy-textarea"></textarea></td>
+          </tr>
+          <tr>
+            <td class="legacy-label"></td>
+            <td class="legacy-value">
+              <button class="legacy-btn" onclick="submitAliUnbind()">重置删除</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- 旧系统原生 alert 还原：备注说明不能为空 -->
+<div class="legacy-alert-mask" id="legacyAlertMask">
+  <div class="legacy-alert-box">
+    <div class="legacy-alert-msg" id="legacyAlertMsg">备注说明不能为空</div>
+    <div class="legacy-alert-actions"><button onclick="closeLegacyAlert()">确定</button></div>
+  </div>
+</div>
+
+<!-- 帐号反查弹窗（复用现有反查功能页，原型内做简化模拟） -->
+<div class="modal-mask" id="reverseModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span>支付宝账号反查（复用现有功能页，此处为简化演示）</span>
+      <span class="x" onclick="closeModal('reverseModal')">✕</span>
+    </div>
+    <div class="modal-body">
+      <div style="color:#8a94a3;margin-bottom:10px;">支付宝账号 <b id="reverseAccount" style="color:#1f2d3d;"></b> 历史关联的所有会员账号：</div>
+      <table class="ali-table" style="width:100%;margin:0;">
+        <thead>
+          <tr><th>用户名称</th><th>所属总代</th><th>最后修改时间</th><th>是否冻结</th><th>状态</th></tr>
+        </thead>
+        <tbody id="reverseBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('reverseModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b>原型说明：</b></p>
+  <p>1. 「支付宝」模块内容完全移植自「用户列表-绑定信息-支付宝」页面，含「绑定中/已解绑」分区展示、字段、支付宝账号显示全部/复制、帐号反查、解绑交互，与源页面保持一致。</p>
+  <p>2. 「解绑」交互直接复用现有旧系统页面「用户绑定的支付宝信息」，原样呈现，未做视觉重新设计；字段含支付宝昵称、支付宝姓名等独立字段，均为源页面原有字段。</p>
+  <p>3. 源页面本身只有「重置删除」一个按钮，无「取消」按钮；原型中在顶部补充了一个「‹ 返回」的导航链接，仅用于原型内可以返回列表演示，不代表新增的产品功能。</p>
+  <p>4. 「帐号反查」复用现有「支付宝账号反查」功能页，本原型中做了简化模拟，实际开发中直接跳转原有页面，不新建、不改动。</p>
+  <p>5. 顶部「切换演示账号」下拉框用于模拟"存在绑定/解绑记录"与"无任何记录"两种数据场景，非真实系统功能。</p>
+</footer>
+
+<script>
+  // ===== 演示数据（仅保留"存在记录" / "无记录"两种代表性场景） =====
+  const demoData = {
+    hasData: {
+      account: "abin001@as",
+      bound: [
+        {user:"abin001@as", nickname:"sda@33#as.", realname:"王大锤", account:"141***********.com", status:"审核通过", time:"2026-02-24 15:18:50"},
+        {user:"abin001@as", nickname:"Hd2号", realname:"王大锤", account:"133*****090", status:"审核通过", time:"2026-02-13 11:33:06"},
+      ],
+      unbound: [
+        {user:"abin001@as", nickname:"阿斌", realname:"王大锤", account:"159*****633", status:"删除(黑名单)", time:"2024-04-22 16:04:20 / 2024-04-23 10:08:13"},
+        {user:"abin001@as", nickname:"天王", realname:"王天地", account:"159*****519", status:"删除(黑名单)", time:"2024-04-22 10:23:45 / 2024-04-22 10:50:46"},
+      ],
+    },
+    noData: {
+      account: "newuser203@as",
+      bound: [],
+      unbound: [],
+    }
+  };
+  const reverseLookup = {
+    "141***********.com": [
+      {u:"abin001@as", agent:"lichaa1@as", time:"2026-02-24 15:18:50", frozen:"未冻结", status:"审核通过"},
+    ],
+    "133*****090": [
+      {u:"abin001@as", agent:"lichaa1@as", time:"2026-02-13 11:33:06", frozen:"未冻结", status:"审核通过"},
+    ],
+  };
+
+  let currentUserKey = "hasData";
+
+  // ---------------- 子Tab切换 ----------------
+  document.querySelectorAll('.sub-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');
+      const key = tab.getAttribute('data-tab');
+      const panel = document.getElementById('panel-'+key);
+      if(panel) panel.style.display='block';
+      if(key==='alipay'){ cancelAliUnbind(); }
+    });
+  });
+
+  // ---------------- 渲染 ----------------
+  function maskCell(account, rowId){
+    return `<span class="mask-cell">
+      <span class="mask-num" id="num-${rowId}">${account}</span>
+      <a class="row-action" onclick="toggleShow('${rowId}','${account}')" id="showbtn-${rowId}">显示全部</a>
+      <a class="row-action" onclick="copyAccount('${account}')">复制</a>
+    </span>`;
+  }
+  function qrCell(){
+    return `<span class="qr-thumb"></span><a class="row-action" onclick="showToast('（原型简化演示，实际点击可查看收款码大图）')">点击查看</a>`;
+  }
+
+  function renderBound(){
+    const data = demoData[currentUserKey];
+    const body = document.getElementById('aBoundBody');
+    document.getElementById('aBoundCount').textContent = `（${data.bound.length} 条）`;
+    if(data.bound.length===0){
+      body.innerHTML = `<tr class="empty-row"><td colspan="8">暂无绑定中的支付宝收款码</td></tr>`;
+      return;
+    }
+    body.innerHTML = data.bound.map((r,i)=>{
+      const rid = 'b'+i;
+      return `<tr>
+        <td>${r.user}</td><td>${r.nickname}</td><td>${r.realname}</td>
+        <td>${maskCell(r.account, rid)}</td>
+        <td>${qrCell()}</td>
+        <td>${r.status}</td>
+        <td>${r.time}</td>
+        <td>
+          <a class="row-action" onclick="openReverse('${r.account}')">帐号反查</a>
+          <a class="row-action danger" onclick="openAliUnbind('${r.user}','${r.nickname}','${r.realname}','${r.account}','${r.time}')">解绑</a>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderUnbound(){
+    const data = demoData[currentUserKey];
+    const body = document.getElementById('aUnboundBody');
+    document.getElementById('aUnboundCount').textContent = `（${data.unbound.length} 条）`;
+    if(data.unbound.length===0){
+      body.innerHTML = `<tr class="empty-row"><td colspan="8">暂无已解绑的支付宝收款码记录</td></tr>`;
+      return;
+    }
+    body.innerHTML = data.unbound.map((r,i)=>{
+      const rid = 'u'+i;
+      return `<tr>
+        <td>${r.user}</td><td>${r.nickname}</td><td>${r.realname}</td>
+        <td>${maskCell(r.account, rid)}</td>
+        <td>${qrCell()}</td>
+        <td>${r.status}</td>
+        <td>${r.time}</td>
+        <td><a class="row-action" onclick="openReverse('${r.account}')">帐号反查</a></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ---------------- 交互 ----------------
+  function toggleShow(rid, full){
+    const el = document.getElementById('num-'+rid);
+    const btn = document.getElementById('showbtn-'+rid);
+    if(btn.textContent === '显示全部'){
+      const real = full.replace(/\*+/g, m => '20'.repeat(m.length).slice(0,m.length));
+      el.textContent = real;
+      btn.textContent = '隐藏';
+    }else{
+      el.textContent = full;
+      btn.textContent = '显示全部';
+    }
+  }
+
+  function copyAccount(account){
+    if(navigator.clipboard){ navigator.clipboard.writeText(account).catch(()=>{}); }
+    showToast('已复制支付宝账号至剪贴板');
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function openReverse(account){
+    document.getElementById('reverseAccount').textContent = account;
+    const rows = reverseLookup[account] || [{u:currentUserKey==='hasData'?"abin001@as":"newuser203@as", agent:"lichaa1@as", time:"（示例数据）", frozen:"未冻结", status:"审核通过"}];
+    document.getElementById('reverseBody').innerHTML = rows.map(r=>`
+      <tr><td>${r.u}</td><td>${r.agent}</td><td>${r.time}</td><td>${r.frozen}</td><td>${r.status}</td></tr>
+    `).join('');
+    document.getElementById('reverseModal').classList.add('show');
+  }
+  function closeModal(id){
+    document.getElementById(id).classList.remove('show');
+  }
+
+  // ---------------- 用户绑定的支付宝信息（沿用旧系统 user_deluserwxzfb.html 页面，原样还原） ----------------
+  function openAliUnbind(user, nickname, realname, account, time){
+    document.getElementById('algUser').textContent = user;
+    document.getElementById('algNickname1').textContent = nickname;
+    document.getElementById('algRealname').textContent = realname;
+    document.getElementById('algAccount').textContent = account;
+    document.getElementById('algTime').textContent = time.split(' / ')[0];
+    document.getElementById('algNote').value = '';
+    document.getElementById('aliMainView').style.display = 'none';
+    document.getElementById('aliUnbindLegacyView').style.display = 'block';
+  }
+  function cancelAliUnbind(){
+    document.getElementById('aliUnbindLegacyView').style.display = 'none';
+    document.getElementById('aliMainView').style.display = 'block';
+  }
+  function submitAliUnbind(){
+    const note = document.getElementById('algNote').value.trim();
+    if(!note){
+      showLegacyAlert('备注说明不能为空');
+      return;
+    }
+    showLegacyAlert('（备注已填写，提交后的成功流程沿用现有系统逻辑，此处不做延伸模拟）');
+  }
+  function showLegacyAlert(msg){
+    document.getElementById('legacyAlertMsg').textContent = msg;
+    document.getElementById('legacyAlertMask').classList.add('show');
+  }
+  function closeLegacyAlert(){
+    document.getElementById('legacyAlertMask').classList.remove('show');
+  }
+
+  // ---------------- 切换演示账号 ----------------
+  function switchUser(){
+    currentUserKey = document.getElementById('userSelect').value;
+    document.getElementById('accName').textContent = demoData[currentUserKey].account;
+    cancelAliUnbind();
+    renderBound();
+    renderUnbound();
+  }
+
+  // init
+  renderBound();
+  renderUnbound();
+</script>
+</body>
+</html>
