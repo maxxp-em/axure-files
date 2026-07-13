@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>会员详情(新) - 虚拟币地址模块 交互原型</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+    background: #eef1f5;
+    color: #333;
+    font-size: 13px;
+  }
+
+  .proto-banner {
+    background: #2b3a55;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .proto-banner .title { font-weight: bold; }
+  .proto-banner select {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    background: #fff;
+    color: #2b3a55;
+  }
+  .switch-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,.08);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+  .switch-group label { font-size: 12px; opacity: .9; }
+
+  .page {
+    max-width: 1200px;
+    margin: 16px auto;
+    background: #fff;
+    border: 1px solid #c9d3e0;
+  }
+
+  .account-bar {
+    background: #f4f6f9;
+    border-bottom: 1px solid #dfe4ec;
+    padding: 12px 18px;
+    font-size: 14px;
+    color: #1f2d3d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .account-bar .back-btn {
+    background: #5b8def;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: default;
+  }
+
+  .top-tabs {
+    display: flex;
+    border-bottom: 1px solid #dfe4ec;
+    background: #fafbfc;
+  }
+  .top-tabs div {
+    padding: 10px 20px;
+    font-size: 13px;
+    color: #5a6a7e;
+    cursor: default;
+    border-right: 1px solid #eef1f5;
+  }
+  .top-tabs div.active {
+    background: #fff;
+    color: #2b6cd4;
+    font-weight: bold;
+    border-bottom: 2px solid #2b6cd4;
+    margin-bottom: -1px;
+  }
+
+  .info-grid {
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 30px;
+    border-bottom: 1px solid #eef1f5;
+  }
+  .info-grid .item { font-size: 13px; color: #444; line-height: 1.8; }
+  .info-grid .item .label { color: #8a94a3; margin-right: 4px; }
+  .info-grid .item .val { color: #1f2d3d; }
+  .info-grid .item .val.green { color: #2e9e5b; font-weight: bold; }
+
+  .info-collapsed {
+    text-align: center;
+    padding: 6px;
+    font-size: 12px;
+    color: #a7b0bd;
+    background: #fbfcfd;
+    border-bottom: 1px solid #eef1f5;
+  }
+
+  .sub-tab-bar {
+    display: flex;
+    gap: 8px;
+    padding: 14px 22px 0 22px;
+    flex-wrap: wrap;
+  }
+  .sub-tab {
+    padding: 8px 18px;
+    font-size: 13px;
+    border: 1px solid #d6dde8;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    background: #f4f6f9;
+    color: #5a6a7e;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s;
+  }
+  .sub-tab:hover { background: #eaf0fb; color: #2b6cd4; }
+  .sub-tab.active {
+    background: #fff;
+    color: #2b6cd4;
+    font-weight: bold;
+    border-color: #2b6cd4;
+    border-bottom: 1px solid #fff;
+    position: relative;
+    top: 1px;
+  }
+  .sub-tab .focus-flag {
+    display: inline-block;
+    background: #ff6b57;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+    transform: translateY(-1px);
+  }
+
+  .sub-panel-wrap {
+    border: 1px solid #d6dde8;
+    margin: 0 22px 22px 22px;
+    border-top: 1px solid #2b6cd4;
+  }
+
+  .placeholder-panel {
+    padding: 60px 0;
+    text-align: center;
+    color: #a7b0bd;
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 6px 20px;
+    border-radius: 3px;
+    font-size: 13px;
+    border: 1px solid #d6dde8;
+    cursor: pointer;
+    background: #fff;
+    color: #5a6a7e;
+  }
+  .btn:hover { opacity: .85; }
+
+  footer {
+    max-width: 1200px;
+    margin: 0 auto 30px auto;
+    font-size: 12px;
+    color: #9aa5b4;
+    padding: 0 4px;
+    line-height: 1.8;
+  }
+  footer b { color: #6b7686; }
+
+  /* ---------- 虚拟币地址模块（本次移植内容） ---------- */
+  .wallet-panel { padding: 0 0 4px 0; }
+  .section-title{
+    margin:16px 16px 0;
+    padding:8px 12px;
+    font-size:14px;
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title.bound{color:#2e9e5b;background:#eaf6ea;border-left:4px solid #2e9e5b;}
+  .section-title.unbound{color:#d9534f;background:#fdecea;border-left:4px solid #d9534f;}
+  .section-title .count{font-weight:normal;font-size:12px;color:#8a94a3;}
+
+  table.wallet-table{
+    width:calc(100% - 32px);
+    margin:8px 16px 18px;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.wallet-table thead th{
+    background:#eef2f8;
+    color:#4a5568;
+    padding:9px 8px;
+    text-align:center;
+    font-weight:bold;
+    border-bottom:1px solid #dfe4ec;
+    white-space:nowrap;
+  }
+  table.wallet-table tbody td{
+    padding:9px 8px;
+    text-align:center;
+    border-bottom:1px solid #eef1f5;
+    color:#333;
+  }
+  table.wallet-table tbody tr:hover{background:#f8fafc;}
+  .row-action{ color:#2b6cd4; cursor:pointer; margin:0 3px; }
+  .row-action:hover{text-decoration:underline;}
+  .row-action.danger{color:#d9534f;}
+  .mask-cell{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+  .empty-row td{padding:34px 8px;color:#a7b0bd;font-size:13px;}
+
+  /* Toast */
+  .toast{
+    position:fixed; top:70px; left:50%;
+    transform:translateX(-50%) translateY(-10px);
+    background:#2c3e50; color:#fff;
+    padding:9px 20px; border-radius:4px; font-size:13px;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:2000; box-shadow:0 4px 14px rgba(0,0,0,.2);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* 帐号反查弹窗 */
+  .modal-mask{
+    position:fixed;inset:0; background:rgba(20,30,50,.45);
+    display:none; align-items:center; justify-content:center; z-index:1500;
+  }
+  .modal-mask.show{display:flex;}
+  .modal{ background:#fff; width:820px; max-width:92vw; border-radius:4px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.25); }
+  .modal-head{
+    background:#3f5a86; color:#fff; padding:12px 16px; font-size:14px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-head .x{cursor:pointer;font-size:16px;opacity:.8;}
+  .modal-head .x:hover{opacity:1;}
+  .modal-body{padding:16px 20px;font-size:13px;line-height:1.8;}
+  .modal-foot{
+    padding:12px 16px; display:flex; justify-content:flex-end; gap:10px;
+    background:#f7f9fb; border-top:1px solid #eef1f5;
+  }
+
+  /* ---------- 旧系统子页面：解绑 / 修改验证状态，原样还原 ---------- */
+  .legacy-topbar{ background:#3d5a8a; color:#fff; padding:10px 16px; font-size:13px; }
+  .legacy-topbar .legacy-sep{margin:0 4px;color:#cfe0f2;}
+  .legacy-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .legacy-table tr:nth-child(odd) .legacy-label, .legacy-table tr:nth-child(odd) .legacy-value{background:#eef1f5;}
+  .legacy-table tr:nth-child(even) .legacy-label, .legacy-table tr:nth-child(even) .legacy-value{background:#fff;}
+  .legacy-label{ width:170px; text-align:right; padding:12px 16px; color:#333; border-bottom:1px solid #dfe4ec; vertical-align:middle; }
+  .legacy-value{ padding:12px 16px; color:#333; border-bottom:1px solid #dfe4ec; vertical-align:middle; }
+  .legacy-file-btn{ border:1px solid #c9d3e0; background:#f4f6f9; padding:4px 12px; font-size:12px; border-radius:2px; color:#333; margin-right:8px; cursor:not-allowed; }
+  .legacy-file-hint{color:#8a95a3;font-size:12px;}
+  .legacy-textarea{ width:400px; max-width:90%; height:70px; border:1px solid #c9d3e0; padding:8px; font-size:13px; font-family:inherit; resize:vertical; }
+  .legacy-select{ border:1px solid #c9d3e0; padding:6px 10px; font-size:13px; font-family:inherit; min-width:160px; }
+  .legacy-btn{ border:1px solid #b6c1cf; background:#eef1f5; padding:5px 18px; font-size:12.5px; color:#333; border-radius:2px; cursor:pointer; margin-right:8px; }
+  .legacy-btn:hover{background:#e2e7ee;}
+
+  .legacy-alert-mask{
+    position:fixed;inset:0; background:rgba(20,30,50,.35);
+    display:none; align-items:flex-start; justify-content:center; z-index:2500;
+  }
+  .legacy-alert-mask.show{display:flex;}
+  .legacy-alert-box{ margin-top:70px; background:#fff; width:600px; max-width:90vw; padding:22px 26px 18px; box-shadow:0 8px 26px rgba(0,0,0,.28); border-radius:2px; }
+  .legacy-alert-msg{font-size:14px;color:#333;margin-bottom:26px;}
+  .legacy-alert-actions{display:flex;justify-content:flex-end;}
+  .legacy-alert-actions button{ background:#3d7bd6; color:#fff; border:none; padding:7px 22px; border-radius:3px; font-size:13px; cursor:pointer; }
+  .legacy-alert-actions button:hover{background:#2f66b8;}
+</style>
+</head>
+<body>
+
+<div class="proto-banner">
+  <div class="title">🔧 交互原型 · 会员详情(新) - 虚拟币地址模块</div>
+  <div class="switch-group">
+    <label>切换演示账号:</label>
+    <select id="userSelect" onchange="switchUser()">
+      <option value="hasData">abin001@as（存在绑定/解绑记录）</option>
+      <option value="noData">newuser203@as（无任何记录）</option>
+    </select>
+  </div>
+</div>
+
+<div class="page">
+  <div class="account-bar">
+    <div class="acc-name">用户账号：<b id="accName">abin001@as</b></div>
+    <button class="back-btn">返回用户列表</button>
+  </div>
+
+  <div class="top-tabs">
+    <div class="active">基础信息</div>
+    <div>账户信息</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="item"><span class="label">冻结状态：</span><span class="val" style="color:#2e9e5b">未冻结</span></div>
+    <div class="item"><span class="label">用户昵称：</span><span class="val">abin001</span></div>
+    <div class="item"><span class="label">用户性质：</span><span class="val">非测试用户</span></div>
+    <div class="item"><span class="label">VIP等级：</span><span class="val">1</span></div>
+    <div class="item"><span class="label">总有效流水：</span><span class="val">336930.75</span></div>
+    <div class="item"><span class="label">净输赢：</span><span class="val green">79807.75（平台盈利）</span></div>
+  </div>
+  <div class="info-collapsed">⋯ 其余基础信息字段省略，原型聚焦于下方「虚拟币地址」模块的优化效果 ⋯</div>
+
+  <div class="sub-tab-bar" id="subTabBar">
+    <div class="sub-tab" data-tab="bank">银行卡信息</div>
+    <div class="sub-tab active" data-tab="crypto">虚拟币地址<span class="focus-flag">本次</span></div>
+    <div class="sub-tab" data-tab="alipay">支付宝</div>
+    <div class="sub-tab" data-tab="wechat">微信支付</div>
+    <div class="sub-tab" data-tab="kyc">用户KYC</div>
+  </div>
+
+  <div class="sub-panel-wrap">
+
+    <div class="sub-panel placeholder-panel" id="panel-bank" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-alipay" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-wechat" style="display:none">（原有模块，原型省略）</div>
+    <div class="sub-panel placeholder-panel" id="panel-kyc" style="display:none">（原有模块，原型省略）</div>
+
+    <!-- ★ 本次改造：虚拟币地址 ★ -->
+    <div class="sub-panel" id="panel-crypto" style="display:block">
+
+      <!-- 主视图：绑定中/已解绑 列表 -->
+      <div id="walletMainView" class="wallet-panel">
+        <div class="section-title bound">
+          绑定中的钱包地址 <span class="count" id="wBoundCount"></span>
+        </div>
+        <table class="wallet-table" id="wBoundTable">
+          <thead>
+            <tr>
+              <th>用户名</th><th>货币类型</th><th>钱包地址</th><th>绑定时间</th><th>验证状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="wBoundBody"></tbody>
+        </table>
+
+        <div class="section-title unbound">
+          已解绑的钱包地址 <span class="count" id="wUnboundCount"></span>
+        </div>
+        <table class="wallet-table" id="wUnboundTable">
+          <thead>
+            <tr>
+              <th>用户名</th><th>货币类型</th><th>钱包地址</th><th>绑定时间 / 解绑时间</th><th>验证状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="wUnboundBody"></tbody>
+        </table>
+
+      </div>
+
+      <!-- 子视图：钱包地址解绑（沿用旧系统 user_deluserwalletinfo.html 页面，原样还原） -->
+      <div id="walletUnbindLegacyView" style="display:none;">
+        <div class="legacy-topbar">
+          达富/杏吧/恒行3/亚体/启航/500 后台管理 <span class="legacy-sep">-</span> <b>钱包地址解绑</b>
+        </div>
+        <table class="legacy-table">
+          <tr><td class="legacy-label">用户名</td><td class="legacy-value" id="wlgUser"></td></tr>
+          <tr><td class="legacy-label">货币类型</td><td class="legacy-value" id="wlgCurrency"></td></tr>
+          <tr><td class="legacy-label">钱包地址</td><td class="legacy-value" id="wlgAddr"></td></tr>
+          <tr>
+            <td class="legacy-label">相关截图</td>
+            <td class="legacy-value">
+              <button class="legacy-file-btn" disabled>选择文件</button>
+              <span class="legacy-file-hint">未选择任何文件</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="legacy-label">备注说明</td>
+            <td class="legacy-value"><textarea id="wlgNote" class="legacy-textarea"></textarea></td>
+          </tr>
+          <tr>
+            <td class="legacy-label"></td>
+            <td class="legacy-value">
+              <button class="legacy-btn" onclick="submitWalletUnbind()">重置删除</button>
+              <button class="legacy-btn" onclick="cancelWalletUnbind()">取消</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- 子视图：修改验证状态（沿用旧系统 user_walletvarifystatus.html 页面，原样还原） -->
+      <div id="walletVerifyLegacyView" style="display:none;">
+        <div class="legacy-topbar">
+          达富/杏吧/恒行3/亚体/启航/500 后台管理 <span class="legacy-sep">-</span> <b>修改验证状态</b>
+        </div>
+        <table class="legacy-table">
+          <tr><td class="legacy-label">用户名</td><td class="legacy-value" id="wvUser"></td></tr>
+          <tr><td class="legacy-label">货币类型</td><td class="legacy-value" id="wvCurrency"></td></tr>
+          <tr><td class="legacy-label">钱包地址</td><td class="legacy-value" id="wvAddr"></td></tr>
+          <tr>
+            <td class="legacy-label">验证状态</td>
+            <td class="legacy-value">
+              <select id="wvStatusSelect" class="legacy-select">
+                <option value="未验证">未验证</option>
+                <option value="已验证">已验证</option>
+                <option value="验证驳回">验证驳回</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td class="legacy-label"></td>
+            <td class="legacy-value">
+              <button class="legacy-btn" onclick="cancelWalletVerify()">取消</button>
+              <button class="legacy-btn" onclick="confirmWalletVerify()">确认</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- 旧系统原生 alert 还原：备注说明不能为空 -->
+<div class="legacy-alert-mask" id="legacyAlertMask">
+  <div class="legacy-alert-box">
+    <div class="legacy-alert-msg" id="legacyAlertMsg">备注说明不能为空</div>
+    <div class="legacy-alert-actions"><button onclick="closeLegacyAlert()">确定</button></div>
+  </div>
+</div>
+
+<!-- 帐号反查弹窗（复用现有反查功能页，原型内做简化模拟） -->
+<div class="modal-mask" id="reverseModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span>钱包地址反查（复用现有功能页，此处为简化演示）</span>
+      <span class="x" onclick="closeModal('reverseModal')">✕</span>
+    </div>
+    <div class="modal-body">
+      <div style="color:#8a94a3;margin-bottom:10px;">钱包地址 <b id="reverseAddr" style="color:#1f2d3d;"></b> 历史关联的所有会员账号：</div>
+      <table class="wallet-table" style="width:100%;margin:0;">
+        <thead>
+          <tr><th>用户名称</th><th>所属总代</th><th>最后操作时间</th><th>是否冻结</th><th>是否测试账户</th></tr>
+        </thead>
+        <tbody id="reverseBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('reverseModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b>原型说明：</b></p>
+  <p>1. 「虚拟币地址」模块内容完全移植自「用户列表-绑定信息-钱包地址」页面，含「绑定中/已解绑」分区展示、字段、钱包地址显示全部/复制、帐号反查、解绑、验证状态编辑，与源页面保持一致。</p>
+  <p>2. 「解绑」交互直接复用现有旧系统页面，原样呈现，未做视觉重新设计；备注说明为必填项，为空时点击「重置删除」会弹出与旧系统一致的提示"备注说明不能为空"（按钮文案「重置删除」沿用源页面原文）。</p>
+  <p>3. 「验证状态」为绑定中数据独有的操作入口，同样复用现有旧系统页面，修改后的状态会同步体现在列表中。</p>
+  <p>4. 「帐号反查」复用现有「钱包地址反查」功能页，本原型中做了简化模拟，实际开发中直接跳转原有页面，不新建、不改动。</p>
+  <p>5. 顶部「切换演示账号」下拉框用于模拟"存在绑定/解绑记录"与"无任何记录"两种数据场景，非真实系统功能。</p>
+</footer>
+
+<script>
+  // ===== 演示数据（仅保留"存在记录" / "无记录"两种代表性场景） =====
+  const demoData = {
+    hasData: {
+      account: "abin001@as",
+      bound: [
+        {user:"abin001@as", currency:"Tron(TRC20)", addr:"Tqqqqq*****wweeee", time:"2026-02-24 15:02:38", verify:"未验证"},
+        {user:"abin001@as", currency:"Ethereum(ERC20)", addr:"0xxxxx*****xxxx02", time:"2025-07-14 18:16:03", verify:"验证驳回"},
+      ],
+      unbound: [
+        {user:"abin001@as", currency:"USDC-Ethereum(ERC20)", addr:"0xERC6*****9hr888", time:"2025-04-25 17:24:26 / 2025-06-05 18:33:39"},
+        {user:"abin001@as", currency:"BOBI", addr:"Bjhjjj*****000000", time:"2025-03-19 18:06:25 / 2025-03-20 15:24:45"},
+      ],
+    },
+    noData: {
+      account: "newuser203@as",
+      bound: [],
+      unbound: [],
+    }
+  };
+  const reverseLookup = {
+    "Tqqqqq*****wweeee": [
+      {u:"abin001@as", agent:"lichaa1@as", time:"2026-02-24 15:02:38", frozen:"未冻结", test:"非测试账户"},
+    ],
+    "0xxxxx*****xxxx02": [
+      {u:"abin001@as", agent:"lichaa1@as", time:"2025-07-14 18:16:03", frozen:"未冻结", test:"非测试账户"},
+    ],
+  };
+
+  let currentUserKey = "hasData";
+
+  // ---------------- 子Tab切换 ----------------
+  document.querySelectorAll('.sub-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');
+      const key = tab.getAttribute('data-tab');
+      const panel = document.getElementById('panel-'+key);
+      if(panel) panel.style.display='block';
+      if(key==='crypto'){ cancelWalletUnbind(); cancelWalletVerify(); }
+    });
+  });
+
+  // ---------------- 渲染 ----------------
+  function maskCell(addr, rowId){
+    return `<span class="mask-cell">
+      <span class="mask-num" id="num-${rowId}">${addr}</span>
+      <a class="row-action" onclick="toggleShow('${rowId}','${addr}')" id="showbtn-${rowId}">显示全部</a>
+      <a class="row-action" onclick="copyAddr('${addr}')">复制</a>
+    </span>`;
+  }
+
+  function renderBound(){
+    const data = demoData[currentUserKey];
+    const body = document.getElementById('wBoundBody');
+    document.getElementById('wBoundCount').textContent = `（${data.bound.length} 条）`;
+    if(data.bound.length===0){
+      body.innerHTML = `<tr class="empty-row"><td colspan="6">暂无绑定中的钱包地址</td></tr>`;
+      return;
+    }
+    body.innerHTML = data.bound.map((r,i)=>{
+      const rid = 'b'+i;
+      return `<tr>
+        <td>${r.user}</td><td>${r.currency}</td>
+        <td>${maskCell(r.addr, rid)}</td>
+        <td>${r.time}</td><td>${r.verify}</td>
+        <td>
+          <a class="row-action" onclick="openReverse('${r.addr}')">帐号反查</a>
+          <a class="row-action danger" onclick="openWalletUnbind('${r.user}','${r.currency}','${r.addr}')">解绑</a>
+          <a class="row-action" onclick="openWalletVerify('${r.user}','${r.currency}','${r.addr}','${r.verify}')">验证状态</a>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderUnbound(){
+    const data = demoData[currentUserKey];
+    const body = document.getElementById('wUnboundBody');
+    document.getElementById('wUnboundCount').textContent = `（${data.unbound.length} 条）`;
+    if(data.unbound.length===0){
+      body.innerHTML = `<tr class="empty-row"><td colspan="6">暂无已解绑的钱包地址记录</td></tr>`;
+      return;
+    }
+    body.innerHTML = data.unbound.map((r,i)=>{
+      const rid = 'u'+i;
+      return `<tr>
+        <td>${r.user}</td><td>${r.currency}</td>
+        <td>${maskCell(r.addr, rid)}</td>
+        <td>${r.time}</td><td>--</td>
+        <td><a class="row-action" onclick="openReverse('${r.addr}')">帐号反查</a></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ---------------- 交互 ----------------
+  function toggleShow(rid, full){
+    const el = document.getElementById('num-'+rid);
+    const btn = document.getElementById('showbtn-'+rid);
+    if(btn.textContent === '显示全部'){
+      const real = full.replace(/\*+/g, m => '20'.repeat(m.length).slice(0,m.length));
+      el.textContent = real;
+      btn.textContent = '隐藏';
+    }else{
+      el.textContent = full;
+      btn.textContent = '显示全部';
+    }
+  }
+
+  function copyAddr(addr){
+    if(navigator.clipboard){ navigator.clipboard.writeText(addr).catch(()=>{}); }
+    showToast('已复制钱包地址至剪贴板');
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function openReverse(addr){
+    document.getElementById('reverseAddr').textContent = addr;
+    const rows = reverseLookup[addr] || [{u:currentUserKey==='hasData'?"abin001@as":"newuser203@as", agent:"lichaa1@as", time:"（示例数据）", frozen:"未冻结", test:"非测试账户"}];
+    document.getElementById('reverseBody').innerHTML = rows.map(r=>`
+      <tr><td>${r.u}</td><td>${r.agent}</td><td>${r.time}</td><td>${r.frozen}</td><td>${r.test}</td></tr>
+    `).join('');
+    document.getElementById('reverseModal').classList.add('show');
+  }
+  function closeModal(id){
+    document.getElementById(id).classList.remove('show');
+  }
+
+  // ---------------- 钱包地址解绑（沿用旧系统 user_deluserwalletinfo.html 页面，原样还原） ----------------
+  function openWalletUnbind(user, currency, addr){
+    document.getElementById('wlgUser').textContent = user;
+    document.getElementById('wlgCurrency').textContent = currency;
+    document.getElementById('wlgAddr').textContent = addr;
+    document.getElementById('wlgNote').value = '';
+    document.getElementById('walletMainView').style.display = 'none';
+    document.getElementById('walletUnbindLegacyView').style.display = 'block';
+  }
+  function cancelWalletUnbind(){
+    document.getElementById('walletUnbindLegacyView').style.display = 'none';
+    document.getElementById('walletMainView').style.display = 'block';
+  }
+  function submitWalletUnbind(){
+    const note = document.getElementById('wlgNote').value.trim();
+    if(!note){
+      showLegacyAlert('备注说明不能为空');
+      return;
+    }
+    showLegacyAlert('（备注已填写，提交后的成功流程沿用现有系统逻辑，此处不做延伸模拟）');
+  }
+  function showLegacyAlert(msg){
+    document.getElementById('legacyAlertMsg').textContent = msg;
+    document.getElementById('legacyAlertMask').classList.add('show');
+  }
+  function closeLegacyAlert(){
+    document.getElementById('legacyAlertMask').classList.remove('show');
+  }
+
+  // ---------------- 修改验证状态（沿用旧系统 user_walletvarifystatus.html 页面，原样还原） ----------------
+  let pendingVerifyAddr = null;
+  function openWalletVerify(user, currency, addr, verify){
+    pendingVerifyAddr = addr;
+    document.getElementById('wvUser').textContent = user;
+    document.getElementById('wvCurrency').textContent = currency;
+    document.getElementById('wvAddr').textContent = addr;
+    document.getElementById('wvStatusSelect').value = verify;
+    document.getElementById('walletMainView').style.display = 'none';
+    document.getElementById('walletVerifyLegacyView').style.display = 'block';
+  }
+  function cancelWalletVerify(){
+    document.getElementById('walletVerifyLegacyView').style.display = 'none';
+    document.getElementById('walletMainView').style.display = 'block';
+  }
+  function confirmWalletVerify(){
+    const newStatus = document.getElementById('wvStatusSelect').value;
+    const data = demoData[currentUserKey];
+    const row = data.bound.find(r=>r.addr===pendingVerifyAddr);
+    if(row){ row.verify = newStatus; }
+    cancelWalletVerify();
+    renderBound();
+    showToast('验证状态已更新');
+  }
+
+  // ---------------- 切换演示账号 ----------------
+  function switchUser(){
+    currentUserKey = document.getElementById('userSelect').value;
+    document.getElementById('accName').textContent = demoData[currentUserKey].account;
+    cancelWalletUnbind();
+    cancelWalletVerify();
+    renderBound();
+    renderUnbound();
+  }
+
+  // init
+  renderBound();
+  renderUnbound();
+</script>
+</body>
+</html>
