@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推广流程演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f3f1fa;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .stage-wrap {
+    max-width: 420px;
+    width: 100%;
+  }
+
+  /* 模拟交互区：只放真实内容 */
+  .phone {
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid #e5e2f0;
+    overflow: hidden;
+    min-height: 620px;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-bar {
+    height: 26px;
+    background: #f7f6fb;
+    border-bottom: 1px solid #e5e2f0;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .phone-bar span {
+    width: 7px; height: 7px; border-radius: 50%; background: #d3d1c7;
+  }
+  .address-bar {
+    flex: 1;
+    margin-left: 8px;
+    background: #fff;
+    border: 1px solid #e5e2f0;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #888780;
+    padding: 3px 10px;
+    text-align: center;
+  }
+  .domain-caption {
+    text-align: center;
+    font-size: 12px;
+    color: #a4a29a;
+    margin-top: 10px;
+  }
+  .phone-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px 26px;
+  }
+  .view { display: none; }
+  .view.show { display: flex; flex-direction: column; flex: 1; justify-content: center; }
+
+  /* 步骤一：域名 */
+  .domain-item {
+    background: #f7f6fb; border-radius: 12px;
+    padding: 20px 18px; font-size: 16px; color: #2c2c2a;
+    margin-bottom: 14px; text-align: center; font-weight: 500;
+  }
+  .domain-item span {
+    display: block; font-size: 12px; color: #a4a29a; font-weight: 400; margin-bottom: 6px;
+  }
+  .domain-item:active {
+    background: #eeedfe;
+  }
+
+  /* 步骤二：落地页文案 */
+  .logo-placeholder {
+    width: 56px; height: 56px; border-radius: 12px;
+    background: #eeedfe; color: #7f77dd;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; margin: 0 auto 14px;
+  }
+  .material-placeholder {
+    background: #f7f6fb; border-radius: 10px;
+    height: 100px;
+    display: flex; align-items: center; justify-content: center;
+    color: #a4a29a; font-size: 13px; margin-bottom: 20px;
+  }
+  .copy-block { text-align: center; margin-bottom: 32px; }
+  .copy-line1 { font-size: 24px; color: #2c2c2a; font-weight: 500; margin-bottom: 14px; line-height: 1.4; }
+  .copy-line2 { font-size: 17px; color: #5f5e5a; line-height: 1.7; }
+  .copy-line2 b { color: #3c3489; }
+
+  .cta {
+    display: block;
+    width: 100%;
+    background: #534AB7;
+    color: #fff;
+    text-decoration: none;
+    padding: 15px 0;
+    border-radius: 999px;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  /* 外部导航：不属于模拟交互区 */
+  .nav-outer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .nav-outer .step-dots {
+    display: flex; gap: 6px;
+  }
+  .nav-outer .step-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: #d3d1c7;
+  }
+  .nav-outer .step-dots span.active {
+    background: #534AB7;
+  }
+  .nav-btn {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid #d3d1c7;
+    background: #fff;
+    font-size: 13px;
+    color: #5f5e5a;
+    cursor: pointer;
+  }
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+
+  <div class="phone">
+    <div class="phone-bar">
+      <span></span><span></span><span></span>
+      <div class="address-bar">www.xc9701.vip</div>
+    </div>
+    <div class="phone-body">
+
+      <div class="logo-placeholder">logo</div>
+      <div class="material-placeholder">代理专属素材</div>
+      <div class="copy-block">
+        <p class="copy-line1">点击注册后下载APP</p>
+        <p class="copy-line2">添加嗨聊专员 <b>ZjZ3001</b><br>领取 38 体验金 !</p>
+      </div>
+      <a class="cta" href="https://www.xc9701.vip/web" target="_blank" rel="noopener">立即注册 →</a>
+
+    </div>
+  </div>
+
+  <p class="domain-caption">www.xc9701.vip / www.xc9283.com 两条域名访问后均展示此页面</p>
+
+</div>
+
+</body>
+</html>
