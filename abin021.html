@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>活动管理 - 添加幸运注单自动化活动</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --bar-dark:#2f3c6e;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --danger:#c23b3b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:10px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar .crumb{font-size:13px;opacity:.9;}
+  .topbar .crumb b{font-weight:600;}
+  .topbar .back{
+    background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.3);
+    color:#fff;
+    padding:5px 12px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  .wrap{max-width:1180px;margin:18px auto;padding:0 20px 60px;}
+  .section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    margin-bottom:18px;
+    overflow:hidden;
+  }
+  .section-head{
+    background:var(--bar);
+    color:#fff;
+    padding:9px 14px;
+    font-weight:600;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-head .tag{
+    font-weight:400;
+    font-size:11px;
+    background:rgba(255,255,255,.18);
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .section-body{padding:16px 20px;}
+  .row{
+    display:flex;
+    align-items:flex-start;
+    padding:9px 0;
+    border-bottom:1px dashed #e6e8f0;
+    gap:14px;
+  }
+  .row:last-child{border-bottom:none;}
+  .label{
+    width:220px;
+    flex-shrink:0;
+    padding-top:6px;
+    color:#40465a;
+  }
+  .label .req{color:var(--danger);margin-right:3px;}
+  .field{flex:1;}
+  input[type=text], input[type=number], select{
+    border:1px solid #cfd4e2;
+    border-radius:3px;
+    padding:6px 8px;
+    font-size:13px;
+    background:#fff;
+    color:var(--text);
+    font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);
+  }
+  .w-s{width:110px;}
+  .w-m{width:220px;}
+  .w-l{width:400px;}
+  .hint{color:var(--muted);font-size:11.5px;margin-top:5px;line-height:1.5;}
+  .radio-group label{margin-right:18px;font-size:13px;}
+  .radio-group input{margin-right:4px;vertical-align:-1px;}
+  .checks{display:flex;flex-wrap:wrap;gap:10px 18px;}
+  .checks label{font-size:13px;white-space:nowrap;}
+  .checks input{margin-right:4px;}
+  .dual-toggle{display:flex;gap:36px;align-items:flex-start;}
+  .dual-toggle .tgroup{display:flex;flex-direction:column;gap:6px;}
+  .dual-toggle .tlabel{font-size:11.5px;color:var(--muted);}
+
+  table.rule-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:6px;
+  }
+  table.rule-table th{
+    background:#f2f4fa;
+    border:1px solid var(--border);
+    padding:7px 8px;
+    font-weight:600;
+    font-size:12.5px;
+    color:#40465a;
+  }
+  table.rule-table td{
+    border:1px solid var(--border);
+    padding:5px 8px;
+    text-align:center;
+  }
+  table.rule-table input{width:100%;text-align:center;}
+  table.rule-table .op{color:var(--danger);cursor:pointer;font-size:12px;}
+  table.rule-table .op:hover{text-decoration:underline;}
+  .add-row-btn{
+    margin-top:8px;
+    background:#fff;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:5px 14px;
+    border-radius:3px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .add-row-btn:hover{background:var(--accent-soft);}
+
+  .subhead{
+    font-weight:600;
+    font-size:13px;
+    margin:22px 0 8px;
+    padding-left:9px;
+    border-left:3px solid var(--accent);
+  }
+  .subhead:first-child{margin-top:0;}
+
+  .exclude-list{
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .exclude-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+    border-bottom:1px solid #eef0f6;
+    font-size:12.5px;
+  }
+  .exclude-item:last-child{border-bottom:none;}
+  .exclude-item:nth-child(odd){background:#fafbfd;}
+  .exclude-item .dot{
+    width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  }
+  .exclude-item .name{width:150px;flex-shrink:0;font-weight:600;color:#2b2f3a;}
+  .exclude-item .desc{flex:1;color:var(--muted);}
+  .status-pill{
+    flex-shrink:0;
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
+  .status-confirmed{background:#e4f6ec;color:var(--ok);}
+  .status-pending{background:var(--warn-bg);color:var(--warn);}
+
+  .note-box{
+    background:var(--warn-bg);
+    border:1px solid #f0d3ae;
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#7a4a12;
+    line-height:1.7;
+    margin-top:10px;
+  }
+  .note-box b{color:var(--warn);}
+
+  .info-box{
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#4a5062;
+    line-height:1.8;
+    margin-top:8px;
+  }
+
+  .footer-bar{
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    border-top:1px solid var(--border);
+    padding:14px 20px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    box-shadow:0 -2px 8px rgba(0,0,0,.04);
+  }
+  .btn{
+    padding:8px 26px;
+    border-radius:3px;
+    font-size:13px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+  }
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  .placeholder-box{
+    border:1px dashed #cfd4e2;
+    border-radius:4px;
+    padding:30px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    background:#fafbfd;
+  }
+
+  .ref-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-left:3px solid #8892ab;
+    border-radius:4px;
+    padding:11px 14px;
+    margin:4px 0 18px;
+  }
+  .ref-note .ref-icon{font-size:15px;flex-shrink:0;line-height:1.5;}
+  .ref-note .ref-text{font-size:12.5px;color:#565d70;line-height:1.8;}
+  .ref-note .ref-text b{color:#2b2f3a;}
+  .proto-note{
+    max-width:1180px;
+    margin:0 auto 40px;
+    padding:0 20px;
+  }
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 18px;
+    font-size:12.5px;
+    line-height:1.9;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:20px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  /* ---- 本次新增 ---- */
+  .view-bar{
+    position:sticky;top:0;z-index:100;
+    background:#fff3d6;border-bottom:1px solid #e8c877;
+    padding:9px 20px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .view-bar .sim-label{font-weight:600;color:#7a5c00;margin-right:4px;}
+  .sim-btn{border:1px solid #d8b448;background:#fff;color:#7a5c00;padding:4px 12px;border-radius:3px;font-size:11.5px;cursor:pointer;font-family:inherit;}
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+  .view{display:none;}
+  .view.on{display:block;}
+  table.rule-table td.ro{background:#f7f8fb;color:#40465a;text-align:left;padding-left:12px;}
+  table.rule-table td.ro .eight{font-family:Consolas,"Courier New",monospace;font-weight:700;color:var(--bar);letter-spacing:1px;}
+  table.rule-table input.err{border-color:var(--danger);background:#fdeaea;}
+  .lock{font-size:11px;color:var(--muted);}
+  .err-msg{color:var(--danger);font-size:11.5px;margin-top:6px;display:none;}
+  .sum-line{margin-top:8px;font-size:12px;color:#40465a;}
+  .sum-line b{color:var(--bar);}
+
+  /* 规则试算（原型辅助） */
+  .sim-box{margin-top:22px;border:1px dashed #e0bf5a;background:#fffbef;border-radius:4px;padding:12px 14px;}
+  .sim-box .sim-title{font-weight:600;color:#7a5c00;font-size:12.5px;margin-bottom:4px;}
+  .sim-box .sim-desc{font-size:11.5px;color:#8a7440;line-height:1.7;margin-bottom:8px;}
+  .sim-box table.rule-table th{background:#fbf1d2;}
+  .sim-box table.rule-table td{background:#fff;}
+  .res{font-size:12px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .res-ok{background:#e4f6ec;color:var(--ok);}
+  .res-void{background:#fdeaea;color:var(--danger);}
+  .res-skip{background:#f1f2f6;color:#767c8c;}
+  .sim-total{margin-top:10px;font-size:12.5px;color:#5c4400;}
+  .sim-total b{color:#4a3600;}
+
+  /* 申请参与列表（沿用现有页面样式） */
+  .legacy-head{background:#f4f5ef;border:1px solid #9fb0c8;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .legacy-head .t{font-weight:700;font-size:13.5px;}
+  .legacy-head .t span{color:#d62a2a;}
+  .legacy-btn{border:1px solid #9fb0c8;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .legacy-filter{background:#f4f5ef;border:1px solid #9fb0c8;padding:9px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;}
+  .legacy-filter input{padding:3px 6px;font-size:12px;}
+  .legacy-filter .lk{color:#1f4e8c;cursor:pointer;}
+  .legacy-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #1d8a9e;}
+  .legacy-table th{background:#8ea3c4;color:#fff;font-weight:600;padding:8px;font-size:12.5px;}
+  .legacy-table td{text-align:center;padding:8px;font-size:12.5px;border-bottom:1px solid #eef0f4;}
+  .legacy-pager{background:#fff;border:1px solid #1d8a9e;border-top:none;padding:8px 10px;font-size:12px;}
+  .keep-tag{display:inline-block;background:#e4f6ec;color:var(--ok);font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:400;}
+  .list-mock{width:100%;border-collapse:collapse;background:#fff;margin-bottom:14px;}
+  .list-mock th{background:#f2f4fa;border:1px solid var(--border);padding:7px;font-size:12px;}
+  .list-mock td{border:1px solid var(--border);padding:8px;font-size:12px;text-align:center;}
+  .list-mock .ops span{color:#1f4e8c;text-decoration:underline;margin:0 3px;cursor:pointer;}
+  .list-mock .ops span.hl{outline:2px solid var(--danger);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div class="view-bar">
+  <span class="sim-label">页面切换：</span>
+  <button class="sim-btn active" data-v="cfg" onclick="showView('cfg')">活动配置页</button>
+  <button class="sim-btn" data-v="apply" onclick="showView('apply')">申请参与列表</button>
+  <button class="sim-btn" data-v="sim" onclick="showView('sim')">规则验证工具</button>
+</div>
+
+<!-- ================= 视图一：活动配置页 ================= -->
+<div class="view on" id="view-cfg">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>添加幸运注单自动化活动</b></div>
+  <div class="back">返回活动列表</div>
+</div>
+
+<div class="wrap">
+
+  <!-- 1.基本信息 -->
+  <div class="section">
+    <div class="section-head">1.基本信息</div>
+    <div class="section-body">
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动名称：</div>
+        <div class="field"><input type="text" class="w-l" value="幸运注单，福利派送" placeholder="请输入活动名称（后台）"></div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动分类：</div>
+        <div class="field">
+          <select class="w-m"><option selected>体育优惠活动</option><option>存款优惠</option><option>其他</option></select>
+          <span style="margin-left:10px;font-size:12px;color:#3b6ff0;">设置活动分类</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动展示时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束"><div class="hint">活动展示于前台的起止时间</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动起止时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">注册起止时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">总代是否可参与活动：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="agent">是</label>
+          <label><input type="radio" name="agent" checked>否</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否推荐到活动公告处：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="promo">推荐</label>
+          <label><input type="radio" name="promo" checked>不推荐</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否自我互斥：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="exclu">自我互斥</label>
+          <label><input type="radio" name="exclu" checked>不自我互斥</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否启用VIP用户参与限制：</div>
+        <div class="field">
+          <div class="radio-group">
+            <label><input type="radio" name="vipLimit" onchange="toggleVip(true)">是</label>
+            <label><input type="radio" name="vipLimit" checked onchange="toggleVip(false)">否</label>
+          </div>
+          <div id="vipPick" style="display:none;margin-top:6px;">
+            <select class="w-s"><option>VIP1</option><option>VIP2</option><option>VIP3</option><option>VIP4</option><option>VIP5</option></select>
+            <span class="hint" style="display:inline;">起始等级，该等级及以上会员可参与</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动领取方式：</div>
+        <div class="field">
+          <select class="w-m">
+            <option>后台审核后前台手动领取</option>
+            <option>后台自动领取</option>
+            <option>前台手动领取</option>
+            <option>前台申请后手动领取</option>
+            <option selected>前台申请后自动发放</option>
+            <option>前台申请固定金额后自动发放</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否禁止同IP用户参与：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="ipLimit">是</label>
+          <label><input type="radio" name="ipLimit" checked>否</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是取用流水场馆设置：</div>
+        <div class="field">
+          <div class="checks">
+            <label><input type="checkbox" checked>体育场馆</label>
+            <label><input type="checkbox">电竞场馆</label>
+          </div>
+          <div class="hint">出款流水计算范围：本活动仅体育场馆</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是取用流水场馆设置（投注来源）：</div>
+        <div class="field">
+          <div class="checks">
+            <label><input type="checkbox" checked>体育场馆</label>
+            <label><input type="checkbox">电竞场馆</label>
+          </div>
+          <div class="hint">参与活动的注单来源：本活动仅体育场馆</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">出款流水：</div>
+        <div class="field">
+          <select class="w-m"><option>全部流水</option><option selected>有效流水</option></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否开启活动分端参与：</div>
+        <div class="field">
+          <div class="dual-toggle">
+            <div class="tgroup">
+              <div class="tlabel">只有登录PC客户端可参与</div>
+              <div class="radio-group">
+                <label><input type="radio" name="pc">是</label>
+                <label><input type="radio" name="pc" checked>否</label>
+              </div>
+            </div>
+            <div class="tgroup">
+              <div class="tlabel">只有登录手机客户端可参与</div>
+              <div class="radio-group">
+                <label><input type="radio" name="mobile">是</label>
+                <label><input type="radio" name="mobile" checked>否</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">周期：</div>
+        <div class="field">
+          <div class="radio-group">
+            <label><input type="radio" name="cycle" checked>日</label>
+            <label><input type="radio" name="cycle">周</label>
+            <label><input type="radio" name="cycle">月</label>
+            <label><input type="radio" name="cycle">整周期</label>
+          </div>
+          <div class="hint">脚本执行周期：本活动为日，每日统计前一结算日的注单</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">参与限制：</div>
+        <div class="field">
+          <div class="checks">
+            <label><input type="checkbox">外部代理模式</label>
+            <label><input type="checkbox" checked>散客模式</label>
+            <label><input type="checkbox">内部代理模式</label>
+            <label><input type="checkbox">代理推荐人</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2.活动规则和派奖策略 -->
+  <div class="section">
+    <div class="section-head">2.活动规则和派奖策略</div>
+    <div class="section-body">
+
+      <div class="subhead">2.1 参与门槛</div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>单笔最低投注额：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="minBet" value="200" min="1" oninput="validateMin();runSim()"> 元
+          <div class="hint">按注单下注本金判定（≥该值即满足）；脚本执行时读取当前配置值，修改后从下一次脚本执行起生效</div>
+          <div class="err-msg" id="minErr">请输入大于0的整数</div>
+        </div>
+      </div>
+
+      <div class="subhead">2.2 派奖档位</div>
+      <table class="rule-table">
+        <thead><tr>
+          <th style="width:10%;">层级</th>
+          <th style="width:36%;">注单尾号规则 <span class="lock">🔒 固定</span></th>
+          <th style="width:27%;">彩金（元）</th>
+          <th style="width:27%;">出款流水倍数</th>
+        </tr></thead>
+        <tbody id="tierBody"></tbody>
+      </table>
+      <div class="err-msg" id="tierErr">彩金、流水倍数须为大于0的数字，请检查标红的单元格</div>
+      <div class="hint">尾号数字「8」与6个层级为固定规则，不支持增删档位或修改尾号；彩金与出款流水倍数可按档位配置。</div>
+
+      <div class="info-box">
+        <b>派发规则（系统固定，不做后台配置项）</b><br>
+        · 一笔注单同时命中多个档位时，<b>仅按最高档</b>计算（如尾号 888888 只算6位档）；单个注单仅可参与一次。<br>
+        · 每位会员<b>每个结算日、每个档位仅限获得一次</b>；同一结算日内同档位再次命中的注单<b>作废</b>，不降档。<br>
+        · 结算日按自然日 00:00~23:59:59，以注单<b>结算时间</b>为准；脚本每日执行一次，统计前一结算日的注单，彩金于<b>次日12:00前</b>派发至账户余额。<br>
+        · 脚本执行时已报名的会员均纳入计算（不限定报名早于下注时间）。
+      </div>
+
+      <div class="ref-note">
+        <span class="ref-icon">📄</span>
+        <div class="ref-text">
+          <b>注单过滤规则</b>（投注类型、结算结果、走水/取消、提前结算、赔率水位下限、对冲盘口等）与<b>脚本执行工程要求</b>（执行时间点、同步缓冲、幂等、失败重试）均为脚本固化判断，不在后台配置，详见 PRD <b>6.2③④</b>。
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3.其他信息 -->
+  <div class="section">
+    <div class="section-head">3.其他信息 <span class="tag">基本不改动，沿用现有组件</span></div>
+    <div class="section-body">
+      <div class="placeholder-box">
+        位置排序 / PC活动封面图片 / 活动图片 / H5活动图片 / H5活动详情图 / 活动详情富文本编辑器<br>
+        —— 沿用现有后台字段结构，本次不做调整，此处省略展示 ——
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ================= 视图二：申请参与列表 ================= -->
+<div class="view" id="view-apply">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>申请参与列表</b></div>
+  <div class="back" onclick="showView('cfg')" style="cursor:pointer;">返回活动配置页</div>
+</div>
+<div class="wrap">
+
+  <div class="subhead" style="margin-top:0;">入口：活动管理列表 →「申请参与」</div>
+
+  <div class="legacy-filter" style="margin-bottom:8px;">
+    🔍 用户渠道：<select disabled style="padding:3px 6px;font-size:12px;color:#40465a;"><option>所有</option></select>
+    进行状态：<select disabled style="padding:3px 6px;font-size:12px;color:#40465a;"><option>进行中</option></select>
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">立即搜索</button>
+  </div>
+
+  <table class="list-mock">
+    <thead><tr>
+      <th>活动ID</th><th>活动名称(后台)</th><th>开始日期</th><th>结束日期</th><th>进行状态</th><th>启动状态</th><th>操作</th>
+    </tr></thead>
+    <tbody><tr>
+      <td>—</td><td>幸运注单，福利派送</td>
+      <td>2026-10-xx</td><td>长期</td>
+      <td style="color:#d62a2a;">进行中</td><td style="color:#d62a2a;">启用</td>
+      <td class="ops"><span>分配</span>|<span>修改</span>|<span>关闭</span>|<span>黑名单</span>|<span>白名单</span>|<span class="hl" onclick="document.getElementById('legacyAnchor').scrollIntoView({behavior:'smooth'})">申请参与</span></td>
+    </tr></tbody>
+  </table>
+  <div class="placeholder-box" style="padding:8px 12px;margin-bottom:14px;font-size:11.5px;">
+    活动类型 / 活动名称(前台) / 用户层级 / 用户渠道 / 黑白名单 / 排序位置 —— 字段真实存在，此处省略展示 ——
+  </div>
+
+  <div id="legacyAnchor" class="legacy-head">
+    <div class="t">后台管理 <span>- 申请参与列表</span></div>
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">返回活动列表</button>
+  </div>
+  <div class="legacy-filter">
+    🔍 用户名称：<input type="text" id="fUser" style="width:130px;">
+    开始时间 <input type="text" id="fStart" value="2026-10-01 00:00:00" style="width:150px;">
+    结束时间 <input type="text" id="fEnd" value="2026-10-31 23:59:59" style="width:150px;">
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">搜索</button>
+    <span class="lk" style="color:#767c8c;cursor:default;text-decoration:none;">Excel导出全部</span>
+  </div>
+  <table class="legacy-table">
+    <thead><tr><th>活动名称</th><th>用户名</th><th>申请金额</th><th>申请时间</th><th>用户IP</th></tr></thead>
+    <tbody id="applyBody"></tbody>
+  </table>
+  <div class="legacy-pager" id="applyPager"></div>
+</div>
+</div>
+
+<!-- ================= 视图三：规则验证工具 ================= -->
+<div class="view" id="view-sim">
+<div class="topbar">
+  <div class="crumb"><b>幸运注单-规则验证工具</b><span class="keep-tag" style="background:#fff3d6;color:#7a5c00;">仅供研发阶段核对使用</span></div>
+  <div class="back" onclick="showView('cfg')" style="cursor:pointer;">返回活动配置页</div>
+</div>
+<div class="wrap">
+
+  <div class="note-box" style="margin-top:0;">
+    <b>说明：</b>本工具不是正式后台页面，仅用于研发阶段核对判定逻辑。模拟「同一会员、同一结算日」的一组注单，按「活动配置页」当前的最低投注额与档位配置实时计算派发结果，用于走查<b>最高档命中、同档作废（不降档）、本金未达门槛</b>三条规则，如有出入以脚本为准。
+  </div>
+
+  <div class="sim-box" style="margin-top:14px;border-style:solid;">
+    <table class="rule-table">
+      <thead><tr>
+        <th style="width:30%;">注单号</th><th style="width:14%;">下注本金（元）</th>
+        <th style="width:16%;">命中档位</th><th style="width:14%;">彩金（元）</th><th style="width:18%;">判定结果</th><th style="width:8%;">操作</th>
+      </tr></thead>
+      <tbody id="simBody"></tbody>
+    </table>
+    <button class="add-row-btn" onclick="addSim()">＋ 新增注单</button>
+    <div class="sim-total" id="simTotal"></div>
+  </div>
+
+</div>
+</div>
+
+<div class="proto-note">
+  <div class="inner">
+    <div><span class="tag">原型说明</span>本文件为「幸运注单，福利派送」自动化活动管理后台原型，业务规则已与需求方确定，仅用于走查字段结构与交互逻辑。用户端沿用现有「前台申请后自动发放」报名逻辑，本次不单独出原型。请重点关注以下几点：</div>
+    <ol>
+      <li>顶部「页面切换」用于在「活动配置页」「申请参与列表」「规则验证工具」三个页面间切换。其中「活动配置页」「申请参与列表」为本活动实际会用到的后台页面；「规则验证工具」不是正式后台页面，仅用于研发阶段核对判定逻辑。</li>
+      <li>「2.2 派奖档位」固定6行，尾号规则（数字8与层级）只读，不可增删；彩金、出款流水倍数、「2.1 单笔最低投注额」为可配置项。脚本执行时读取当前配置值，修改后从下一次执行起生效，不回溯已派发的结算日。</li>
+      <li>注单过滤规则（单关/单式串关、走水/取消、赢半输半、提前结算、赔率水位下限、对冲盘口）为脚本固化判断，后台不提供UI配置入口，如需调整需走版本迭代。</li>
+      <li>日脚本需保证重跑幂等：以「会员+结算日+档位」及「注单号」双重唯一约束，任务重试或重跑不得重复派发。</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+const TIERS = [
+  {lv:1, n:2, bonus:48,   flow:3},
+  {lv:2, n:3, bonus:108,  flow:3},
+  {lv:3, n:4, bonus:388,  flow:3},
+  {lv:4, n:5, bonus:688,  flow:3},
+  {lv:5, n:6, bonus:1088, flow:3},
+  {lv:6, n:7, bonus:1888, flow:3}
+];
+
+function showView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on', e.id==='view-'+v));
+  document.querySelectorAll('.view-bar .sim-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+function toggleVip(on){ document.getElementById('vipPick').style.display = on?'block':'none'; }
+
+function renderTiers(){
+  const body = document.getElementById('tierBody');
+  body.innerHTML = '';
+  TIERS.forEach((t,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${t.lv}</td>
+      <td class="ro">最后${'二三四五六七'[t.n-2]}位数为 <span class="eight">${'8'.repeat(t.n)}</span></td>
+      <td><input type="number" min="0" value="${t.bonus}" oninput="setTier(${i},'bonus',this)"></td>
+      <td><input type="number" min="0" step="0.5" value="${t.flow}" oninput="setTier(${i},'flow',this)"></td>`;
+    body.appendChild(tr);
+  });
+}
+function setTier(i,key,el){
+  const v = parseFloat(el.value);
+  const bad = !(v>0);
+  el.classList.toggle('err', bad);
+  TIERS[i][key] = bad ? null : v;
+  document.getElementById('tierErr').style.display = document.querySelector('#tierBody input.err') ? 'block':'none';
+  runSim();
+}
+function validateMin(){
+  const v = document.getElementById('minBet');
+  const bad = !(parseInt(v.value)>0);
+  v.classList.toggle('err', bad);
+  v.style.borderColor = bad ? 'var(--danger)' : '';
+  document.getElementById('minErr').style.display = bad?'block':'none';
+}
+
+/* ---- 规则试算 ---- */
+let sims = [
+  ['5084856172515888', 200],
+  ['5084907481485188', 200],
+  ['5084911230047888', 500],
+  ['5084920015528888', 150],
+  ['5084931177788888', 300],
+  ['5084940026637451', 1000]
+];
+function hitTier(no){
+  let best = null;
+  TIERS.forEach(t=>{ if(no.length>=t.n && no.slice(-t.n)==='8'.repeat(t.n)) best = t; });
+  return best;
+}
+function runSim(){
+  const min = parseInt(document.getElementById('minBet').value);
+  const used = {};
+  let total = 0, flow = 0, paid = 0;
+  const body = document.getElementById('simBody');
+  body.innerHTML = '';
+  sims.forEach((s,i)=>{
+    const no = String(s[0]).trim(), amt = parseFloat(s[1]);
+    let tierTxt='—', bonusTxt='—', res;
+    const valid = /^\d+$/.test(no);
+    const t = valid ? hitTier(no) : null;
+    if(!valid){ res = '<span class="res res-skip">注单号格式有误</span>'; }
+    else if(!(amt>0) || !(min>0) || amt < min){ res = `<span class="res res-skip">本金未达${min>0?min:'—'}元</span>`; if(t) tierTxt='层级'+t.lv+'（'+t.n+'位）'; }
+    else if(!t){ res = '<span class="res res-skip">未命中</span>'; }
+    else{
+      tierTxt = '层级'+t.lv+'（'+t.n+'位）';
+      if(used[t.lv]){ res = `<span class="res res-void">同档已派，作废</span>`; }
+      else if(!(t.bonus>0)){ res = '<span class="res res-skip">档位配置有误</span>'; }
+      else{
+        used[t.lv] = true; total += t.bonus; flow += t.bonus*(t.flow||0); paid++;
+        bonusTxt = t.bonus.toLocaleString();
+        res = '<span class="res res-ok">派发</span>';
+      }
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${no}" oninput="sims[${i}][0]=this.value;runSimDeferred()"></td>
+      <td><input type="number" value="${s[1]}" oninput="sims[${i}][1]=this.value;runSimDeferred()"></td>
+      <td>${tierTxt}</td><td>${bonusTxt}</td><td>${res}</td>
+      <td><span class="op" onclick="delSim(${i})">删除</span></td>`;
+    body.appendChild(tr);
+  });
+  if(!sims.length){ body.innerHTML = '<tr><td colspan="6" style="color:#767c8c;">暂无注单，点击「新增注单」添加</td></tr>'; }
+  document.getElementById('simTotal').innerHTML =
+    `试算结果：共派发 <b>${paid}</b> 笔，彩金合计 <b>${total.toLocaleString()}</b> 元，需完成出款流水 <b>${flow.toLocaleString()}</b> 元（仅体育场馆）`;
+}
+let simTimer=null;
+function runSimDeferred(){
+  clearTimeout(simTimer);
+  simTimer = setTimeout(()=>{
+    const a = document.activeElement, row = a && a.closest('tr'), idx = row ? [...row.parentNode.children].indexOf(row) : -1;
+    const col = a && row ? [...row.querySelectorAll('input')].indexOf(a) : -1;
+    const pos = a && a.selectionStart;
+    runSim();
+    if(idx>=0 && col>=0){
+      const el = document.getElementById('simBody').children[idx].querySelectorAll('input')[col];
+      el.focus(); try{ el.setSelectionRange(pos,pos); }catch(e){}
+    }
+  }, 350);
+}
+function addSim(){ sims.push(['', 200]); runSim(); }
+function delSim(i){ sims.splice(i,1); runSim(); }
+
+/* ---- 申请参与列表（模拟数据） ---- */
+const APPLY = [
+  ['user_a01','2026-10-01 10:12:08','112.199.81.2'],
+  ['user_b17','2026-10-01 14:33:51','103.166.80.82'],
+  ['user_c09','2026-10-02 09:05:44','47.76.91.34'],
+  ['user_d22','2026-10-03 21:47:19','139.162.49.6'],
+  ['user_e05','2026-10-05 16:20:02','45.125.64.197'],
+  ['user_f31','2026-10-08 23:58:40','122.128.99.40'],
+  ['user_g14','2026-10-09 00:36:15','104.238.161.232']
+];
+function renderApply(){
+  const kw = document.getElementById('fUser').value.trim().toLowerCase();
+  const s = document.getElementById('fStart').value, e = document.getElementById('fEnd').value;
+  const rows = APPLY.filter(r=>(!kw || r[0].toLowerCase().includes(kw)) && r[1]>=s && r[1]<=e);
+  const body = document.getElementById('applyBody');
+  body.innerHTML = rows.length ? rows.map(r=>`<tr><td>幸运注单，福利派送</td><td>${r[0]}</td><td>0</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')
+    : '<tr><td colspan="5" style="color:#999;">暂无记录</td></tr>';
+  document.getElementById('applyPager').innerHTML = `总计 ${rows.length} 个记录, 分为 ${rows.length?1:0} 页, 当前第 ${rows.length?1:0} 页 &nbsp;转至 <input style="width:40px;"> 页 <button class="legacy-btn">GO</button>`;
+}
+
+renderTiers();
+runSim();
+renderApply();
+</script>
+
+</body>
+</html>
