@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>圣诞元旦盛典 - 用户端交互原型</title>
+<style>
+  :root{
+    --bar:#3b4b87; --border:#c7ccdb; --bg:#eef0f6; --panel:#ffffff; --text:#2b2f3a; --muted:#767c8c;
+    --accent:#3b6ff0; --accent-soft:#eaf0ff; --warn:#b4530a; --warn-bg:#fdf1e6;
+    --danger:#c23b3b; --danger-bg:#fdeaea; --disabled-bg:#f1f2f6; --disabled-text:#a7abba;
+    --dbl:#c8322b; --dbl-soft:#fff1ec; --dbl-line:#f3b9a8;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:13px;}
+  button{font-family:inherit;}
+  .topbar{background:var(--bar);color:#fff;padding:12px 20px;font-size:14px;font-weight:600;}
+
+  /* ---- 场景切换工具条（原型辅助，非正式UI） ---- */
+  .sim-bar{position:sticky;top:0;z-index:100;background:#fff3d6;border-bottom:1px solid #e8c877;padding:8px 20px;font-size:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;}
+  .sim-bar .sim-label{font-weight:600;color:#7a5c00;}
+  .sim-bar .grp{display:inline-flex;align-items:center;gap:6px;color:#7a5c00;}
+  .sim-bar label{display:inline-flex;align-items:center;gap:3px;}
+  .sim-bar select,.sim-bar input[type=number]{padding:3px 6px;border:1px solid #d8b448;border-radius:3px;font-size:12px;background:#fff;}
+  .sim-bar input[type=number]{width:96px;}
+  .sim-btn{border:1px solid #d8b448;background:#fff;color:#7a5c00;padding:3px 9px;border-radius:3px;font-size:11.5px;cursor:pointer;}
+  .sim-btn:hover{background:#fbe9b8;}
+
+  .page{max-width:640px;margin:0 auto;min-height:100vh;background:var(--panel);border-left:1px solid var(--border);border-right:1px solid var(--border);padding-bottom:30px;}
+
+  /* ---- 低保真占位区块 ---- */
+  .placeholder-block{background:repeating-linear-gradient(45deg,#f4f5f9,#f4f5f9 10px,#eceef4 10px,#eceef4 20px);border:1px dashed #c7ccdb;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .banner-block{height:140px;margin:16px 16px 0;border-radius:4px;}
+  .table-block{height:200px;margin:14px 16px 0;border-radius:4px;}
+  .pay-table{margin:14px 16px 0;border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+  .pay-table table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;}
+  .pay-table th{background:#f4f6fb;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--border);}
+  .pay-table td{text-align:center;padding:7px 6px;border-bottom:1px solid #eef0f6;}
+  .pay-table td:nth-child(2),.pay-table td:nth-child(4){font-weight:700;}
+  .pay-note{font-size:11.5px;color:var(--muted);padding:7px 10px;background:#fafbfd;}
+  .go-row{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;}
+  .go-btn{border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:14px;padding:3px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;margin-bottom:4px;}
+  .go-btn:hover{background:var(--accent-soft);}
+  .ia.dbl .go-btn{border-color:var(--dbl);color:var(--dbl);}
+  .ia.dbl .go-btn:hover{background:var(--dbl-soft);}
+  .text-block{margin:14px 16px 0;padding:14px 16px;}
+  .text-block .ln{height:11px;background:#eceef4;border-radius:3px;margin-bottom:9px;}
+  .text-block .ln:last-child{margin-bottom:0;}
+  .page-footnote{margin-top:6px;padding:0 16px;font-size:11px;color:var(--muted);text-align:center;}
+
+  /* ---- 用户交互板块 ---- */
+  .ia{margin:14px 16px 0;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .ia.dbl{border-color:var(--dbl);}
+  .ia-ribbon{display:none;background:var(--dbl);color:#fff;padding:10px 14px;align-items:center;justify-content:space-between;}
+  .ia.dbl .ia-ribbon{display:flex;}
+  .ia-ribbon .t{font-size:16px;font-weight:700;letter-spacing:1px;}
+  .ia-ribbon .t b{font-size:20px;margin-left:4px;}
+  .ia-ribbon .s{font-size:11.5px;opacity:.9;}
+  .ia-body{padding:14px;}
+
+  .dbl-pre{display:flex;align-items:center;gap:10px;background:var(--dbl-soft);border:1px solid var(--dbl-line);border-radius:4px;padding:9px 12px;margin-bottom:12px;color:#7a2a1a;font-size:12px;line-height:1.6;}
+  .dbl-pre .ic{width:30px;height:30px;border-radius:50%;background:var(--dbl);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
+  .dbl-pre .t{font-weight:700;font-size:13px;}
+  .dbl-pre .cd{margin-left:auto;white-space:nowrap;}
+  .dbl-pre .cd b{color:var(--dbl);font-size:16px;}
+
+  .status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .status-row .d{font-size:14px;font-weight:700;}
+  .status-row .st{font-size:12px;color:var(--muted);}
+  .status-row .st b{color:var(--dbl);}
+  .apply-btn{padding:10px 26px;border-radius:22px;font-size:14px;font-weight:700;border:none;background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap;}
+  .apply-btn:hover{background:#2f5ed6;}
+  .ia.dbl .apply-btn{background:var(--dbl);}
+  .apply-btn:disabled{background:var(--disabled-bg);color:var(--disabled-text);cursor:not-allowed;}
+  .apply-tip{font-size:11.5px;color:var(--muted);text-align:right;margin-top:4px;}
+
+  .prog{margin-top:14px;}
+  .duo2{display:flex;flex-direction:column;}
+  .col.main{border:2px solid var(--accent);padding:12px 14px;}
+  .ia.dbl .col.main{border-color:var(--dbl);}
+  .col.main .v{font-size:26px;}
+  .col.sub{background:#f8f9fc;border-style:solid;}
+  .col.sub .v.sm{font-size:17px;}
+  .col.sub.locked{background:var(--disabled-bg);color:var(--disabled-text);}
+  .col.sub.locked .k,.col.sub.locked .lv{color:var(--disabled-text);}
+  .step{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .step .no{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;}
+  .ia.dbl .step .no{background:var(--dbl);}
+  .col.sub .step .no{background:#9aa3bf;}
+  .col.sub.locked .step{color:var(--disabled-text);}
+  .cap-tag,.lock-tag{margin-left:auto;font-size:11px;font-weight:600;border-radius:10px;padding:1px 8px;}
+  .cap-tag{background:var(--accent-soft);color:var(--accent);}
+  .ia.dbl .cap-tag{background:var(--dbl-soft);color:var(--dbl);}
+  .lock-tag{background:#e4e6ee;color:#8a8fa0;}
+  .link{font-size:11.5px;color:var(--accent);text-align:center;padding:5px 0;position:relative;}
+  .link::before{content:"↓ ";}
+  .ia.dbl .link{color:var(--dbl);}
+  .link.off{color:var(--warn);}
+  .segs{display:flex;gap:3px;margin-top:8px;}
+  .segs span{flex:1;height:5px;border-radius:3px;background:#e1e4ec;}
+  .segs span.on{background:var(--accent);}
+  .ia.dbl .segs span.on{background:var(--dbl);}
+  .segs span.cap{background:repeating-linear-gradient(45deg,#eef0f5 0 3px,#dcdfe7 3px 6px);}
+  .go-btn.solid{background:var(--accent);color:#fff;padding:6px 16px;font-size:13px;}
+  .go-btn.solid:hover{background:#2f5ed6;}
+  .ia.dbl .go-btn.solid{background:var(--dbl);color:#fff;}
+  .col{border:1px solid var(--border);border-radius:5px;padding:10px 12px;}
+  .col .k{font-size:11.5px;color:var(--muted);}
+  .col .v{font-size:20px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums;}
+  .col .lv{font-size:12px;}
+  .col .lv b{color:var(--accent);}
+  .ia.dbl .col .lv b{color:var(--dbl);}
+  .col .next{margin-top:8px;padding-top:8px;border-top:1px dashed #e1e4ec;font-size:11.5px;line-height:1.6;color:#4a4f5c;}
+  .col .next.lock{color:var(--warn);}
+  .orig{font-size:11px;color:var(--disabled-text);text-decoration:line-through;margin-left:3px;font-weight:400;}
+  .x2{display:inline-block;background:var(--dbl);color:#fff;font-size:10.5px;border-radius:2px;padding:0 4px;margin-left:3px;}
+  .sum{margin-top:8px;border-radius:5px;padding:10px 12px;background:var(--accent-soft);display:flex;align-items:center;justify-content:space-between;}
+  .ia.dbl .sum{background:var(--dbl-soft);}
+  .sum.off{background:var(--disabled-bg);}
+  .sum .k{font-size:12px;font-weight:600;}
+  .sum .d2{font-size:11px;color:var(--muted);}
+  .sum .v{font-size:22px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .ia.dbl .sum .v{color:var(--dbl);}
+  .sum.off .v{color:var(--disabled-text);}
+  .unapplied{margin-top:10px;font-size:12px;border-radius:4px;padding:8px 12px;background:var(--warn-bg);border:1px solid #f0d3ae;color:#7a4a12;}
+  .delay{margin-top:10px;font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:4px;padding:6px 10px;}
+  .login-cta{text-align:center;padding:20px 0 6px;color:var(--muted);font-size:12.5px;}
+  .login-cta a{color:var(--accent);cursor:pointer;text-decoration:underline;}
+
+  .toast{position:fixed;left:50%;top:90px;transform:translateX(-50%);background:#2b2f3a;color:#fff;padding:8px 16px;border-radius:4px;z-index:200;display:none;font-size:12.5px;}
+
+  /* ---- 原型说明 ---- */
+  .proto-note{margin:24px 16px 0;}
+  .proto-note .inner{background:#fff8e6;border:1px solid #f0d78c;border-radius:6px;padding:14px 16px;font-size:12px;line-height:1.85;color:#7a5c00;}
+  .proto-note .tag{display:inline-block;background:#f0d78c;color:#5c4400;border-radius:3px;padding:1px 6px;font-size:11px;margin-right:6px;font-weight:600;}
+  .proto-note ol{margin:8px 0 0;padding-left:18px;}
+  .proto-note li{margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">圣诞元旦盛典用户端交互</div>
+
+<div class="sim-bar">
+  <span class="sim-label">模拟场景：</span>
+  <label class="grp">日期 <select id="cDate" onchange="render()"></select></label>
+  <span class="grp">登录 <label><input type="radio" name="cLogin" value="0" onchange="render()">否</label><label><input type="radio" name="cLogin" value="1" checked onchange="render()">是</label></span>
+  <span class="grp">今日申请 <label><input type="radio" name="cApply" value="0" onchange="render()">否</label><label><input type="radio" name="cApply" value="1" checked onchange="render()">是</label></span>
+  <label class="grp">存款 <input type="number" id="cDep" value="6000" oninput="render()"></label>
+  <label class="grp">有效流水 <input type="number" id="cFlow" value="5000" oninput="render()"></label>
+  <span class="grp">
+    <button class="sim-btn" onclick="preset('2026-12-24',6000,5000)">示例A</button>
+    <button class="sim-btn" onclick="preset('2026-12-25',10000,600000)">示例B·翻倍日</button>
+    <button class="sim-btn" onclick="preset('2026-12-28',100,600000)">示例C</button>
+    <button class="sim-btn" onclick="preset('2026-12-27',1000,30000)">流水受存款限制</button>
+    <button class="sim-btn" onclick="preset('2026-12-29',120000,700000)">双边最高档</button>
+  </span>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ============ 活动内页 ============ -->
+<div class="page">
+
+  <div class="placeholder-block banner-block">Banner 占位（活动主视觉，素材由UI/设计提供）</div>
+
+  <div class="ia" id="ia">
+    <div class="ia-ribbon"><div class="t">今日彩金翻倍<b id="rbX">×2</b></div><div class="s">存款彩金与投注彩金均翻倍发放</div></div>
+    <div class="ia-body">
+      <div id="dblPre"></div>
+      <div class="status-row">
+        <div><div class="d" id="sDate"></div><div class="st" id="sState"></div></div>
+        <div><button class="apply-btn" id="applyBtn">立即申请</button><div class="apply-tip" id="applyTip"></div></div>
+      </div>
+      <div id="progWrap"></div>
+    </div>
+  </div>
+
+  <div class="pay-table">
+    <table>
+      <thead><tr><th>每日累计存款</th><th>存款彩金</th><th>每日累计有效投注</th><th>投注彩金</th></tr></thead>
+      <tbody>
+        <tr><td>≥500</td><td>8</td><td>≥3,000</td><td>8</td></tr>
+        <tr><td>≥1,000</td><td>20</td><td>≥6,000</td><td>20</td></tr>
+        <tr><td>≥5,000</td><td>108</td><td>≥30,000</td><td>108</td></tr>
+        <tr><td>≥10,000</td><td>208</td><td>≥60,000</td><td>208</td></tr>
+        <tr><td>≥50,000</td><td>1,088</td><td>≥300,000</td><td>1,088</td></tr>
+        <tr><td>≥100,000</td><td>2,088</td><td>≥600,000</td><td>2,088</td></tr>
+      </tbody>
+    </table>
+    <div class="pay-note">注：12月25日及1月1日存款彩金及投注彩金翻倍</div>
+  </div>
+  <div class="page-footnote">派彩表格（活动组提供的静态内容，美术按此出图）</div>
+
+  <div class="placeholder-block text-block">
+    <div style="width:100%;">
+      <div class="ln" style="width:92%;"></div><div class="ln" style="width:88%;"></div>
+      <div class="ln" style="width:95%;"></div><div class="ln" style="width:60%;"></div>
+    </div>
+  </div>
+  <div class="page-footnote">文字描述素材占位（活动规则/玩法说明，由活动组提供文案）</div>
+
+  <div class="proto-note"><div class="inner">
+    <div><span class="tag">原型说明</span>本文件为「圣诞元旦盛典」用户端交互原型，聚焦用户交互区的状态与逻辑分支，视觉仅做低保真占位，Banner、派彩表格、活动规则为静态内容，由UI与活动组提供。请重点关注以下几点：</div>
+    <ol>
+      <li>进入页面时请求一次接口，返回当日申请状态、今日累计存款（仅统计在线充值【31】）、今日累计有效流水；不提供刷新按钮，数据延迟说明文案由活动组提供。</li>
+      <li>申请按钮五种状态：活动未开始 / 未登录 / 今日未申请 / 今日已申请 / 活动已结束。同一会员同一自然日仅生成一条申请记录。</li>
+      <li>进度展示：流水卡提示按四种情况切换：存款未达最低档（提示存款解锁）、流水未追平存款档（提示还差多少流水）、流水已追平存款档（提示存款解锁下一档）、双边最高档。今日未申请时进度正常展示（当日申请后全天数据都计入），仅「今日预计彩金」显示未申请状态，并提示申请。</li>
+      <li>进度区按「先存款、后投注」分主次：存款卡为主卡片，带「前往存款」入口（跳转存款页，活动期内登录后常驻，不受申请状态影响）；流水卡为次卡片，标注当前可领上限（与存款档位同档），档位条中超出上限的部分以斜纹表示锁定；存款未达最低档时流水卡整体置灰并显示「未解锁」。</li>
+      <li>翻倍日独立UI：非翻倍日在交互区顶部显示下一个翻倍日预告及倒计天数，最后一个翻倍日过后不再显示；翻倍日当天交互区切换为翻倍样式（顶部横幅、主色切换、彩金显示翻倍后金额并划线原价）。翻倍日期与倍数取后台配置。</li>
+      <li>档位、彩金、翻倍配置均取后台接口；派彩表格为活动组提供的静态内容（页面中为当前方案数据），须与后台最终配置保持一致。</li>
+      <li>顶部「模拟场景」工具条为原型辅助功能，非正式页面内容。</li>
+    </ol>
+  </div></div>
+
+</div>
+
+<script>
+/* 默认配置（与后台默认值一致；实际以接口下发为准） */
+const cfg = {
+  tiers:[
+    {dep:500,depB:8,flow:3000,flowB:8},{dep:1000,depB:20,flow:6000,flowB:20},
+    {dep:5000,depB:108,flow:30000,flowB:108},{dep:10000,depB:208,flow:60000,flowB:208},
+    {dep:50000,depB:1088,flow:300000,flowB:1088},{dep:100000,depB:2088,flow:600000,flowB:2088}
+  ],
+  dblMult:2, dbl:['2026-12-25','2027-01-01'], start:'2026-12-23', end:'2027-01-01'
+};
+const fmt=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
+const cn=d=>{const [,m,dd]=d.split('-');return `${+m}月${+dd}日`;};
+const dayDiff=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',1600);}
+
+(function(){
+  const sel=document.getElementById('cDate'), out=[];
+  for(let d=new Date('2026-12-22T00:00:00'); d<=new Date('2027-01-02T00:00:00'); d.setDate(d.getDate()+1)){
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const tag=iso<cfg.start?'（未开始）':iso>cfg.end?'（已结束）':cfg.dbl.includes(iso)?'（翻倍日）':'';
+    out.push(`<option value="${iso}">${cn(iso)}${tag}</option>`);
+  }
+  sel.innerHTML=out.join(''); sel.value='2026-12-24';
+})();
+
+function idxOf(v,k){let r=-1;cfg.tiers.forEach((t,i)=>{if(v>=t[k])r=i;});return r;}
+const money=(v,m)=> m>1 ? `${fmt(v*m)}<span class="orig">${fmt(v)}</span>` : fmt(v);
+function compute(dep,flow,m){
+  const T=cfg.tiers,n=T.length,dT=idxOf(dep,'dep'),fR=idxOf(flow,'flow'),fT=dT<0?-1:Math.min(dT,fR);
+  const depB=dT>=0?T[dT].depB:0, betB=fT>=0?T[fT].flowB:0;
+  const depNext = dT<n-1 ? `再存 <b>${fmt(T[dT+1].dep-dep)}</b> 元达第${dT+2}档，存款彩金 ${money(T[dT+1].depB,m)} 元` : '已达最高档';
+  let flowNext, lock=false;
+  if(dT<0){flowNext=`存款满 ${fmt(T[0].dep)} 元解锁投注彩金`;lock=true;}
+  else if(fR>=dT){ if(dT===n-1) flowNext='已达最高档'; else {flowNext=`已达当前上限，存款再存 <b>${fmt(T[dT+1].dep-dep)}</b> 元解锁下一档`;lock=true;} }
+  else flowNext=`再投注 <b>${fmt(T[fT+1].flow-flow)}</b> 元达第${fT+2}档，投注彩金 ${money(T[fT+1].flowB,m)} 元`;
+  return {dT,fT,depB,betB,depNext,flowNext,lock,total:depB+betB};
+}
+function preset(d,dep,flow){
+  document.getElementById('cDate').value=d; document.getElementById('cDep').value=dep; document.getElementById('cFlow').value=flow;
+  document.querySelector('input[name=cLogin][value="1"]').checked=true;
+  document.querySelector('input[name=cApply][value="1"]').checked=true; render();
+}
+
+function render(){
+  const date=document.getElementById('cDate').value;
+  const logged=document.querySelector('input[name=cLogin]:checked').value==='1';
+  const applied=document.querySelector('input[name=cApply]:checked').value==='1';
+  const dep=Math.max(0,+document.getElementById('cDep').value||0), flow=Math.max(0,+document.getElementById('cFlow').value||0);
+  const before=date<cfg.start, after=date>cfg.end, inAct=!before&&!after;
+  const isDbl=inAct&&cfg.dbl.includes(date), m=isDbl?cfg.dblMult:1;
+
+  document.getElementById('ia').classList.toggle('dbl',isDbl);
+  document.getElementById('rbX').textContent='×'+fmt(cfg.dblMult);
+  const next=cfg.dbl.filter(d=>d>date).sort()[0], pre=document.getElementById('dblPre');
+  if(!isDbl && !after && next){
+    const n=dayDiff(date,next);
+    pre.innerHTML=`<div class="dbl-pre"><div class="ic">×${fmt(cfg.dblMult)}</div>
+      <div><div class="t">${cn(next)} 彩金翻倍</div>当日申请，存款彩金与投注彩金均 ×${fmt(cfg.dblMult)}（翻倍日：${cfg.dbl.map(cn).join('、')}）</div>
+      <div class="cd">${n===1?'<b>明天</b>':`还有 <b>${n}</b> 天`}</div></div>`;
+  } else pre.innerHTML='';
+
+  document.getElementById('sDate').textContent='今天 '+cn(date);
+  document.getElementById('sState').innerHTML = before?`活动将于${cn(cfg.start)}开始`:after?'活动已结束':isDbl?`活动进行中，<b>今日彩金 ×${fmt(m)}</b>`:'活动进行中';
+
+  const btn=document.getElementById('applyBtn'), tip=document.getElementById('applyTip');
+  btn.onclick=null;
+  if(before){btn.disabled=true;btn.textContent=`${cn(cfg.start)}开始`;tip.textContent='活动开始后每日可申请一次';}
+  else if(after){btn.disabled=true;btn.textContent='活动已结束';tip.textContent=`${cn(cfg.end)}的彩金次日12:00前派发`;}
+  else if(!logged){btn.disabled=false;btn.textContent='登录后申请';btn.onclick=()=>toast('跳转登录');tip.textContent='每日需申请一次';}
+  else if(!applied){btn.disabled=false;btn.textContent='立即申请';tip.textContent='申请后当日数据计入';
+    btn.onclick=()=>{document.querySelector('input[name=cApply][value="1"]').checked=true;toast('申请成功');render();};}
+  else{btn.disabled=true;btn.textContent='今日已申请';tip.textContent='彩金明日12:00前派发';}
+
+  const pw=document.getElementById('progWrap');
+  if(!inAct){pw.innerHTML='';return;}
+  if(!logged){pw.innerHTML='<div class="login-cta"><a onclick="toast(\'跳转登录\')">登录</a>后查看今日存款与流水进度</div>';return;}
+  const r=compute(dep,flow,m), x2=m>1?`<span class="x2">×${fmt(m)}</span>`:'';
+  const lv=(i,b)=>i>=0?`第${i+1}档，彩金 <b>${money(b,m)}</b> 元${x2}`:'未达档位';
+  const n=cfg.tiers.length;
+  const segs=(filled,cap)=>`<div class="segs">${cfg.tiers.map((t,i)=>`<span class="${i<=filled?'on':(cap!==undefined&&i>cap?'cap':'')}"></span>`).join('')}</div>`;
+  const locked=r.dT<0;
+  pw.innerHTML=`<div class="prog">
+    <div class="duo2">
+      <div class="col main">
+        <div class="step"><span class="no">1</span>先存款，定档位</div>
+        <div class="go-row"><div><div class="k">今日累计存款（元）</div><div class="v">${fmt(dep)}</div><div class="lv">${lv(r.dT,r.depB)}</div></div>
+          <button class="go-btn solid" onclick="toast('跳转存款页')">前往存款</button></div>
+        ${segs(r.dT)}
+        <div class="next">${r.depNext}</div>
+      </div>
+      <div class="link ${locked?'off':''}">${locked?`存款满 ${fmt(cfg.tiers[0].dep)} 元，解锁投注彩金`:`存款第${r.dT+1}档，投注彩金最高可领第${r.dT+1}档`}</div>
+      <div class="col sub ${locked?'locked':''}">
+        <div class="step"><span class="no">2</span>再投注，领加码${locked?'<span class="lock-tag">🔒 未解锁</span>':`<span class="cap-tag">上限 第${r.dT+1}档</span>`}</div>
+        <div class="k">今日累计有效流水（元）</div>
+        <div class="v sm">${fmt(flow)}</div>
+        <div class="lv">${locked?'存款达标后计入投注彩金':lv(r.fT,r.betB)}</div>
+        ${locked?'':segs(r.fT,r.dT)}
+        ${locked?'':`<div class="next ${r.lock?'lock':''}">${r.flowNext}</div>`}
+      </div>
+    </div>
+    <div class="sum ${applied?'':'off'}">
+      <div><div class="k">${applied?(m>1?'今日预计彩金（已翻倍）':'今日预计彩金'):'今日预计彩金'}</div><div class="d2">${m>1?`原 ${fmt(r.total)} 元 × ${fmt(m)}，`:''}${applied?'明日12:00前到账':'未申请，不派发'}</div></div>
+      <div class="v">${fmt(r.total*m)} 元</div>
+    </div>
+  </div>
+  ${applied?'':'<div class="unapplied">今日未申请，申请后当日累计存款与有效流水计入彩金</div>'}
+  <div class="delay">数据延迟说明占位（文案由活动组提供）</div>`;
+}
+render();
+</script>
+</body>
+</html>
