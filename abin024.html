@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>资金密码重构 · 交互原型</title>
+<style>
+:root{
+  --g:#13a052; --g2:#22c062; --g-dark:#0d7f40;
+  --g-bg:#dcf2e1; --g-soft:#eaf8ee; --g-head:#c8ecd4;
+  --ink:#1f2a24; --ink2:#55615a; --ink3:#8a958f; --line:#dfe7e2;
+  --red:#e0383e; --red-bg:#fdecec; --amber:#d98a0b;
+  --note-bg:#fff6cc; --note-line:#e0b400; --note-ink:#7a5b00;
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Hiragino Sans GB",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{}
+body{font-family:var(--font);color:var(--ink);background:#c9d6cd;font-size:14px;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input{font-family:inherit}
+:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+
+/* ---------- stage ---------- */
+/* PC：原型随内容拉长，只保留浏览器一个滚动条；弹窗与 toast 固定在可视区域 */
+#stage{position:relative}
+#device{position:relative;width:100%;background:var(--g-bg)}
+#app{position:relative}
+#layer{position:fixed;left:0;right:0;bottom:0;top:var(--ch,100px);pointer-events:none;z-index:50}
+/* H5：保持手机框固定尺寸 */
+#stage.h5{display:flex;align-items:center;justify-content:center;background:#c9d6cd}
+#stage.h5 #device{width:390px;height:min(820px,calc(100% - 40px));overflow:hidden;border-radius:38px;border:10px solid #1f2622;box-shadow:0 30px 60px rgba(20,40,28,.35)}
+#stage.h5 #app{position:absolute;inset:0;overflow:auto}
+#stage.h5 #layer{position:absolute;inset:0}
+#layer>*{pointer-events:auto}
+.h5-ph{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:30px;color:var(--ink2)}
+.h5-ph strong{font-size:18px;color:var(--ink)}
+.h5-ph .frame{width:120px;height:120px;border:2px dashed #a9c2b2;border-radius:18px;display:grid;place-items:center;color:#8fae9a;font-size:13px;margin-bottom:10px}
+
+/* ---------- hot zones & dev notes ---------- */
+.show-hz .hz{outline:2px dashed var(--red);outline-offset:2px}
+.note{display:none;background:var(--note-bg);border:1px dashed var(--note-line);color:var(--note-ink);font-size:12px;line-height:1.6;border-radius:6px;padding:4px 8px;margin-top:6px;text-align:left}
+.note::before{content:"开发标注";font-weight:700;margin-right:6px}
+.show-notes .note{display:block}
+.note[contenteditable]{cursor:text}
+.note[contenteditable]:hover{border-style:solid}
+.note[contenteditable]:focus{outline:2px solid var(--note-line);border-style:solid}
+.note .edit-tip{color:#a88a2a;font-size:11px;margin-left:6px}
+
+/* ---------- PC chrome ---------- */
+.topbar{height:56px;background:#fff;display:flex;align-items:center;padding:0 22px;gap:18px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.logo{font-weight:800;font-size:19px;color:var(--g);letter-spacing:1px;white-space:nowrap}
+.logo b{font-style:italic;margin-right:4px}
+.marquee{flex:1;color:var(--ink2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-icons{display:flex;gap:16px;font-size:12px;color:var(--ink2)}
+.tb-icons button{display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:4px}
+.tb-icons i{width:18px;height:18px;border-radius:5px;background:#e6ede9;display:block}
+.tb-icons button.on{color:var(--g);font-weight:600}
+.tb-icons button.on i{background:var(--g)}
+.tb-bal{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-weight:700}
+.tb-bal span:first-child{background:var(--g);color:#fff;padding:6px 10px}
+.tb-bal span:last-child{padding:6px 10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#4b4f55 0 30%,#d9dde0 31%);flex:none}
+.body{display:flex;min-height:calc(100% - 56px)}
+.side{width:150px;flex:none;padding:18px 14px;display:flex;flex-direction:column;gap:4px}
+.side .dl{background:linear-gradient(#22c062,#0f9447);color:#fff;border-radius:6px;padding:9px 0;text-align:center;font-weight:700;margin-bottom:12px}
+.side a{display:block;padding:7px 10px;border-radius:6px;color:var(--ink);text-decoration:none}
+.side a.on{color:var(--g);font-weight:700}
+.main{flex:1;padding:18px 26px 40px;min-width:0}
+
+.hero{display:grid;grid-template-columns:1.1fr 1.6fr 1.1fr;gap:16px}
+.box{background:#fff;border-radius:12px;padding:16px 18px}
+.who{display:flex;gap:12px;align-items:center}
+.who .avatar{width:54px;height:54px}
+.who small{color:var(--ink3);display:block}
+.who strong{font-size:17px;font-weight:600}
+.bal{background:linear-gradient(115deg,#ffd862,#ffc23a);border-radius:12px;padding:14px 18px;color:#5a3a00}
+.bal .num{font-size:24px;font-weight:700;margin:2px 0 12px}
+.bal .btns{display:flex;gap:10px}
+.bal .btns button{background:#fff3cf;border-radius:6px;padding:8px 22px;font-weight:700;color:#7a4b00}
+.msgs li{list-style:none;display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f0f3f1}
+.msgs li span{color:var(--ink3);font-size:12px}
+.tabs{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap}
+.tabs button{background:#fff;border-radius:7px;padding:9px 16px}
+.tabs button.on{background:var(--g);color:#fff;font-weight:700}
+.panel{background:#fff;border-radius:12px;padding:20px}
+
+/* security grid */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{border:1px solid #edf1ee;border-radius:10px;padding:16px;display:flex;gap:12px;align-items:center;background:#fff}
+.card .ico{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff}
+.card .tx{flex:1;min-width:0}
+.card .tx strong{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600}
+.card .tx p{color:var(--ink2);font-size:12.5px;margin-top:3px}
+.tag{font-size:11px;font-weight:500;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--ink3)}
+.tag.ok{color:var(--g);border-color:#bfe6cc;background:var(--g-soft)}
+.tag.warn{color:var(--amber);border-color:#f3d9a8;background:#fff7e6}
+.tag.bad{color:var(--red);border-color:#f5c2c4;background:var(--red-bg)}
+.mini{background:var(--g);color:#fff;border-radius:5px;padding:4px 11px;font-size:12px;font-weight:600;flex:none}
+.card.focus{border-color:#9bd9b1;box-shadow:0 0 0 3px #e2f5e8}
+
+/* team table */
+.filter{background:#f1f4f2;border-radius:8px;padding:12px 14px;display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.filter .fake{background:#fff;border:1px solid var(--line);border-radius:5px;padding:6px 10px;min-width:120px;color:var(--ink3)}
+.filter .sp{flex:1}
+.btn-s{background:var(--g);color:#fff;border-radius:6px;padding:7px 14px;font-weight:600}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;padding:3px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+th{background:var(--g-head);font-weight:600;padding:9px 8px}
+td{padding:9px 8px;text-align:center;border-top:1px solid #eef2ef}
+.ops{display:flex;gap:4px;justify-content:center}
+.ops button{white-space:nowrap;background:var(--g);color:#fff;border-radius:4px;padding:3px 7px;font-size:12px}
+
+/* withdraw page */
+.page-h{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.page-h h2{font-size:19px}
+.back{color:var(--ink2);font-size:13px;border:1px solid var(--line);border-radius:6px;padding:4px 10px}
+.placeholder{max-width:520px;margin:30px auto 0;border:2px dashed #c3d3c9;border-radius:12px;padding:40px 20px;text-align:center;color:var(--ink2)}
+.placeholder strong{display:block;font-size:16px;color:var(--ink);margin-bottom:6px}
+.placeholder .note{display:none;margin:12px auto 0;max-width:320px}
+.show-notes .placeholder .note{display:block}
+.frozen-box{max-width:440px;margin:20px auto 0;text-align:center;border:1px solid #f5c2c4;background:var(--red-bg);border-radius:12px;padding:26px 20px;color:var(--red)}
+.frozen-box strong{display:block;font-size:16px;margin-bottom:6px}
+.frozen-box p{color:var(--ink2);font-size:13px}
+
+/* ---------- fund password component ---------- */
+.fp{width:100%}
+.fp-desc{color:var(--ink2);font-size:13px;margin:-4px 0 16px;text-align:center}
+.fp-f{margin-bottom:14px}
+.fp-f>label{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.fp-in{display:flex;align-items:center;border:1px solid #cfd9d3;border-radius:8px;background:#fff;transition:border-color .15s}
+.fp-in:focus-within{border-color:var(--g);box-shadow:0 0 0 3px #e2f5e8}
+.fp-f.bad .fp-in{border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.fp-in input{flex:1;border:0;outline:0;padding:11px 12px;font-size:14px;background:transparent;min-width:0;color:var(--ink)}
+.fp-in input::placeholder{color:#a5b0aa}
+.fp-static{padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#f6f9f7;font-weight:600;letter-spacing:.5px}
+.eye{width:40px;height:40px;display:grid;place-items:center;color:#8a958f;flex:none}
+.eye:hover{color:var(--g)}
+.eye svg{width:18px;height:18px}
+.sms{flex:none;margin-right:6px;font-size:13px;color:var(--g);font-weight:600;padding:6px 8px;border-left:1px solid var(--line);white-space:nowrap}
+.sms[disabled]{color:var(--ink3);cursor:default}
+.fp-err{color:var(--red);font-size:12.5px;margin-top:5px;display:none}
+.fp-f.bad .fp-err{display:block}
+.fp-forgot{font-size:12px;color:var(--ink3);margin-top:6px}
+.rules{list-style:none;display:grid;gap:4px;margin:-4px 0 14px;padding:10px 12px;background:#f6f9f7;border-radius:8px;font-size:12.5px;color:var(--ink3)}
+.rules li{display:flex;align-items:center;gap:7px}
+.rules li::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid #c3cdc7;flex:none}
+.rules li.pass{color:var(--g-dark)}
+.rules li.pass::before{border-color:var(--g);background:var(--g) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E") center/12px no-repeat}
+.rules li.fail{color:var(--red)}
+.rules li.fail::before{border-color:var(--red)}
+.rules li.txt{color:var(--ink2);padding-left:21px}
+.rules li.txt::before{display:none}
+.rules+.note{margin:-6px 0 14px}
+.fp-note{font-size:12px;color:var(--ink3);line-height:1.7;margin:2px 0 16px}
+.fp-acts{display:flex;gap:12px}
+.fp-acts button{flex:1;border-radius:8px;padding:11px 0;font-size:15px;font-weight:600}
+.b-ghost{border:1px solid #cfd9d3 !important;color:var(--ink2)}
+.b-pri{background:linear-gradient(#22c062,#0f9447);color:#fff}
+.b-pri:active{filter:brightness(.95)}
+.inline-shell{max-width:440px;margin:6px auto 0}
+.inline-shell h3{text-align:center;color:var(--g-dark);font-size:17px;margin-bottom:10px}
+.dlg-b>.note,.fp>.note{margin:0 0 14px}
+
+/* ---------- overlays ---------- */
+.mask{position:absolute;inset:0;background:rgba(24,36,29,.45);display:flex;align-items:center;justify-content:center;padding:20px;animation:fade .15s}
+.dlg{background:#fff;border-radius:14px;width:440px;max-width:100%;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.25);animation:pop .18s ease-out;max-height:100%;display:flex;flex-direction:column}
+.dlg-h{background:var(--g-head);padding:13px 46px;text-align:center;font-weight:700;font-size:16px;position:relative;flex:none}
+.dlg-x{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:28px;height:28px;font-size:20px;color:var(--ink2);line-height:1}
+.dlg-b{padding:20px 24px 22px;overflow:auto}
+.alert{width:370px}
+.alert .dlg-b{text-align:center}
+.alert p{font-size:14.5px;line-height:1.7;color:var(--ink);margin:4px 0 18px}
+.alert p small{display:block;color:var(--ink3);font-size:12.5px;margin-top:4px}
+.alert .note{margin-top:14px}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{transform:scale(.95);opacity:0}}
+.toast-wrap{position:absolute;z-index:60;left:50%;top:16px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;max-width:92%;animation:pop .18s}
+.toast{background:rgba(25,35,29,.92);color:#fff;border-radius:22px;padding:10px 18px;font-size:14px;display:flex;gap:14px;align-items:center}
+.toast .ok{width:18px;height:18px;border-radius:50%;background:var(--g2);display:grid;place-items:center;font-size:12px;flex:none}
+.toast button{color:#7ee2a3;font-weight:700;white-space:nowrap}
+
+/* ---------- console ---------- */
+#console{position:sticky;top:0;z-index:100;background:#16201b;color:#dfe9e3;padding:9px 16px 7px;font-size:12.5px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.c-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.c-title{font-size:15px;font-weight:700;color:#fff;align-self:center;margin-right:4px;white-space:nowrap}
+.grp{display:flex;align-items:flex-end;gap:8px;padding-left:10px;border-left:1px solid #2f3f36}
+.grp:first-child{border-left:0;padding-left:0}
+.grp>b{align-self:center;color:#7ee2a3;font-size:12px;font-weight:600;writing-mode:horizontal-tb;white-space:nowrap}
+.cf>span{display:block;color:#a9bab0;font-size:11.5px;margin-bottom:3px;white-space:nowrap}
+.seg{display:flex;background:#24312a;border-radius:6px;padding:2px;gap:2px}
+.seg button{padding:4px 7px;border-radius:5px;color:#c4d3ca;font-size:12px;white-space:nowrap}
+.seg button.on{background:var(--g);color:#fff;font-weight:700}
+.c-acts{margin-left:auto;display:flex;gap:6px;align-self:flex-end}
+.c-acts button{border:1px solid #3a4c42;border-radius:6px;padding:4px 10px;color:#dfe9e3;font-size:12px;white-space:nowrap}
+.c-acts button:hover{background:#24312a}
+.c-info{margin-top:8px;padding-top:7px;border-top:1px solid #2a382f;color:#a9bab0;font-size:12px;display:flex;flex-wrap:wrap;gap:6px 22px}
+.c-info code{background:#2d3d34;color:#ffd862;padding:1px 6px;border-radius:4px;font-family:inherit}
+.c-info em{font-style:normal;color:#dfe9e3}
+
+/* ---------- docs ---------- */
+#docs{background:#f4f8f5;padding:40px 6vw 60px;border-top:1px solid #c8d6cd}
+#docs h2{font-size:20px;margin-bottom:22px;color:var(--ink)}
+.docs-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:22px;max-width:1300px}
+.doc-card{background:#fff;border:1px solid #dfe7e2;border-radius:12px;padding:20px 22px}
+.doc-card h3{font-size:15px;margin-bottom:12px;color:var(--g-dark)}
+.doc-card ul{list-style:none;display:grid;gap:9px;font-size:13px;line-height:1.65;color:var(--ink2)}
+.doc-card li{padding-left:14px;position:relative}
+.doc-card li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--g)}
+.legend{display:grid;gap:14px;font-size:13px;color:var(--ink2);line-height:1.6}
+.legend .sample-hz{display:inline-block;background:var(--g);color:#fff;border-radius:5px;padding:3px 10px;font-size:12px;font-weight:600;outline:2px dashed var(--red);outline-offset:2px;margin:4px 0 2px}
+.legend .note{display:inline-block;margin:4px 0 2px}
+@media (max-width:1100px){.docs-grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="show-hz show-notes">
+<header id="console" aria-label="原型控制台">
+  <div class="c-row">
+    <div class="grp"><b>用户状态</b>
+      <div class="cf"><span>资金密码</span><div class="seg" data-k="fund"></div></div>
+      <div class="cf"><span>手机号</span><div class="seg" data-k="phone"></div></div>
+      <div class="cf"><span>账户状态</span><div class="seg" data-k="frozen"></div></div>
+    </div>
+    <div class="grp"><b>后台配置</b>
+      <div class="cf"><span>修改需手机号验证</span><div class="seg" data-k="sw"></div></div>
+      <div class="cf"><span>冷却时长</span><div class="seg" data-k="cool"></div></div>
+      <div class="cf"><span>错误冻结</span><div class="seg" data-k="fz"></div></div>
+      <div class="cf"><span>冻结次数</span><div class="seg" data-k="fx"></div></div>
+    </div>
+    <div class="grp"><b>演示显示</b>
+      <div class="cf"><span>预览端</span><div class="seg" data-k="view"></div></div>
+      <div class="cf"><span>交互热区</span><div class="seg" data-k="hot"></div></div>
+      <div class="cf"><span>开发标注</span><div class="seg" data-k="notes"></div></div>
+    </div>
+    <div class="c-acts"><button data-act="docs">查看说明</button><button data-act="reset">重置演示</button></div>
+  </div>
+  <div class="c-info"><span id="demoData"></span><span id="coolInfo"></span><span id="errInfo"></span></div>
+</header>
+
+<div id="stage"><div id="device"><div id="app"></div><div id="layer"></div></div></div>
+
+<section id="docs" aria-label="原型说明">
+  <h2>原型说明</h2>
+  <div class="docs-grid">
+    <div class="doc-card"><h3>本期规则速览</h3><ul>
+      <li>设置、验证、修改共用一套组件，分弹窗与页面内嵌两种外壳。</li>
+      <li>钱包绑定：未设置时原地设置，成功后直接进入现有绑定页，不再二次验证。</li>
+      <li>提款：每次进入提款页都需验证；未设置时页内设置，成功后直接进入。</li>
+      <li>下级转账：未设置时原地弹窗设置，成功后直接进入现有下级转账页，不再二次验证。</li>
+      <li>外壳分工：操作类入口（钱包绑定、下级转账）用弹窗，页面类入口（提款）用页面内嵌。</li>
+      <li>修改：需已绑定手机号且度过冷却期，先完成短信安全验证，再进入修改弹窗。</li>
+      <li>资金密码连续错误达到次数后冻结账户，冻结期间拦截所有资金密码入口。</li>
+      <li>规则区：可勾选规则只放前端能确定的规则；需服务端校验的规则以文字说明展示。</li>
+      <li>校验错误统一显示在字段下方；成功统一用 toast；阻断统一用温馨提示弹窗。</li>
+    </ul></div>
+    <div class="doc-card"><h3>图例说明</h3><div class="legend">
+      <div><span class="sample-hz">按钮</span><br>红色虚线框：交互热区，表示可点击演示的入口。</div>
+      <div><span class="note" style="display:inline-block">示例说明</span><br>黄色便签：开发标注，正式开发时不出现在页面上。找回提示下方的标注可直接点击编辑。</div>
+      <div>两者都可以在顶部“演示显示”中隐藏，方便截图。</div>
+    </div></div>
+    <div class="doc-card"><h3>占位与范围说明</h3><ul>
+      <li>钱包绑定页、下级转账页、提款表单为现有页面，本期不改动，原型中用占位页表示跳转，点击“返回”回到入口页。</li>
+      <li>H5 端 UI 待美术补充，交互逻辑与 PC 端一致。</li>
+      <li>登录密码、密保、谷歌动态口令不在本期范围，点击只提示。</li>
+      <li>手机号绑定沿用现有流程，原型中仅为占位。</li>
+      <li>账户解冻沿用现有逻辑；顶部将账户状态切回“正常”即模拟解冻。</li>
+    </ul></div>
+  </div>
+</section>
+
+<script>
+/* ================= state ================= */
+const HOUR = 3600e3;
+const PHONE = '138****5678';
+const DEFAULT_FORGOT_NOTE = '文案待定：找回方式未确定，最终文案由业务方确定';
+const S = {};
+function initState(){
+  Object.assign(S,{
+    fundSet:false, fundPwd:'', loginPwd:'abc123',
+    phoneBound:true, phoneBindAt:Date.now()-72*HOUR,
+    sw:true, coolH:24, freezeOn:true, freezeX:5, errCount:0, frozen:false,
+    view:'pc', hot:true, notes:true,
+    page:'security', wdPassed:false, focusCard:false, ticket:false,
+    forgotNote: S.forgotNote || DEFAULT_FORGOT_NOTE
+  });
+}
+initState();
+
+const WALLETS = [
+  ['bank','绑定银行卡','最多可绑定5张银行卡','#f5a524','卡'],
+  ['usdt','绑定USDT','绑定您的USDT钱包地址','#26a17b','T'],
+  ['usdc','绑定USDC','绑定您的USDC钱包地址','#2775ca','$'],
+  ['ebpay','绑定EBPAY','绑定您的EBPAY钱包地址','#4a3fd1','E'],
+  ['topay','绑定TOPAY','绑定您的TOPAY钱包地址','#a8873f','To'],
+  ['cnyt','绑定CNYT','绑定您的CNYT钱包地址','#f08a24','C'],
+  ['gobao','绑定GOBAO','绑定您的GOBAO钱包地址','#e6a23c','G'],
+  ['alipay','绑定支付宝','绑定您的支付宝收款码','#1677ff','支'],
+  ['wechat','绑定微信支付','绑定您的微信支付收款码','#07c160','微'],
+];
+
+const $ = s => document.querySelector(s);
+const app = $('#app'), layer = $('#layer');
+const fmt = t => { const d=new Date(t), p=n=>String(n).padStart(2,'0'); return `${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const coolEnd = () => S.phoneBindAt + S.coolH*HOUR;
+const phoneState = () => !S.phoneBound ? 'none' : (Date.now() < coolEnd() ? 'cooling' : 'ok');
+const noteHTML = t => `<div class="note">${t}</div>`;
+
+/* ================= console ================= */
+const SEGS = {
+  fund:[['0','未设置'],['1','已设置']],
+  phone:[['none','未绑定'],['cooling','冷却期内'],['ok','已过冷却期']],
+  frozen:[['0','正常'],['1','已冻结']],
+  sw:[['1','开启'],['0','关闭']],
+  cool:[['24','24h'],['48','48h']],
+  fz:[['1','开启'],['0','关闭']],
+  fx:[['3','3次'],['5','5次']],
+  view:[['pc','PC'],['h5','H5']],
+  hot:[['1','显示'],['0','隐藏']],
+  notes:[['1','显示'],['0','隐藏']],
+};
+function curSeg(k){
+  return {fund:S.fundSet?'1':'0', phone:phoneState(), frozen:S.frozen?'1':'0', sw:S.sw?'1':'0', cool:String(S.coolH),
+          fz:S.freezeOn?'1':'0', fx:String(S.freezeX), view:S.view, hot:S.hot?'1':'0', notes:S.notes?'1':'0'}[k];
+}
+function renderConsole(){
+  document.querySelectorAll('.seg').forEach(el=>{
+    const k=el.dataset.k;
+    el.innerHTML = SEGS[k].map(([v,t])=>`<button data-act="cfg" data-k="${k}" data-v="${v}" class="${curSeg(k)===v?'on':''}">${t}</button>`).join('');
+  });
+  const ps = phoneState();
+  $('#coolInfo').innerHTML = '手机号：<em>' + (ps==='none' ? '未绑定' : `绑定于 ${fmt(S.phoneBindAt)}，${ps==='cooling' ? '冷却期至 '+fmt(coolEnd()) : '已可修改资金密码'}`) + '</em>';
+  $('#errInfo').innerHTML = '错误计数：<em>' + (S.freezeOn ? `${S.errCount} / ${S.freezeX} 次` : '冻结已关闭，不计数') + '</em>';
+  $('#demoData').innerHTML =
+    `演示数据：登录密码 <code>${S.loginPwd}</code>　资金密码 ${S.fundSet?`<code>${S.fundPwd}</code>`:'<em>未设置</em>'}　短信验证码 <code>123456</code>`;
+  $('#stage').classList.toggle('h5', S.view==='h5');
+  document.body.classList.toggle('show-hz', S.hot);
+  document.body.classList.toggle('show-notes', S.notes);
+  fitStage();
+}
+let PAGE_MIN_H = 0;   // 以安全中心页面高度为准，其他页面同样拉长，下方留空
+function fitStage(){
+  const ch=$('#console').offsetHeight, vh=window.innerHeight-ch;
+  document.documentElement.style.setProperty('--ch', ch+'px');
+  const st=$('#stage');
+  if(S.view==='h5'){ st.style.height=vh+'px'; app.style.minHeight=''; return; }
+  st.style.height='';
+  app.style.minHeight='';
+  if(S.page==='security') PAGE_MIN_H = Math.max(app.scrollHeight, vh);
+  app.style.minHeight = Math.max(PAGE_MIN_H, vh) + 'px';
+}
+window.addEventListener('resize', ()=>{ if(S.page!=='security' && S.view!=='h5'){ PAGE_MIN_H=0; } fitStage(); });
+function applyCfg(k,v){
+  if(k==='fund'){ S.fundSet = v==='1'; S.fundPwd = S.fundSet ? 'qwe123' : ''; }
+  if(k==='phone'){
+    if(v==='none'){ S.phoneBound=false; S.phoneBindAt=null; }
+    else { S.phoneBound=true; S.phoneBindAt = Date.now() - (v==='cooling' ? 2 : 72)*HOUR; }
+  }
+  if(k==='frozen'){ S.frozen = v==='1'; S.errCount = S.frozen ? S.freezeX : 0; }
+  if(k==='sw') S.sw = v==='1';
+  if(k==='cool') S.coolH = +v;
+  if(k==='fz'){ S.freezeOn = v==='1'; if(!S.freezeOn) S.errCount=0; }
+  if(k==='fx') S.freezeX = +v;
+  if(k==='view') S.view = v;
+  if(k==='hot'){ S.hot = v==='1'; renderConsole(); return; }
+  if(k==='notes'){ S.notes = v==='1'; renderConsole(); return; }
+  closeAll(); render();
+}
+
+/* ================= icons ================= */
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12s3.5-6 9-6 9 6 9 6"/><path d="M4 15l2-2M20 15l-2-2M9.5 17.5l.6-2.3M14.5 17.5l-.6-2.3" /></svg>';
+const EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+/* ================= overlays ================= */
+function overlay(html,onClose){
+  const m=document.createElement('div'); m.className='mask'; m.innerHTML=html; m._onClose=onClose; layer.appendChild(m); return m;
+}
+function closeTop(silent){ const ms=layer.querySelectorAll('.mask'); if(!ms.length) return; const m=ms[ms.length-1]; m.remove(); if(!silent && m._onClose) m._onClose(); }
+function closeAll(){ layer.querySelectorAll('.mask').forEach(m=>m.remove()); S.ticket=false; }
+
+let alertSeq=0; const alertActs={};
+function showAlert(msg, buttons, sub, note){
+  const id='a'+(++alertSeq);
+  alertActs[id]=buttons;
+  overlay(`<div class="dlg alert" role="alertdialog" aria-label="温馨提示">
+    <div class="dlg-h">温馨提示</div>
+    <div class="dlg-b"><p>${msg}${sub?`<small>${sub}</small>`:''}</p>
+    <div class="fp-acts">${buttons.map((b,i)=>`<button class="${b.primary?'b-pri':'b-ghost'}" data-act="alert-btn" data-id="${id}" data-i="${i}">${b.text}</button>`).join('')}</div>
+    ${note?noteHTML(note):''}</div></div>`);
+}
+
+let toastTimer;
+function toast(msg, opt={}){
+  layer.querySelectorAll('.toast-wrap').forEach(t=>t.remove());
+  const t=document.createElement('div'); t.className='toast-wrap'; t.setAttribute('role','status');
+  t.innerHTML=`<div class="toast"><span class="ok">✓</span><span>${msg}</span>${opt.action?`<button data-act="toast-act">${opt.action.text}</button>`:''}</div>${opt.note?noteHTML(opt.note):''}`;
+  layer.appendChild(t);
+  window._toastAct = opt.action ? opt.action.fn : null;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.remove(), opt.action?6000:(opt.note?4000:2400));
+}
+
+/* ================= freeze ================= */
+const FREEZE_NOTE = '冻结范围：仅此用户，不含下级；冻结方式以后台配置为准';
+function guardFrozen(){
+  if(!S.frozen) return false;
+  showAlert('账户已被冻结，请联系在线客服处理',[{text:'我知道了'},{text:'联系客服',primary:true,fn:()=>toast('跳转在线客服（现有功能）')}],'',FREEZE_NOTE+'；冻结期间拦截所有资金密码的设置、验证、修改入口');
+  return true;
+}
+// 资金密码输错时调用，返回错误文案后缀；达到次数则冻结
+function countError(){
+  if(!S.freezeOn) return '';
+  S.errCount++;
+  if(S.errCount >= S.freezeX){
+    S.frozen=true; closeAll(); render();
+    showAlert(`资金密码连续输错 ${S.freezeX} 次，账户已被冻结，请联系在线客服处理`,[{text:'我知道了'},{text:'联系客服',primary:true,fn:()=>toast('跳转在线客服（现有功能）')}],'',FREEZE_NOTE+'；冻结由现有用户冻结组件执行，解冻沿用现有逻辑');
+    return null;
+  }
+  const left=S.freezeX-S.errCount;
+  renderConsole();
+  return left<=2 ? `，还可尝试 ${left} 次` : '';
+}
+function resetCount(){ S.errCount=0; renderConsole(); }
+
+/* ================= fund password component ================= */
+/* 一套核心：mode = set | verify | modify | sms（修改前的安全验证）；两种外壳：modal | inline */
+let fpSeq=0; const FP={};
+const TITLES = {set:'设置资金密码', verify:'验证资金密码', modify:'修改资金密码', sms:'安全验证'};
+const SUBMIT = {set:'确认设置', verify:'确认', modify:'确认修改', sms:'下一步'};
+const RULE_TEXT = {set:'资金密码不能与登录密码相同', modify:'资金密码不能与登录密码或旧资金密码相同'};
+const LEGACY_NOTE = '现状说明文案：“请妥善保管，它用于提款、转账和绑定收款账户。建议同时绑定谷歌动态口令，进一步保障资金安全。”是否保留由业务方确定，未确认前不展示';
+
+function fpFields(mode){
+  if(mode==='verify') return [{k:'v',label:'资金密码',ph:'请输入资金密码',forgot:true}];
+  if(mode==='sms') return [{k:'p',label:'手机号',static:PHONE},{k:'s',label:'短信验证码',ph:'请输入短信验证码',sms:true}];
+  const f=[];
+  if(mode==='modify') f.push({k:'o',label:'旧资金密码',ph:'请输入旧资金密码',forgot:true});
+  const nw = mode==='modify' ? '新' : '';
+  f.push({k:'n',label:nw+'资金密码',ph:`请输入${nw}资金密码`,rules:true});
+  f.push({k:'c',label:`确认${nw}资金密码`,ph:`请再次输入${nw}资金密码`});
+  return f;
+}
+function ruleItems(mode){
+  return [['len','6-16 位，仅限字母和数字'],['mix','同时包含字母和数字']];
+}
+function forgotHTML(){
+  return `<div class="fp-forgot">忘记资金密码？请使用密保功能找回或联系在线客服处理</div>
+    <div class="note" contenteditable="true" data-act-edit="forgot" title="可直接点击编辑">${S.forgotNote}</div>`;
+}
+function fieldHTML(id,f){
+  if(f.static) return `<div class="fp-f"><label>${f.label}</label><div class="fp-static">${f.static}</div></div>`;
+  return `<div class="fp-f" data-f="${f.k}">
+      <label for="${id}-${f.k}">${f.label}</label>
+      <div class="fp-in">
+        <input id="${id}-${f.k}" type="${f.sms?'text':'password'}" ${f.sms?'inputmode="numeric" maxlength="6"':'maxlength="16"'} placeholder="${f.ph}" autocomplete="off" data-fp="${id}" data-k="${f.k}">
+        ${f.sms?`<button class="sms" data-act="sms" data-id="${id}">获取验证码</button>`:`<button class="eye" data-act="eye" aria-label="显示密码" title="显示/隐藏密码">${EYE_OFF}</button>`}
+      </div>
+      <div class="fp-err" role="alert"></div>
+      ${f.forgot?forgotHTML():''}
+    </div>
+    ${f.rules?`<ul class="rules" data-rules="${id}">${ruleItems(FP[id].mode).map(([k,t])=>`<li data-r="${k}">${t}</li>`).join('')}<li class="txt">${RULE_TEXT[FP[id].mode]}</li></ul>${noteHTML(LEGACY_NOTE)}`:''}`;
+}
+function fpHTML(id,cfg){
+  const body = fpFields(cfg.mode).map(f=>fieldHTML(id,f)).join('');
+  const secondary = cfg.mode==='sms' ? `<button class="b-ghost" data-act="close">取消</button>` : `<button class="b-ghost" data-act="fp-clear" data-id="${id}">清空</button>`;
+  return `<div class="fp" data-fpid="${id}">
+    ${cfg.desc?`<p class="fp-desc">${cfg.desc}</p>`:''}
+    ${cfg.note?noteHTML(cfg.note):''}
+    ${body}
+    <div class="fp-acts">${secondary}<button class="b-pri" data-act="fp-submit" data-id="${id}">${SUBMIT[cfg.mode]}</button></div>
+  </div>`;
+}
+function openFP(cfg){
+  const id='fp'+(++fpSeq); FP[id]=cfg; cfg.shell='modal';
+  const m=overlay(`<div class="dlg" role="dialog" aria-label="${TITLES[cfg.mode]}"><div class="dlg-h">${TITLES[cfg.mode]}<button class="dlg-x" data-act="close" aria-label="关闭">×</button></div><div class="dlg-b">${fpHTML(id,cfg)}</div></div>`, cfg.onClose);
+  setTimeout(()=>m.querySelector('input')?.focus(),50);
+  return id;
+}
+function inlineFP(cfg){
+  const id='fp'+(++fpSeq); FP[id]=cfg; cfg.shell='inline';
+  return `<div class="inline-shell"><h3>${TITLES[cfg.mode]}</h3>${fpHTML(id,cfg)}</div>`;
+}
+function fpVal(id,k){ return document.getElementById(id+'-'+k)?.value ?? ''; }
+function fpErr(id,k,msg){
+  const f=document.querySelector(`[data-fpid="${id}"] [data-f="${k}"]`); if(!f) return;
+  f.classList.toggle('bad',!!msg); f.querySelector('.fp-err').textContent=msg||'';
+}
+const chkLen = v => /^[A-Za-z0-9]{6,16}$/.test(v);
+const chkMix = v => /[A-Za-z]/.test(v) && /\d/.test(v);
+// 规则清单：可勾选规则只放前端能完全确定的规则；服务端规则以文字说明展示
+function updRules(id){
+  const ul=document.querySelector(`[data-rules="${id}"]`); if(!ul) return;
+  const v=fpVal(id,'n');
+  ul.querySelectorAll('li[data-r]').forEach(li=>{
+    li.classList.remove('pass','fail');
+    const k=li.dataset.r;
+    if(!v) return;
+    if(k==='len' && chkLen(v)) li.classList.add('pass');
+    if(k==='mix' && chkMix(v)) li.classList.add('pass');
+  });
+}
+function fpSubmit(id){
+  const cfg=FP[id], mode=cfg.mode;
+  let ok=true;
+  const set=(k,m)=>{ fpErr(id,k,m); if(m) ok=false; };
+  const done=()=>{ if(cfg.shell==='modal') closeTop(true); clearInterval(cfg.timer); cfg.onSuccess && cfg.onSuccess(); renderConsole(); };
+
+  if(mode==='sms'){
+    const s=fpVal(id,'s');
+    set('s', !s ? '请输入短信验证码' : (!cfg.sent ? '请先获取验证码' : (s!=='123456' ? '验证码错误或已失效' : '')));
+    if(!ok) return;
+    return done();   // 短信验证码错误不计入资金密码错误次数
+  }
+
+  if(mode==='verify'){
+    const v=fpVal(id,'v');
+    set('v', !v ? '请输入资金密码' : '');
+    if(!ok) return;
+    // ---- 服务端 ----
+    if(S.frozen){ if(cfg.shell==='modal') closeTop(true); guardFrozen(); return; }
+    if(v!==S.fundPwd){ const suf=countError(); if(suf!==null) set('v','资金密码错误，请重新输入'+suf); return; }
+    resetCount(); return done();
+  }
+
+  // set / modify：前端校验（不涉及保密信息，可同时展示）
+  const n=fpVal(id,'n'), c=fpVal(id,'c'), o=fpVal(id,'o');
+  if(mode==='modify') set('o', !o ? '请输入旧资金密码' : '');
+  const nw = mode==='modify' ? '新' : '';
+  set('n', !n ? `请输入${nw}资金密码` : !chkLen(n) ? '资金密码需为 6-16 位字母或数字' : !chkMix(n) ? '资金密码需同时包含字母和数字' : '');
+  set('c', !c ? `请再次输入${nw}资金密码` : (c!==n ? '两次输入的密码不一致' : ''));
+  updRules(id);
+  if(!ok){ document.querySelector(`[data-fpid="${id}"] .fp-f.bad input`)?.focus(); return; }
+
+  // ---- 服务端：按顺序校验，遇错即停 ----
+  if(mode==='modify'){
+    if(S.sw && !S.ticket){ closeTop(true); toast('验证已过期，请重新验证'); return openSmsVerify(); }
+    if(S.frozen){ closeTop(true); guardFrozen(); return; }
+    if(o!==S.fundPwd){ const suf=countError(); if(suf!==null) set('o','旧资金密码错误，请重新输入'+suf); return; }   // 旧密码错误时不再校验新密码
+    resetCount();
+  }
+  if(n===S.loginPwd){ set('n','资金密码不能与登录密码相同'); return; }
+  if(mode==='modify' && n===S.fundPwd){ set('n','新资金密码不能与旧资金密码相同'); return; }   // 旧密码已校验通过，此判断准确
+  S.fundSet=true; S.fundPwd=n; S.ticket=false;
+  done();
+}
+function sendSms(id,btn){
+  const cfg=FP[id]; cfg.sent=true; let n=60;
+  btn.disabled=true; btn.textContent=`${n}s 后重新获取`;
+  cfg.timer=setInterval(()=>{ n--; if(!document.body.contains(btn)||n<=0){ clearInterval(cfg.timer); btn.disabled=false; btn.textContent='重新获取'; return; } btn.textContent=`${n}s 后重新获取`; },1000);
+  toast(`验证码已发送至 ${PHONE}`);
+  fpErr(id,'s','');
+}
+
+/* ================= business flows ================= */
+function go(page,opts={}){
+  S.page=page; Object.assign(S,opts);
+  if(page==='withdraw') S.wdPassed=false;   // 每次进入提款页都需验证
+  closeAll(); render(); app.scrollTop=0;
+  if(window.scrollY>0) window.scrollTo({top:0,behavior:'instant'});
+}
+
+// 安全中心 · 资金密码卡片
+function onFundCard(){
+  if(guardFrozen()) return;
+  if(!S.fundSet){
+    openFP({mode:'set', onSuccess:()=>{ render(); toast('资金密码设置成功'); }});
+  } else onModify();
+}
+const TRANSFER_JUMP = {title:'下级转账', back:'team', page:'现有下级转账页面'};
+
+// 修改资金密码：前置判断 → 安全验证 → 修改
+function onModify(){
+  if(guardFrozen()) return;
+  if(!S.sw) return openModify();
+  const ps=phoneState();
+  if(ps==='none') return showAlert('修改资金密码前，请先绑定手机号',[{text:'取消'},{text:'去绑定',primary:true,fn:openBindPhone}]);
+  if(ps==='cooling') return showAlert(`手机号绑定未满 ${S.coolH} 小时，暂不可修改资金密码`,[{text:'我知道了',primary:true}],`可于 ${fmt(coolEnd())} 后修改`);
+  openSmsVerify();
+}
+function openSmsVerify(){
+  openFP({mode:'sms', desc:'修改资金密码前，需验证您绑定的手机号',
+    note:'验证通过后服务端签发一次性凭证，有效期 10 分钟；关闭修改弹窗或凭证过期后需重新验证',
+    onSuccess:()=>{ S.ticket=true; openModify(); }});
+}
+function openModify(){
+  openFP({mode:'modify', onClose:()=>{ S.ticket=false; }, onSuccess:()=>{ render(); toast('资金密码修改成功'); }});
+}
+// 钱包绑定
+function onWallet(key){
+  if(guardFrozen()) return;
+  const w=WALLETS.find(x=>x[0]===key);
+  const jump={title:w[1], back:'security', page:`现有${w[1]}页面`};
+  if(!S.fundSet){
+    openFP({mode:'set', desc:`${w[1]}前，请先设置资金密码`, onSuccess:()=>{ go('jump',{jump:{...jump, from:'set'}}); toast('资金密码设置成功'); }});
+  } else {
+    openFP({mode:'verify', desc:`${w[1]}需验证资金密码`, onSuccess:()=>{ go('jump',{jump:{...jump, from:'verify'}}); toast('验证通过'); }});
+  }
+}
+// 下级转账
+function onTransfer(){
+  if(guardFrozen()) return;
+  if(!S.fundSet){
+    openFP({mode:'set', desc:'下级转账前，请先设置资金密码', onSuccess:()=>{ go('jump',{jump:{...TRANSFER_JUMP, from:'set'}}); toast('资金密码设置成功'); }});
+  } else {
+    openFP({mode:'verify', desc:'下级转账需验证资金密码', onSuccess:()=>{ go('jump',{jump:{...TRANSFER_JUMP, from:'verify'}}); toast('验证通过'); }});
+  }
+}
+// 绑定手机号（现有流程占位）
+function openBindPhone(){
+  overlay(`<div class="dlg" role="dialog"><div class="dlg-h">绑定手机号<button class="dlg-x" data-act="close" aria-label="关闭">×</button></div>
+  <div class="dlg-b"><div class="fp">
+    ${noteHTML(`现有手机号绑定流程，本期不改动。绑定或更换成功后，重新开始 ${S.coolH} 小时冷却期`)}
+    <div class="fp-f" style="margin-top:12px"><label>手机号</label><div class="fp-static">13812345678</div></div>
+    <div class="fp-f"><label>短信验证码</label><div class="fp-static">123456</div></div>
+    <div class="fp-acts"><button class="b-ghost" data-act="close">取消</button><button class="b-pri" data-act="phone-ok">确认绑定</button></div>
+  </div></div></div>`);
+}
+
+/* ================= pages ================= */
+function topbar(){
+  return `<header class="topbar">
+    <div class="logo"><b>BF</b>八方娱乐</div>
+    <div class="marquee">【万象更新】全新游戏生态上线，畅享极速竞技新体验　【财富密码】邀请好友入驻，双方均可获得高额聚财礼包</div>
+    <div class="tb-icons">
+      <button><i></i>网路状态</button><button><i></i>换肤</button><button><i></i>聊天</button><button><i></i>站内信</button>
+      <button><i></i>转账</button><button class="hz ${S.page==='withdraw'?'on':''}" data-act="nav" data-p="withdraw"><i></i>提款</button>
+    </div>
+    <div class="tb-bal"><span>充值</span><span>¥ 2,000.0000</span></div>
+    <div class="avatar"></div>
+  </header>`;
+}
+function side(){
+  return `<nav class="side"><div class="dl">下载专区</div>${['首页','彩票','体育','真人','电子','电竞','棋牌','捕鱼','活动','帮助','客服'].map((t,i)=>`<a href="#" onclick="return false" class="${i===0?'on':''}">${t}</a>`).join('')}</nav>`;
+}
+function hero(){
+  return `<div class="hero">
+    <div class="box who"><div class="avatar"></div><div><small>亲爱的</small><strong>abin002</strong><small style="margin-top:6px">账户注册时间　2026-10-06 14:27:16</small></div></div>
+    <div class="bal"><div>余额</div><div class="num">¥ 2000.0000</div><div class="btns"><button class="hz" data-act="nav" data-p="withdraw">提款</button><button>转账</button><button>充值 ›</button></div></div>
+    <div class="box"><ul class="msgs"><li>充值成功<span>10-06 14:31</span></li><li>彩票分红契约邀请<span>10-06 14:27</span></li><li>游戏分红契约邀请<span>10-06 14:27</span></li></ul></div>
+  </div>
+  <div class="tabs">${['个人资料','团队管理','团队统计','契约管理','钱包管理','充提记录','安全中心','报表管理'].map(t=>{
+    const p = t==='安全中心'?'security':t==='团队管理'?'team':''; const on=(p&&p===S.page);
+    return `<button class="${on?'on':''} ${p?'hz':''}" ${p?`data-act="nav" data-p="${p}"`:''}>${t}</button>`;}).join('')}</div>`;
+}
+function card(icoBg,icoTx,title,desc,btn,act,extra='',cls='',hz=false){
+  return `<div class="card ${cls}"><div class="ico" style="background:${icoBg}">${icoTx}</div>
+  <div class="tx"><strong>${title}${extra}</strong><p>${desc}</p></div>
+  <button class="mini ${hz?'hz':''}" ${act}>${btn}</button></div>`;
+}
+function pageSecurity(){
+  const ps=phoneState();
+  const fundTag = S.frozen ? ' <span class="tag bad">已冻结</span>' : S.fundSet ? ' <span class="tag ok">已设置</span>' : ' <span class="tag warn">未设置</span>';
+  const cards=[
+    card('#ef4b4b','锁','登录密码','6-16 个字符','修改','data-act="oos" data-t="登录密码修改"'),
+    ...WALLETS.map(w=>card(w[3],w[4],w[1],w[2],'绑定',`data-act="wallet" data-w="${w[0]}"`,'','',true)),
+    card('#ef4b4b','¥','资金密码',
+      S.fundSet?'用于提款、转账和绑定收款账户':'提款、转账、绑定收款账户前需先设置',
+      S.fundSet?'修改':'设置','data-act="fund"', fundTag, S.focusCard?'focus':'', true),
+    card('#1a8fd8','盾','密保设定','用于找回密码','绑定','data-act="oos" data-t="密保设定"'),
+    card('#2b7de9','G','谷歌动态口令','30 秒更换口令，进一步保障资金安全','绑定','data-act="oos" data-t="谷歌动态口令"'),
+    card('#c75bd6','☎','手机号码',
+      ps==='none'?'绑定后可修改资金密码':`已绑定 ${PHONE}`,
+      ps==='none'?'绑定':'更换','data-act="phone"',
+      ps==='none'?' <span class="tag">未设置</span>':' <span class="tag ok">已绑定</span>','',true),
+  ];
+  return hero()+`<div class="panel"><div class="grid">${cards.join('')}</div></div>`;
+}
+function pageTeam(){
+  const rows=[['abin002','代理','2000.0000','3000','3','2026-10-06 14:27:16','2026-10-06 17:10:37',['投注记录','账变记录']],
+              ['abin003','会员','1000.0000','1000.0000','1','2026-10-06 14:29:11','2026-10-06 17:02:40',['返点设定','下级转账','投注记录','账变记录']],
+              ['abin004','会员','0.0000','0.0000','1','2026-10-06 17:08:16','2026-10-06 17:08:51',['返点设定','投注记录','账变记录']]];
+  return hero()+`<div class="panel">
+    <div class="filter"><span>类型</span><span class="fake">全部 ▾</span><span>用户名</span><span class="fake">查询用户名</span><button class="btn-s">查询</button><span class="sp"></span><button class="btn-s">推广链接</button><button class="btn-s">注册开户</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>用户名</th><th>类型</th><th>余额</th><th>团队余额</th><th>团队人数</th><th>注册时间</th><th>最后登录</th><th>操作</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.slice(0,7).map(c=>`<td>${c}</td>`).join('')}<td><div class="ops">${r[7].map(o=>o==='下级转账'?`<button class="hz" data-act="transfer">${o}</button>`:`<button>${o}</button>`).join('')}</div></td></tr>`).join('')}</tbody></table></div>
+  </div>`;
+}
+function pageWithdraw(){
+  let inner;
+  if(S.frozen){
+    inner = `<div class="frozen-box"><strong>账户已被冻结</strong><p>请联系在线客服处理</p>${noteHTML(FREEZE_NOTE)}</div>`;
+  } else if(S.wdPassed){
+    inner = `<div class="placeholder"><strong>现有提款页面</strong>${S.wdFromSet?'设置成功后':'验证通过后'}进入现有提款页面${noteHTML('现有页面，本期不改动'+(S.wdFromSet?'；设置成功视为已验证，不再二次验证':''))}</div>`;
+  } else if(!S.fundSet){
+    inner = inlineFP({mode:'set', desc:'提款前请先设置资金密码', onSuccess:()=>{ S.wdPassed=true; S.wdFromSet=true; render(); toast('资金密码设置成功'); }});
+  } else {
+    inner = inlineFP({mode:'verify', desc:'为保障资金安全，提款前需验证资金密码', note:'每次进入提款页都需验证，离开后再次进入需重新验证',
+      onSuccess:()=>{ S.wdPassed=true; S.wdFromSet=false; render(); toast('验证通过'); }});
+  }
+  return `<div class="panel" style="min-height:440px"><div class="page-h"><button class="back" data-act="nav" data-p="security">‹ 返回</button><h2>提款</h2></div>${inner}</div>`;
+}
+function pageJump(){
+  const j=S.jump||{title:'',back:'security',page:''};
+  const via = j.from==='set' ? '设置成功后' : '验证通过后';
+  const note = (j.back==='team' ? '跳转至现有下级转账页' : '跳转至现有绑定页') + '，本期不改动' + (j.from==='set' ? '；刚完成设置，视为已验证，不再二次验证' : '');
+  return `<div class="panel" style="min-height:440px"><div class="page-h"><button class="back" data-act="nav" data-p="${j.back}">‹ 返回</button><h2>${j.title}</h2></div>
+    <div class="placeholder"><strong>${j.page}</strong>${via}进入${j.page}${noteHTML(note)}</div></div>`;
+}
+function render(){
+  if(S.view==='h5'){
+    layer.querySelectorAll('.toast-wrap').forEach(t=>t.remove());
+    app.innerHTML = `<div class="h5-ph"><div class="frame">H5</div><strong>H5 端 UI 待美术补充</strong><span>交互逻辑与 PC 端一致</span></div>`;
+    renderConsole(); return;
+  }
+  const pages={security:pageSecurity,team:pageTeam,withdraw:pageWithdraw,jump:pageJump};
+  app.innerHTML = topbar()+`<div class="body">${side()}<main class="main">${pages[S.page]()}</main></div>`;
+  renderConsole();
+}
+
+/* ================= events ================= */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act;
+  if(S.view==='h5' && b.closest('#app')) return;
+  switch(a){
+    case 'cfg': applyCfg(b.dataset.k,b.dataset.v); break;
+    case 'nav': if(S.view==='h5'){ toast('请切换到 PC 端查看交互'); break; } go(b.dataset.p,{focusCard:false}); break;
+    case 'docs': $('#docs').scrollIntoView({behavior:'smooth'}); break;
+    case 'reset': initState(); closeAll(); render(); toast('已重置演示'); break;
+    case 'quick-modify':
+      if(S.view==='h5'){ toast('请切换到 PC 端查看交互'); break; }
+      if(!S.fundSet){ toast('请先在控制台将资金密码切换为“已设置”'); break; }
+      go('security'); setTimeout(onModify,100); break;
+    case 'close': closeTop(); break;
+    case 'alert-btn': { const btn=alertActs[b.dataset.id][+b.dataset.i]; closeTop(); btn.fn && btn.fn(); break; }
+    case 'toast-act': b.closest('.toast-wrap').remove(); window._toastAct && window._toastAct(); break;
+    case 'fund': onFundCard(); break;
+    case 'wallet': onWallet(b.dataset.w); break;
+    case 'transfer': onTransfer(); break;
+    case 'phone': openBindPhone(); break;
+    case 'phone-ok': S.phoneBound=true; S.phoneBindAt=Date.now(); closeTop(); render(); toast(`手机号绑定成功，${S.coolH} 小时后可修改资金密码`); break;
+    case 'oos': toast(`「${b.dataset.t}」不在本期范围`); break;
+    case 'eye': { const inp=b.parentElement.querySelector('input'); const show=inp.type==='password'; inp.type=show?'text':'password'; b.innerHTML=show?EYE_ON:EYE_OFF; b.setAttribute('aria-label',show?'隐藏密码':'显示密码'); inp.focus(); break; }
+    case 'fp-clear': { const id=b.dataset.id; document.querySelectorAll(`[data-fpid="${id}"] input`).forEach(i=>i.value=''); document.querySelectorAll(`[data-fpid="${id}"] .fp-f`).forEach(f=>f.classList.remove('bad')); updRules(id); break; }
+    case 'fp-submit': fpSubmit(b.dataset.id); break;
+    case 'sms': if(!b.disabled) sendSms(b.dataset.id,b); break;
+  }
+});
+document.addEventListener('input',e=>{
+  const i=e.target;
+  if(i.dataset && i.dataset.actEdit==='forgot'){ S.forgotNote=i.textContent; return; }
+  if(!i.dataset || !i.dataset.fp) return;
+  const id=i.dataset.fp, k=i.dataset.k;
+  fpErr(id,k,'');
+  if(k==='n'||k==='o') updRules(id);
+  if(k==='c'||k==='n'){ const c=fpVal(id,'c'); if(c && c===fpVal(id,'n')) fpErr(id,'c',''); }
+});
+document.addEventListener('focusout',e=>{
+  const i=e.target;
+  if(i.dataset && i.dataset.actEdit==='forgot'){ if(!i.textContent.trim()){ S.forgotNote=DEFAULT_FORGOT_NOTE; i.textContent=DEFAULT_FORGOT_NOTE; } return; }
+  if(!i.dataset || i.dataset.k!=='c') return;
+  const id=i.dataset.fp, c=i.value, n=fpVal(id,'n');
+  if(c && n && c!==n) fpErr(id,'c','两次输入的密码不一致');
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && e.target.dataset && e.target.dataset.fp){ e.preventDefault(); fpSubmit(e.target.dataset.fp); }
+  if(e.key==='Enter' && e.target.dataset && e.target.dataset.actEdit){ e.preventDefault(); e.target.blur(); }
+  if(e.key==='Escape') closeTop();
+});
+
+render();
+</script>
+</body>
+</html>
