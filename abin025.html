@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>资金密码优化重构 视觉素材清单</title>
+<style>
+:root{
+  --paper:#fbfcfa; --ink:#1d2621; --ink2:#55615a; --ink3:#8a958f; --line:#dce4df;
+  --g:#13a052; --g-dark:#0d7f40; --g-head:#c8ecd4; --g-soft:#eaf8ee; --g-bg:#dcf2e1;
+  --red:#d9363e; --red-bg:#fdecec; --amber:#b9790a; --note:#fff3bf; --note-line:#e0b400;
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Hiragino Sans GB",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6}
+a{color:inherit}
+.wrap{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1360px;margin:0 auto}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}.toc{position:static!important;height:auto!important;border-right:0!important;border-bottom:1px solid var(--line)}}
+
+/* ---------- index ---------- */
+.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:32px 22px;border-right:1px solid var(--line)}
+.toc h1{font-size:19px;line-height:1.35;margin-bottom:22px}
+.toc .meta{color:var(--ink3);font-size:12.5px;margin-bottom:22px}
+.toc nav a{display:flex;justify-content:space-between;text-decoration:none;padding:7px 10px;border-radius:7px;color:var(--ink2);font-size:13.5px}
+.toc nav a:hover{background:var(--g-soft);color:var(--g-dark)}
+.toc nav a span{color:var(--ink3);font-size:12px}
+.progress{margin-top:24px;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.progress b{font-size:22px;color:var(--g-dark)}
+.bar{height:6px;border-radius:3px;background:#e7eee9;margin:8px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--g);width:0;transition:width .2s}
+.progress small{color:var(--ink3);font-size:12px}
+
+/* ---------- content ---------- */
+main{padding:36px 40px 80px;min-width:0}
+@media (max-width:700px){main{padding:24px 18px 60px}}
+.lede{max-width:760px;color:var(--ink2);margin-bottom:22px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:44px}
+.summary div{background:#fff;padding:14px 16px}
+.summary strong{display:block;font-size:15px}
+.summary span{color:var(--ink3);font-size:12.5px}
+section{margin-bottom:56px;scroll-margin-top:20px}
+section>h2{font-size:21px;margin-bottom:6px}
+section>p.intro{color:var(--ink2);margin-bottom:22px;max-width:760px}
+
+/* asset group */
+.group{border-top:1px solid var(--line);padding:22px 0 26px}
+.g-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;margin-bottom:6px}
+.g-head h3{font-size:16px}
+.g-head .count{color:var(--ink3);font-size:12.5px}
+.ticks{margin-left:auto;display:flex;gap:8px}
+.tick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;padding:3px 10px;font-size:12.5px;cursor:pointer;background:#fff;user-select:none}
+.tick input{accent-color:var(--g)}
+.tick:has(input:checked){border-color:#9bd9b1;background:var(--g-soft);color:var(--g-dark)}
+.g-desc{color:var(--ink2);font-size:13px;max-width:780px;margin-bottom:14px}
+.g-desc em{font-style:normal;color:var(--amber)}
+.frames{display:flex;flex-wrap:wrap;gap:18px}
+figure{width:232px}
+.frame{width:232px;height:270px;border:1px solid var(--line);border-radius:10px;background:var(--g-bg);overflow:hidden;position:relative}
+.frame.short{height:150px}
+.frame.tiny{height:96px}
+.frame .sc{position:absolute;left:8px;top:10px;width:432px;transform:scale(.5);transform-origin:top left}
+figcaption{font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.5}
+figcaption b{color:var(--ink);font-weight:600;display:block}
+
+/* ---------- mini components (1:1 尺寸，缩放 50% 展示) ---------- */
+.m-dlg{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);width:432px}
+.m-h{background:var(--g-head);padding:13px;text-align:center;font-weight:700;font-size:16px;position:relative}
+.m-h i{position:absolute;right:16px;top:9px;font-style:normal;font-size:22px;color:var(--ink2)}
+.m-b{padding:20px 24px 22px}
+.m-desc{text-align:center;color:var(--ink2);font-size:13px;margin-bottom:14px}
+.m-f{margin-bottom:13px}
+.m-f label{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.m-in{display:flex;align-items:center;border:1px solid #cfd9d3;border-radius:8px;height:42px;padding:0 12px;font-size:14px;color:#a5b0aa;background:#fff}
+.m-in.v{color:var(--ink);letter-spacing:2px}
+.m-in.focus{border-color:var(--g);box-shadow:0 0 0 3px #e2f5e8}
+.m-in.err{border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.m-in.static{background:#f6f9f7;color:var(--ink);font-weight:600;letter-spacing:.5px}
+.m-in .sp{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.m-in svg{width:18px;height:18px;color:#8a958f}
+.m-sms{white-space:nowrap;font-size:13px;color:var(--g);font-weight:600;border-left:1px solid var(--line);padding-left:10px;letter-spacing:0}
+.m-sms.off{color:var(--ink3)}
+.m-err{color:var(--red);font-size:12.5px;margin-top:5px}
+.m-tip{color:var(--ink3);font-size:12px;margin-top:6px}
+.m-rules{background:#f6f9f7;border-radius:8px;padding:10px 12px;margin:-3px 0 13px;font-size:12.5px;color:var(--ink3);display:grid;gap:4px}
+.m-rules span{display:flex;align-items:center;gap:7px}
+.m-rules span::before{content:"";width:13px;height:13px;border-radius:50%;border:1.5px solid #c3cdc7}
+.m-rules span.ok{color:var(--g-dark)}
+.m-rules span.ok::before{border-color:var(--g);background:var(--g) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E") center/11px no-repeat}
+.m-rules span.txt{color:var(--ink2);padding-left:20px}
+.m-rules span.txt::before{display:none}
+.m-btns{display:flex;gap:12px;margin-top:4px}
+.m-btns b{flex:1;height:42px;border-radius:8px;display:grid;place-items:center;font-size:15px}
+.m-btns .gh{border:1px solid #cfd9d3;color:var(--ink2);font-weight:600}
+.m-btns .pr{background:linear-gradient(#22c062,#0f9447);color:#fff}
+.m-alert{width:370px}
+.m-alert .m-b{text-align:center}
+.m-alert p{font-size:14.5px;margin:2px 0 16px;line-height:1.7}
+.m-alert p small{display:block;color:var(--ink3);font-size:12.5px}
+.m-toast{display:inline-flex;align-items:center;gap:10px;background:rgba(25,35,29,.92);color:#fff;border-radius:22px;padding:10px 18px;font-size:14px}
+.m-toast i{width:18px;height:18px;border-radius:50%;background:#22c062;display:grid;place-items:center;font-style:normal;font-size:12px}
+.m-page{background:#fff;border-radius:12px;padding:18px 20px 22px;width:432px}
+.m-page .ph{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;margin-bottom:16px}
+.m-page .ph small{font-weight:400;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--ink2)}
+.m-page h4{text-align:center;color:var(--g-dark);font-size:16px;margin-bottom:4px}
+.m-frozen{border:1px solid #f5c2c4;background:var(--red-bg);border-radius:12px;padding:24px;text-align:center;color:var(--red)}
+.m-frozen p{color:var(--ink2);font-size:13px}
+.m-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #edf1ee;border-radius:10px;padding:16px;width:432px}
+.m-card .ic{width:40px;height:40px;border-radius:10px;background:#ef4b4b;color:#fff;display:grid;place-items:center;font-weight:800}
+.m-card .tx{flex:1}
+.m-card strong{display:flex;align-items:center;gap:6px;font-size:15px}
+.m-card p{color:var(--ink2);font-size:12.5px}
+.m-card .bt{background:var(--g);color:#fff;border-radius:5px;padding:4px 11px;font-size:12px;font-weight:600}
+.tag{font-size:11px;font-weight:500;border-radius:4px;padding:1px 6px;border:1px solid}
+.tag.warn{color:#d98a0b;border-color:#f3d9a8;background:#fff7e6}
+.tag.ok{color:var(--g);border-color:#bfe6cc;background:var(--g-soft)}
+.tag.bad{color:var(--red);border-color:#f5c2c4;background:var(--red-bg)}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tbl th{background:#f1f5f2;text-align:left;font-weight:600;padding:10px 12px;color:var(--ink2);font-size:12.5px}
+.tbl td{padding:12px;border-top:1px solid var(--line);vertical-align:middle}
+.tbl-wrap{overflow-x:auto}
+.icon-cell{width:64px;height:64px;border:1px dashed #c3d3c9;border-radius:10px;display:grid;place-items:center;background:#fff}
+.icon-cell svg{width:28px;height:28px}
+.opt{display:inline-block;font-size:11.5px;color:var(--amber);border:1px solid #f0d9a8;background:#fff8e8;border-radius:4px;padding:0 6px;margin-left:6px}
+
+/* state strips */
+.strip{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 24px}
+.strip figure{width:auto}
+.strip .box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;width:250px}
+.strip .box .m-in,.strip .box .m-btns b{transform:none}
+.swatches{display:flex;flex-wrap:wrap;gap:14px}
+.sw{width:150px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;font-size:12.5px}
+.sw i{display:block;height:46px}
+.sw div{padding:8px 10px}
+.sw b{display:block}
+.sw span{color:var(--ink3)}
+
+/* confirm */
+.confirm{border:1px solid #f0d9a8;background:#fffbef;border-radius:12px;padding:18px 20px;margin-bottom:14px;max-width:820px}
+.confirm h3{font-size:15px;margin-bottom:6px}
+.confirm p{color:var(--ink2);font-size:13.5px}
+ul.plain{list-style:none;display:grid;gap:8px;max-width:820px;color:var(--ink2)}
+ul.plain li{padding-left:14px;position:relative}
+ul.plain li::before{content:"";position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%;background:var(--g)}
+:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{.toc{display:none}.wrap{display:block}.ticks{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="toc">
+    <h1>资金密码优化重构<br>视觉素材清单</h1>
+    <nav>
+      <a href="#s1">设计稿 <span>8 组</span></a>
+      <a href="#s2">图标切图 <span>6 个</span></a>
+      <a href="#s3">状态规范 <span>4 类</span></a>
+      <a href="#s4">颜色参考</a>
+      <a href="#s5">待确认 <span>2 项</span></a>
+    </nav>
+    <div class="progress">
+      <small>出稿进度</small><br><b id="pNum">0 / 16</b>
+      <div class="bar"><i id="pBar"></i></div>
+    </div>
+  </aside>
+
+  <main>
+    <p class="lede">缩略图仅示意状态，视觉由美术定。</p>
+
+    <div class="summary">
+      <div><strong>设计稿 8 组</strong><span>每端 19 张，共 38 张</span></div>
+      <div><strong>图标 6 个</strong><span>含 1 个可选</span></div>
+      <div><strong>状态规范 4 类</strong><span>输入框、验证码、按钮、规则区</span></div>
+      <div><strong>待确认 2 项</strong><span>换肤、H5 键盘遮挡</span></div>
+    </div>
+
+    <section id="s1">
+      <h2>设计稿</h2>
+      <p class="intro">先定弹窗基础样式，再按状态出稿。</p>
+      <div id="groups"></div>
+    </section>
+
+    <section id="s2">
+      <h2>图标切图</h2>
+      <p class="intro">关闭按钮、主次按钮复用现有组件。</p>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>示意</th><th>名称</th><th>位置</th></tr></thead>
+        <tbody id="icons"></tbody>
+      </table></div>
+    </section>
+
+    <section id="s3">
+      <h2>状态规范</h2>
+      <p class="intro">多处复用，统一出一份即可。</p>
+      <div id="states"></div>
+    </section>
+
+    <section id="s4">
+      <h2>颜色参考</h2>
+      <p class="intro">原型当前用色，仅供参考。</p>
+      <div class="swatches" id="swatches"></div>
+    </section>
+
+    <section id="s5">
+      <h2>待确认</h2>
+      <div class="confirm">
+        <h3>换肤适配</h3>
+        <p>共几套皮肤？弹窗和状态色是否跟随皮肤？跟随则需按皮肤出稿或出颜色规范。</p>
+      </div>
+      <div class="confirm">
+        <h3>H5 键盘遮挡</h3>
+        <p>修改弹窗字段多，键盘弹起会遮挡。需与开发定方案（上移、底部弹出或整页），并补键盘弹起态。</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12s3.5-6 9-6 9 6 9 6"/><path d="M4 15l2-2M20 15l-2-2M9.5 17.5l.6-2.3M14.5 17.5l-.6-2.3"/></svg>';
+const EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+/* ---- builders ---- */
+const dlg = (t,b,cls='') => `<div class="m-dlg ${cls}"><div class="m-h">${t}${cls?'':'<i>×</i>'}</div><div class="m-b">${b}</div></div>`;
+const f = (label,{v='',ph='',st='',err='',tip='',sms='',eye=true,stat=false}={}) =>
+  `<div class="m-f"><label>${label}</label><div class="m-in ${v?'v':''} ${st} ${stat?'static':''}"><span class="sp">${v||ph}</span>${sms?`<span class="m-sms ${sms==='off'?'off':''}">${sms==='off'?'58s 后重新获取':'获取验证码'}</span>`:(eye&&!stat?EYE:'')}</div>${err?`<div class="m-err">${err}</div>`:''}${tip?`<div class="m-tip">${tip}</div>`:''}</div>`;
+const rules = (a,b,txt) => `<div class="m-rules"><span class="${a?'ok':''}">6-16 位，仅限字母和数字</span><span class="${b?'ok':''}">同时包含字母和数字</span><span class="txt">${txt}</span></div>`;
+const btns = (a,b) => `<div class="m-btns"><b class="gh">${a}</b><b class="pr">${b}</b></div>`;
+const desc = t => `<div class="m-desc">${t}</div>`;
+const FORGOT = '忘记资金密码？请使用密保功能找回或联系在线客服处理';
+const DOT = '••••••';
+const R_SET = '资金密码不能与登录密码相同', R_MOD = '资金密码不能与登录密码或旧资金密码相同';
+const alertBox = (msg,sub,bs) => `<div class="m-dlg m-alert"><div class="m-h">温馨提示</div><div class="m-b"><p>${msg}${sub?`<small>${sub}</small>`:''}</p>${bs.length>1?btns(bs[0],bs[1]):`<div class="m-btns"><b class="pr">${bs[0]}</b></div>`}</div></div>`;
+const card = (tag,descr,bt) => `<div class="m-card"><div class="ic">¥</div><div class="tx"><strong>资金密码 ${tag}</strong><p>${descr}</p></div><span class="bt">${bt}</span></div>`;
+
+const GROUPS = [
+  {name:'设置资金密码弹窗', desc:'说明文字随入口变化。', frames:[
+    ['空状态','', dlg('设置资金密码', desc('绑定USDT前，请先设置资金密码')+f('资金密码',{ph:'请输入资金密码'})+rules(0,0,R_SET)+f('确认资金密码',{ph:'请再次输入资金密码'})+btns('清空','确认设置'))],
+    ['输入中','规则逐条打勾', dlg('设置资金密码', desc('绑定USDT前，请先设置资金密码')+f('资金密码',{v:DOT,st:'focus'})+rules(1,1,R_SET)+f('确认资金密码',{ph:'请再次输入资金密码'})+btns('清空','确认设置'))],
+    ['错误','', dlg('设置资金密码', desc('绑定USDT前，请先设置资金密码')+f('资金密码',{v:DOT,st:'err',err:'资金密码不能与登录密码相同'})+rules(1,1,R_SET)+f('确认资金密码',{v:'•••••',st:'err',err:'两次输入的密码不一致'})+btns('清空','确认设置'))],
+  ]},
+  {name:'验证资金密码弹窗', desc:'找回提示文案待定。', frames:[
+    ['空状态','', dlg('验证资金密码', desc('绑定银行卡需验证资金密码')+f('资金密码',{ph:'请输入资金密码',tip:FORGOT})+btns('清空','确认'))],
+    ['错误','含剩余次数', dlg('验证资金密码', desc('绑定银行卡需验证资金密码')+f('资金密码',{v:DOT,st:'err',err:'资金密码错误，请重新输入，还可尝试 2 次',tip:FORGOT})+btns('清空','确认'))],
+  ]},
+  {name:'安全验证弹窗', desc:'手机号不可编辑，倒计时 60 秒。', frames:[
+    ['未获取','', dlg('安全验证', desc('修改资金密码前，需验证您绑定的手机号')+f('手机号',{v:'138****5678',stat:true})+f('短信验证码',{ph:'请输入短信验证码',sms:'on'})+btns('取消','下一步'))],
+    ['倒计时','', dlg('安全验证', desc('修改资金密码前，需验证您绑定的手机号')+f('手机号',{v:'138****5678',stat:true})+f('短信验证码',{v:'1234',st:'focus',sms:'off'})+btns('取消','下一步'))],
+    ['错误','', dlg('安全验证', desc('修改资金密码前，需验证您绑定的手机号')+f('手机号',{v:'138****5678',stat:true})+f('短信验证码',{v:'123450',st:'err',sms:'off',err:'验证码错误或已失效'})+btns('取消','下一步'))],
+  ]},
+  {name:'修改资金密码弹窗', desc:'<em>H5 需补键盘弹起态。</em>', frames:[
+    ['空状态','', dlg('修改资金密码', f('旧资金密码',{ph:'请输入旧资金密码',tip:FORGOT})+f('新资金密码',{ph:'请输入新资金密码'})+rules(0,0,R_MOD)+f('确认新资金密码',{ph:'请再次输入新资金密码'})+btns('清空','确认修改'))],
+    ['错误','', dlg('修改资金密码', f('旧资金密码',{v:'•••••••',st:'err',err:'旧资金密码错误，请重新输入',tip:FORGOT})+f('新资金密码',{v:DOT})+rules(1,1,R_MOD)+f('确认新资金密码',{v:DOT})+btns('清空','确认修改'))],
+  ]},
+  {name:'提款页内嵌设置与验证', desc:'内容同弹窗。H5 建议整页。', frames:[
+    ['设置','', `<div class="m-page"><div class="ph"><small>‹ 返回</small>提款</div><h4>设置资金密码</h4>${desc('提款前请先设置资金密码')}${f('资金密码',{ph:'请输入资金密码'})}${rules(0,0,R_SET)}${f('确认资金密码',{ph:'请再次输入资金密码'})}${btns('清空','确认设置')}</div>`],
+    ['验证','', `<div class="m-page"><div class="ph"><small>‹ 返回</small>提款</div><h4>验证资金密码</h4>${desc('为保障资金安全，提款前需验证资金密码')}${f('资金密码',{ph:'请输入资金密码',tip:FORGOT})}${btns('清空','确认')}</div>`],
+    ['冻结','', `<div class="m-page"><div class="ph"><small>‹ 返回</small>提款</div><div class="m-frozen"><b style="font-size:16px">账户已被冻结</b><p>请联系在线客服处理</p></div></div>`],
+  ]},
+  {name:'温馨提示弹窗', desc:'出两种布局，4 种提示替换文案。', short:true, frames:[
+    ['单按钮','', alertBox('手机号绑定未满 24 小时，暂不可修改资金密码','可于 10-08 09:38 后修改',['我知道了'])],
+    ['双按钮','', alertBox('修改资金密码前，请先绑定手机号','',['取消','去绑定'])],
+  ]},
+  {name:'成功提示（toast）', desc:'一种样式通用。', tiny:true, frames:[
+    ['默认','', `<div style="padding:30px 0 0 60px"><span class="m-toast"><i>✓</i>资金密码设置成功</span></div>`],
+  ]},
+  {name:'安全中心资金密码卡片', desc:'只改状态标签。', tiny:true, frames:[
+    ['未设置','', card('<span class="tag warn">未设置</span>','提款、转账、绑定收款账户前需先设置','设置')],
+    ['已设置','', card('<span class="tag ok">已设置</span>','用于提款、转账和绑定收款账户','修改')],
+    ['已冻结','', card('<span class="tag bad">已冻结</span>','用于提款、转账和绑定收款账户','修改')],
+  ]},
+];
+
+document.getElementById('groups').innerHTML = GROUPS.map((g,gi)=>`
+  <div class="group">
+    <div class="g-head"><h3>${g.name}</h3><span class="count">${g.frames.length} 张</span>
+      <div class="ticks"><label class="tick"><input type="checkbox" data-t>PC</label><label class="tick"><input type="checkbox" data-t>H5</label></div></div>
+    <p class="g-desc">${g.desc}</p>
+    <div class="frames">${g.frames.map(([t,c,html])=>`<figure><div class="frame ${g.short?'short':''} ${g.tiny?'tiny':''}"><div class="sc">${html}</div></div><figcaption><b>${t}</b>${c||''}</figcaption></figure>`).join('')}</div>
+  </div>`).join('');
+
+const ICONS = [
+  [EYE,'隐藏密码（闭眼）','密码框，默认'],
+  [EYE_ON,'显示密码（睁眼）','密码框，明文'],
+  ['<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#c3cdc7" stroke-width="1.5"/></svg>','规则未满足','规则区'],
+  ['<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7.5" fill="#13a052"/><path d="M4.5 8.3l2.3 2.3 4.7-4.8" stroke="#fff" stroke-width="1.8" fill="none"/></svg>','规则已满足','规则区'],
+  ['<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7.5" fill="#22c062"/><path d="M4.5 8.3l2.3 2.3 4.7-4.8" stroke="#fff" stroke-width="1.8" fill="none"/></svg>','成功提示','toast'],
+  ['<svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z" fill="#fdecec" stroke="#d9363e" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 9.5v5" stroke="#d9363e" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.1" fill="#d9363e"/></svg>','冻结 / 警告<span class="opt">可选</span>','冻结提示'],
+];
+document.getElementById('icons').innerHTML = ICONS.map(([svg,n,u])=>`<tr><td><div class="icon-cell" style="color:#8a958f">${svg}</div></td><td><b>${n}</b></td><td>${u}</td></tr>`).join('');
+
+const ST = [
+  ['密码输入框', [
+    ['默认', `<div class="m-in"><span class="sp">请输入资金密码</span>${EYE}</div>`],
+    ['聚焦', `<div class="m-in focus"><span class="sp">请输入资金密码</span>${EYE}</div>`],
+    ['已输入（密文）', `<div class="m-in v"><span class="sp">${DOT}</span>${EYE}</div>`],
+    ['已输入（明文）', `<div class="m-in" style="color:#1d2621"><span class="sp">qwe123</span><span style="color:#8a958f;display:flex">${EYE_ON}</span></div>`],
+    ['错误', `<div class="m-in err v"><span class="sp">${DOT}</span>${EYE}</div><div class="m-err">资金密码错误，请重新输入</div>`],
+  ]],
+  ['获取验证码按钮', [
+    ['可点击', `<div class="m-in"><span class="sp">请输入短信验证码</span><span class="m-sms">获取验证码</span></div>`],
+    ['倒计时中', `<div class="m-in"><span class="sp">请输入短信验证码</span><span class="m-sms off">58s 后重新获取</span></div>`],
+    ['重新获取', `<div class="m-in"><span class="sp">请输入短信验证码</span><span class="m-sms">重新获取</span></div>`],
+  ]],
+  ['主按钮与次按钮', [
+    ['默认', btns('清空','确认')],
+    ['按下', `<div class="m-btns"><b class="gh" style="background:#f1f5f2">清空</b><b class="pr" style="filter:brightness(.92)">确认</b></div>`],
+  ]],
+  ['规则区', [
+    ['未满足', rules(0,0,R_SET)],
+    ['部分满足', rules(1,0,R_SET)],
+    ['全部满足', rules(1,1,R_SET)],
+  ]],
+];
+document.getElementById('states').innerHTML = ST.map(([n,items])=>`<h3 style="font-size:15px;margin-top:8px">${n}</h3><div class="strip">${items.map(([t,h])=>`<figure><div class="box">${h}</div><figcaption><b>${t}</b></figcaption></figure>`).join('')}</div>`).join('');
+
+const SW = [
+  ['#13a052','主色',''],['#c8ecd4','标题栏',''],['#d9363e','错误',''],
+  ['#fdecec','错误底色',''],['#1d2621','正文',''],['#8a958f','辅助文字',''],
+];
+document.getElementById('swatches').innerHTML = SW.map(([c,n,u])=>`<div class="sw"><i style="background:${c}"></i><div><b>${n}</b><span>${c}</span></div></div>`).join('');
+
+/* 缩略图高度按内容自适应 */
+document.querySelectorAll('.frame').forEach(fr=>{ const sc=fr.querySelector('.sc'); fr.style.height=Math.ceil(sc.offsetHeight*0.5+20)+'px'; });
+/* progress (仅本页临时记录) */
+function upd(){ const all=[...document.querySelectorAll('[data-t]')], done=all.filter(i=>i.checked).length;
+  document.getElementById('pNum').textContent=`${done} / ${all.length}`; document.getElementById('pBar').style.width=(done/all.length*100)+'%'; }
+document.addEventListener('change',e=>{ if(e.target.matches('[data-t]')) upd(); });
+upd();
+</script>
+</body>
+</html>
