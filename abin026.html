@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>活动管理 - 添加USDT笔笔加赠礼自动化活动</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --bar-dark:#2f3c6e;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --danger:#c23b3b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:10px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar .crumb{font-size:13px;opacity:.9;}
+  .topbar .crumb b{font-weight:600;}
+  .topbar .back{
+    background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.3);
+    color:#fff;
+    padding:5px 12px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  .wrap{max-width:1180px;margin:18px auto;padding:0 20px 60px;}
+  .section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    margin-bottom:18px;
+    overflow:hidden;
+  }
+  .section-head{
+    background:var(--bar);
+    color:#fff;
+    padding:9px 14px;
+    font-weight:600;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-head .tag{
+    font-weight:400;
+    font-size:11px;
+    background:rgba(255,255,255,.18);
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .section-body{padding:16px 20px;}
+  .row{
+    display:flex;
+    align-items:flex-start;
+    padding:9px 0;
+    border-bottom:1px dashed #e6e8f0;
+    gap:14px;
+  }
+  .row:last-child{border-bottom:none;}
+  .label{
+    width:220px;
+    flex-shrink:0;
+    padding-top:6px;
+    color:#40465a;
+  }
+  .label .req{color:var(--danger);margin-right:3px;}
+  .field{flex:1;}
+  input[type=text], input[type=number], select{
+    border:1px solid #cfd4e2;
+    border-radius:3px;
+    padding:6px 8px;
+    font-size:13px;
+    background:#fff;
+    color:var(--text);
+    font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);
+  }
+  .w-s{width:110px;}
+  .w-m{width:220px;}
+  .w-l{width:400px;}
+  .hint{color:var(--muted);font-size:11.5px;margin-top:5px;line-height:1.5;}
+  .radio-group label{margin-right:18px;font-size:13px;}
+  .radio-group input{margin-right:4px;vertical-align:-1px;}
+  .checks{display:flex;flex-wrap:wrap;gap:10px 18px;}
+  .checks label{font-size:13px;white-space:nowrap;}
+  .checks input{margin-right:4px;}
+  .dual-toggle{display:flex;gap:36px;align-items:flex-start;}
+  .dual-toggle .tgroup{display:flex;flex-direction:column;gap:6px;}
+  .dual-toggle .tlabel{font-size:11.5px;color:var(--muted);}
+
+  table.rule-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:6px;
+  }
+  table.rule-table th{
+    background:#f2f4fa;
+    border:1px solid var(--border);
+    padding:7px 8px;
+    font-weight:600;
+    font-size:12.5px;
+    color:#40465a;
+  }
+  table.rule-table td{
+    border:1px solid var(--border);
+    padding:5px 8px;
+    text-align:center;
+  }
+  table.rule-table input{width:100%;text-align:center;}
+  table.rule-table .op{color:var(--danger);cursor:pointer;font-size:12px;}
+  table.rule-table .op:hover{text-decoration:underline;}
+  .add-row-btn{
+    margin-top:8px;
+    background:#fff;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:5px 14px;
+    border-radius:3px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .add-row-btn:hover{background:var(--accent-soft);}
+
+  .subhead{
+    font-weight:600;
+    font-size:13px;
+    margin:22px 0 8px;
+    padding-left:9px;
+    border-left:3px solid var(--accent);
+  }
+  .subhead:first-child{margin-top:0;}
+
+  .exclude-list{
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .exclude-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+    border-bottom:1px solid #eef0f6;
+    font-size:12.5px;
+  }
+  .exclude-item:last-child{border-bottom:none;}
+  .exclude-item:nth-child(odd){background:#fafbfd;}
+  .exclude-item .dot{
+    width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  }
+  .exclude-item .name{width:150px;flex-shrink:0;font-weight:600;color:#2b2f3a;}
+  .exclude-item .desc{flex:1;color:var(--muted);}
+  .status-pill{
+    flex-shrink:0;
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
+  .status-confirmed{background:#e4f6ec;color:var(--ok);}
+  .status-pending{background:var(--warn-bg);color:var(--warn);}
+
+  .note-box{
+    background:var(--warn-bg);
+    border:1px solid #f0d3ae;
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#7a4a12;
+    line-height:1.7;
+    margin-top:10px;
+  }
+  .note-box b{color:var(--warn);}
+
+  .info-box{
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#4a5062;
+    line-height:1.8;
+    margin-top:8px;
+  }
+
+  .footer-bar{
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    border-top:1px solid var(--border);
+    padding:14px 20px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    box-shadow:0 -2px 8px rgba(0,0,0,.04);
+  }
+  .btn{
+    padding:8px 26px;
+    border-radius:3px;
+    font-size:13px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+  }
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  .placeholder-box{
+    border:1px dashed #cfd4e2;
+    border-radius:4px;
+    padding:30px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    background:#fafbfd;
+  }
+
+  .ref-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-left:3px solid #8892ab;
+    border-radius:4px;
+    padding:11px 14px;
+    margin:4px 0 18px;
+  }
+  .ref-note .ref-icon{font-size:15px;flex-shrink:0;line-height:1.5;}
+  .ref-note .ref-text{font-size:12.5px;color:#565d70;line-height:1.8;}
+  .ref-note .ref-text b{color:#2b2f3a;}
+  .proto-note{
+    max-width:1180px;
+    margin:0 auto 40px;
+    padding:0 20px;
+  }
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 18px;
+    font-size:12.5px;
+    line-height:1.9;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:20px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  /* ---- 本次新增 ---- */
+  .view-bar{
+    position:sticky;top:0;z-index:100;
+    background:#fff3d6;border-bottom:1px solid #e8c877;
+    padding:9px 20px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .view-bar .sim-label{font-weight:600;color:#7a5c00;margin-right:4px;}
+  .sim-btn{border:1px solid #d8b448;background:#fff;color:#7a5c00;padding:4px 12px;border-radius:3px;font-size:11.5px;cursor:pointer;font-family:inherit;}
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+  .view{display:none;}
+  .view.on{display:block;}
+  table.rule-table td.ro{background:#f7f8fb;color:#40465a;text-align:left;padding-left:12px;}
+  table.rule-table td.ro .eight{font-family:Consolas,"Courier New",monospace;font-weight:700;color:var(--bar);letter-spacing:1px;}
+  table.rule-table input.err{border-color:var(--danger);background:#fdeaea;}
+  .lock{font-size:11px;color:var(--muted);}
+  .err-msg{color:var(--danger);font-size:11.5px;margin-top:6px;display:none;}
+  .sum-line{margin-top:8px;font-size:12px;color:#40465a;}
+  .sum-line b{color:var(--bar);}
+
+  /* 规则试算（原型辅助） */
+  .sim-box{margin-top:22px;border:1px dashed #e0bf5a;background:#fffbef;border-radius:4px;padding:12px 14px;}
+  .sim-box .sim-title{font-weight:600;color:#7a5c00;font-size:12.5px;margin-bottom:4px;}
+  .sim-box .sim-desc{font-size:11.5px;color:#8a7440;line-height:1.7;margin-bottom:8px;}
+  .sim-box table.rule-table th{background:#fbf1d2;}
+  .sim-box table.rule-table td{background:#fff;}
+  .res{font-size:12px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .res-ok{background:#e4f6ec;color:var(--ok);}
+  .res-void{background:#fdeaea;color:var(--danger);}
+  .res-skip{background:#f1f2f6;color:#767c8c;}
+  .sim-total{margin-top:10px;font-size:12.5px;color:#5c4400;}
+  .sim-total b{color:#4a3600;}
+
+  /* 申请参与列表（沿用现有页面样式） */
+  .legacy-head{background:#f4f5ef;border:1px solid #9fb0c8;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .legacy-head .t{font-weight:700;font-size:13.5px;}
+  .legacy-head .t span{color:#d62a2a;}
+  .legacy-btn{border:1px solid #9fb0c8;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .legacy-filter{background:#f4f5ef;border:1px solid #9fb0c8;padding:9px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;}
+  .legacy-filter input{padding:3px 6px;font-size:12px;}
+  .legacy-filter .lk{color:#1f4e8c;cursor:pointer;}
+  .legacy-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #1d8a9e;}
+  .legacy-table th{background:#8ea3c4;color:#fff;font-weight:600;padding:8px;font-size:12.5px;}
+  .legacy-table td{text-align:center;padding:8px;font-size:12.5px;border-bottom:1px solid #eef0f4;}
+  .legacy-pager{background:#fff;border:1px solid #1d8a9e;border-top:none;padding:8px 10px;font-size:12px;}
+  .keep-tag{display:inline-block;background:#e4f6ec;color:var(--ok);font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:400;}
+  .list-mock{width:100%;border-collapse:collapse;background:#fff;margin-bottom:14px;}
+  .list-mock th{background:#f2f4fa;border:1px solid var(--border);padding:7px;font-size:12px;}
+  .list-mock td{border:1px solid var(--border);padding:8px;font-size:12px;text-align:center;}
+  .list-mock .ops span{color:#1f4e8c;text-decoration:underline;margin:0 3px;cursor:pointer;}
+  .list-mock .ops span.hl{outline:2px solid var(--danger);outline-offset:2px;}
+  .chan-fixed{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .chan{background:#f2f4fa;border:1px solid var(--border);border-radius:3px;padding:4px 10px;font-size:12.5px;color:#40465a;}
+  input.err{border-color:var(--danger)!important;background:#fdeaea;}
+  /* 判定示例：独立色系（青绿），仅供开发参考 */
+  .dev-ref{margin-top:22px;border:1px solid #7cc4bd;background:#f0faf8;border-radius:4px;padding:12px 14px;}
+  .dev-head{font-weight:600;color:#0d5f57;font-size:13px;margin-bottom:4px;}
+  .dev-tag{font-weight:400;font-size:11px;background:#0f766e;color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px;}
+  .dev-desc{font-size:11.5px;color:#3c6f6a;line-height:1.7;margin-bottom:8px;}
+  .dev-scroll{overflow-x:auto;}
+  .dev-table{width:100%;min-width:760px;border-collapse:collapse;}
+  .dev-table th{background:#d5efeb;border:1px solid #9fd3cc;padding:7px 6px;font-size:12px;color:#0d5f57;}
+  .dev-table td{background:#fff;border:1px solid #c3e5e0;padding:4px 6px;text-align:center;font-size:12.5px;}
+  .dev-table input,.dev-table select{width:100%;text-align:center;padding:4px;}
+  .dev-table .op{color:var(--danger);cursor:pointer;font-size:12px;}
+  .dev-add{margin-top:8px;background:#fff;border:1px solid #0f766e;color:#0f766e;padding:5px 14px;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .dev-total{margin-top:10px;font-size:12.5px;color:#0d5f57;line-height:1.8;}
+  .dev-total b{color:#063f3a;}
+  .dev-head{display:flex;align-items:center;}
+  .dev-toggle{margin-left:auto;background:#fff;border:1px solid #0f766e;color:#0f766e;padding:2px 12px;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:400;}
+  .dev-toggle:hover{background:#d5efeb;}
+  .res-cut{background:#fff3d6;color:#7a5c00;}
+</style>
+</head>
+<body>
+<div class="view-bar">
+  <span class="sim-label">页面切换：</span>
+  <button class="sim-btn active" data-v="cfg" onclick="showView('cfg')">活动配置页</button>
+  <button class="sim-btn" data-v="apply" onclick="showView('apply')">申请参与列表</button>
+</div>
+
+<!-- ================= 视图一：活动配置页 ================= -->
+<div class="view on" id="view-cfg">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>添加USDT笔笔加赠礼自动化活动</b></div>
+  <div class="back">返回活动列表</div>
+</div>
+
+<div class="wrap">
+
+  <!-- 1.基本信息 -->
+  <div class="section">
+    <div class="section-head">1.基本信息 <span class="tag">沿用现有组件</span></div>
+    <div class="section-body">
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动名称：</div>
+        <div class="field"><input type="text" class="w-l" value="USDT笔笔加赠礼" placeholder="请输入活动名称（后台）"></div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动分类：</div>
+        <div class="field">
+          <select class="w-m"><option>体育优惠活动</option><option selected>存款优惠</option><option>其他</option></select>
+          <span style="margin-left:10px;font-size:12px;color:#3b6ff0;">设置活动分类</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动展示时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束"><div class="hint">活动展示于前台的起止时间</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动起止时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束">
+          <div class="hint">存款到账时间不在起止时间内，或活动状态为关闭时，不触发派发</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">注册起止时间：</div>
+        <div class="field">
+          <input type="text" class="w-m" placeholder="开始"> —
+          <input type="text" class="w-m" placeholder="结束">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">总代是否可参与活动：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="agent">是</label>
+          <label><input type="radio" name="agent" checked>否</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否推荐到活动公告处：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="promo">推荐</label>
+          <label><input type="radio" name="promo" checked>不推荐</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否自我互斥：</div>
+        <div class="field">
+          <div class="radio-group">
+            <label><input type="radio" name="exclu" checked>自我互斥</label>
+            <label><input type="radio" name="exclu">不自我互斥</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否启用VIP用户参与限制：</div>
+        <div class="field">
+          <div class="radio-group">
+            <label><input type="radio" name="vipLimit" onchange="toggleVip(true)">是</label>
+            <label><input type="radio" name="vipLimit" checked onchange="toggleVip(false)">否</label>
+          </div>
+          <div id="vipPick" style="display:none;margin-top:6px;">
+            <select class="w-s"><option>VIP1</option><option>VIP2</option><option>VIP3</option><option>VIP4</option><option>VIP5</option></select>
+            <span class="hint" style="display:inline;">起始等级，该等级及以上会员可参与</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label"><span class="req">*</span>活动领取方式：</div>
+        <div class="field">
+          <select class="w-m">
+            <option>后台审核后前台手动领取</option>
+            <option>后台自动领取</option>
+            <option>前台手动领取</option>
+            <option>前台申请后手动领取</option>
+            <option selected>前台申请后自动发放</option>
+            <option>前台申请固定金额后自动发放</option>
+          </select>
+          <div class="hint">会员在活动页申请一次，长期有效；仅计算报名成功时间之后到账的存款</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否禁止同IP用户参与：</div>
+        <div class="field"><div class="radio-group">
+          <label><input type="radio" name="ipLimit">是</label>
+          <label><input type="radio" name="ipLimit" checked>否</label>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">是取用流水场馆设置：</div>
+        <div class="field">
+          <div class="placeholder-box" style="padding:8px 12px;text-align:left;">场馆多选沿用现有组件，选项以线上为准，原型不逐一列出</div>
+          <div class="hint">出款流水计算范围由活动组按需勾选</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">出款流水：</div>
+        <div class="field">
+          <select class="w-m"><option>全部流水</option><option selected>有效流水</option></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">是否开启活动分端参与：</div>
+        <div class="field">
+          <div class="dual-toggle">
+            <div class="tgroup">
+              <div class="tlabel">只有登录PC客户端可参与</div>
+              <div class="radio-group">
+                <label><input type="radio" name="pc">是</label>
+                <label><input type="radio" name="pc" checked>否</label>
+              </div>
+            </div>
+            <div class="tgroup">
+              <div class="tlabel">只有登录手机客户端可参与</div>
+              <div class="radio-group">
+                <label><input type="radio" name="mobile">是</label>
+                <label><input type="radio" name="mobile" checked>否</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">周期：</div>
+        <div class="field">
+          <div class="radio-group">
+            <label><input type="radio" name="cycle" checked>日</label>
+            <label><input type="radio" name="cycle">周</label>
+            <label><input type="radio" name="cycle">月</label>
+            <label><input type="radio" name="cycle">整周期</label>
+          </div>
+          <div class="hint">本活动为日：每日彩金上限按彩金到账时间所在的自然日累计</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">参与限制：</div>
+        <div class="field">
+          <div class="checks">
+            <label><input type="checkbox">外部代理模式</label>
+            <label><input type="checkbox" checked>散客模式</label>
+            <label><input type="checkbox">内部代理模式</label>
+            <label><input type="checkbox">代理推荐人</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2.活动规则和派奖策略 -->
+  <div class="section">
+    <div class="section-head">2.活动规则和派奖策略</div>
+    <div class="section-body">
+
+      <div class="subhead">2.1 参与条件</div>
+      <div class="row">
+        <div class="label">存款渠道：</div>
+        <div class="field">
+          <div class="checks">
+            <label><input type="checkbox" checked disabled>USDT</label>
+            <span class="lock">🔒 固定，不可取消</span>
+          </div>
+          <div class="hint">仅统计会员通过USDT渠道（含其下全部链路）自主发起并成功到账的存款；其他渠道及后台手工加款不计入</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>单笔最低存款金额：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="cfgMin" value="100" oninput="validateAll()"> 元
+          <div class="hint">按单笔存款实际到账金额（元）判定，≥该值即满足</div>
+          <div class="err-msg" id="errMin">请输入大于0的整数</div>
+        </div>
+      </div>
+
+      <div class="subhead">2.2 加赠规则</div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>加赠比例：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="cfgRate" value="1.5" step="0.01" oninput="validateAll()"> %
+          <div class="hint">单笔彩金 = 单笔实际到账金额 × 加赠比例，结果保留整数、向下截断</div>
+          <div class="err-msg" id="errRate">请输入大于0的数字，最多2位小数</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>单笔彩金上限：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="cfgSingle" value="1888" oninput="validateAll()"> 元
+          <div class="hint">单笔彩金超过该值时按该值派发</div>
+          <div class="err-msg" id="errSingle">请输入大于0的整数</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>每日彩金上限：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="cfgDaily" value="" placeholder="请输入" oninput="validateAll()"> 元
+          <div class="hint">无默认值，由活动组填写；同一会员同一自然日（按彩金到账时间）累计派发不超过该值，触顶的一笔截断至剩余额度</div>
+          <div class="err-msg" id="errDaily">请输入大于0的整数</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><span class="req">*</span>出款流水倍数：</div>
+        <div class="field">
+          <input type="number" class="w-s" id="cfgFlow" value="3" oninput="validateAll()"> 倍
+          <div class="hint">出款流水 = 实际派发彩金 × 倍数，不含存款本金</div>
+          <div class="err-msg" id="errFlow">请输入大于0的整数</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <b>派发规则（系统固定，不做后台配置项）</b><br>
+        · 事件触发：USDT存款成功到账后自动判定，正常情况下<b>到账后20分钟内</b>派发至账户余额，不走每日定时脚本。<br>
+        · 仅计算<b>报名成功时间之后</b>到账的存款；报名前到账的存款不计算、不补发。<br>
+        · 彩金 = min（到账金额 × 比例向下取整，单笔上限，当日剩余额度）；结果为0时不派发。<br>
+        · 每日上限按<b>彩金到账时间</b>所在自然日（平台时区 00:00:00~23:59:59）累计；同一会员多笔存款按到账时间先后占用额度，到账时间相同的按存款订单号升序。<br>
+        · 本期派发前不做人工审核，异常由风控事后处理；会员账号状态不做派发判断。
+      </div>
+
+      <div class="ref-note">
+        <span class="ref-icon">📄</span>
+        <div class="ref-text">
+          <b>取数口径</b>（存款类型、渠道编码、到账状态、报名时间比较）与<b>工程要求</b>（事件触发、补偿扫描、幂等、并发占额、失败重试）均为系统固化判断，不在后台配置，详见 PRD <b>6.2</b>。
+        </div>
+      </div>
+
+      <!-- 判定示例：仅供开发参考 -->
+      <div class="dev-ref">
+        <div class="dev-head">判定示例 <span class="dev-tag">仅供开发参考，不做进后台</span><button class="dev-toggle" id="devToggle" onclick="toggleDev()">收起</button></div>
+        <div id="devBody">
+        <div class="dev-desc">模拟同一会员、同一彩金到账日的一组存款，按上方当前配置实时计算。每日彩金上限未填写时按不封顶演示。</div>
+        <div class="dev-scroll">
+        <table class="dev-table">
+          <thead><tr>
+            <th style="width:16%;">到账时间</th><th style="width:17%;">存款渠道</th><th style="width:14%;">到账金额（元）</th>
+            <th style="width:13%;">报名后到账</th><th style="width:12%;">彩金（元）</th><th style="width:22%;">判定结果</th><th style="width:6%;">操作</th>
+          </tr></thead>
+          <tbody id="simBody"></tbody>
+        </table>
+        </div>
+        <button class="dev-add" onclick="addSim()">＋ 新增存款</button>
+        <div class="dev-total" id="simTotal"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3.其他信息 -->
+  <div class="section">
+    <div class="section-head">3.其他信息 <span class="tag">基本不改动，沿用现有组件</span></div>
+    <div class="section-body">
+      <div class="placeholder-box">
+        位置排序 / PC活动封面图片 / 活动图片 / H5活动图片 / H5活动详情图 / 活动详情富文本编辑器<br>
+        —— 沿用现有后台字段结构，本次不做调整，此处省略展示 ——
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ================= 视图二：申请参与列表 ================= -->
+<div class="view" id="view-apply">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>申请参与列表</b><span class="keep-tag">沿用现有页面</span></div>
+  <div class="back" onclick="showView('cfg')" style="cursor:pointer;">返回活动配置页</div>
+</div>
+<div class="wrap">
+  <div class="subhead" style="margin-top:0;">入口：活动管理列表 →「申请参与」</div>
+  <div class="legacy-head">
+    <div class="t">后台管理 <span>- 申请参与列表</span></div>
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">返回活动列表</button>
+  </div>
+  <div class="legacy-filter">
+    🔍 用户名称：<input type="text" id="fUser" style="width:130px;" oninput="renderApply()">
+    开始时间 <input type="text" id="fStart" value="2026-11-01 00:00:00" style="width:150px;" oninput="renderApply()">
+    结束时间 <input type="text" id="fEnd" value="2026-11-30 23:59:59" style="width:150px;" oninput="renderApply()">
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">搜索</button>
+    <span class="lk" style="color:#767c8c;cursor:default;">Excel导出全部</span>
+  </div>
+  <table class="legacy-table">
+    <thead><tr><th>活动名称</th><th>用户名</th><th>申请金额</th><th>申请时间</th><th>用户IP</th></tr></thead>
+    <tbody id="applyBody"></tbody>
+  </table>
+  <div class="legacy-pager" id="applyPager"></div>
+  <div class="hint" style="margin-top:8px;">申请时间即报名成功时间，是「仅计算报名成功时间之后到账的存款」的判定依据。</div>
+</div>
+</div>
+
+<div class="proto-note">
+  <div class="inner">
+    <div><span class="tag">原型说明</span></div>
+    <ol>
+      <li><b>校验规则：</b>单笔最低存款金额、单笔彩金上限、每日彩金上限、出款流水倍数为必填、大于0的整数；加赠比例为必填、大于0、最多2位小数。字段之间的大小关系（如单笔上限与每日上限）不做校验，由配置方自查。</li>
+      <li><b>判定公式：</b>单笔彩金 = min（⌊到账金额 × 加赠比例⌋，单笔彩金上限，当日剩余额度）；当日剩余额度 = 每日彩金上限 − 当日已派发彩金；结果为0时不派发。出款流水 = 实际派发彩金 × 出款流水倍数。</li>
+      <li><b>计入条件：</b>存款渠道为USDT（含其下全部链路）、会员自主发起且已成功到账；到账时间晚于报名成功时间；到账金额 ≥ 单笔最低存款金额；到账时间在活动起止时间内且活动状态为开启。</li>
+      <li><b>生效口径：</b>配置以每笔存款被处理时读取的值为准，修改后对之后处理的存款生效，不追溯已派发的存款。</li>
+      <li><b>每日口径：</b>按彩金到账时间所在自然日（平台时区）累计每日上限，由需求方活动组确定。</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+function showView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on', e.id==='view-'+v));
+  document.querySelectorAll('.view-bar .sim-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+function toggleDev(){
+  const b=document.getElementById('devBody'), t=document.getElementById('devToggle');
+  const hide = b.style.display!=='none';
+  b.style.display = hide?'none':''; t.textContent = hide?'展开':'收起';
+}
+function toggleVip(on){ document.getElementById('vipPick').style.display = on?'block':'none'; }
+
+const INT_FIELDS = [['cfgMin','errMin'],['cfgSingle','errSingle'],['cfgDaily','errDaily'],['cfgFlow','errFlow']];
+function setErr(id,errId,bad){
+  document.getElementById(id).classList.toggle('err',bad);
+  document.getElementById(errId).style.display = bad?'block':'none';
+}
+function validateAll(){
+  INT_FIELDS.forEach(([id,e])=>{
+    const raw = document.getElementById(id).value.trim();
+    const bad = id==='cfgDaily' && raw==='' ? false : !/^[1-9]\d*$/.test(raw);
+    setErr(id,e,bad);
+  });
+  const r = document.getElementById('cfgRate').value.trim();
+  setErr('cfgRate','errRate', !(/^\d+(\.\d{1,2})?$/.test(r) && parseFloat(r)>0));
+  runSim();
+}
+function cfg(){
+  const g = id=>document.getElementById(id).value.trim();
+  const posInt = v=>/^[1-9]\d*$/.test(v) ? parseInt(v) : null;
+  return {
+    min: posInt(g('cfgMin')),
+    rate: (/^\d+(\.\d{1,2})?$/.test(g('cfgRate')) && parseFloat(g('cfgRate'))>0) ? parseFloat(g('cfgRate')) : null,
+    single: posInt(g('cfgSingle')),
+    daily: g('cfgDaily')==='' ? Infinity : posInt(g('cfgDaily')),
+    flow: posInt(g('cfgFlow'))
+  };
+}
+
+const CHANNELS = ['USDT (TRC20)','USDT (ARB)','USDT (ERC20)','USDT (BEP20)','USDT (SOL)','USDC','CNYT','支付宝扫码','银行卡快充'];
+const USDT = CHANNELS.slice(0,5);
+let sims = [
+  ['08:40:12','USDT (TRC20)',5000,'否'],
+  ['09:12:05','USDT (TRC20)',5000,'是'],
+  ['10:30:41','USDC',10000,'是'],
+  ['11:02:17','USDT (ERC20)',99,'是'],
+  ['13:20:33','USDT (BEP20)',100,'是'],
+  ['15:05:09','USDT (SOL)',200000,'是'],
+  ['15:05:09','USDT (ARB)',60000,'是']
+];
+function fmt(n){ return Number(n).toLocaleString('zh-CN'); }
+function runSim(){
+  const c = cfg();
+  const body = document.getElementById('simBody');
+  const order = sims.map((s,i)=>i).sort((a,b)=> sims[a][0]<sims[b][0]?-1: sims[a][0]>sims[b][0]?1: a-b);
+  const out = {};
+  let used = 0, total = 0, paid = 0;
+  const cfgOk = c.min && c.rate && c.single && c.daily && c.flow;
+  order.forEach(i=>{
+    const [t,ch,amtRaw,after] = sims[i];
+    const amt = parseFloat(amtRaw);
+    let bonus='—', res;
+    if(!cfgOk) res = '<span class="res res-skip">配置有误，无法计算</span>';
+    else if(!USDT.includes(ch)) res = '<span class="res res-skip">非USDT渠道，不计入</span>';
+    else if(after!=='是') res = '<span class="res res-skip">报名前到账，不计入</span>';
+    else if(!(amt>0) || amt < c.min) res = `<span class="res res-skip">未达${fmt(c.min)}元门槛</span>`;
+    else{
+      const raw = Math.floor(amt * c.rate / 100 + 1e-9);
+      const left = c.daily===Infinity ? Infinity : Math.max(c.daily-used,0);
+      const v = Math.min(raw, c.single, left);
+      if(v<=0){ res = raw<=0 ? '<span class="res res-skip">计算结果为0，不派发</span>' : '<span class="res res-void">当日额度已用完，不派发</span>'; }
+      else{
+        used += v; total += v; paid++;
+        bonus = fmt(v);
+        if(v===raw) res = '<span class="res res-ok">派发</span>';
+        else if(v===c.single && c.single<=left) res = `<span class="res res-cut">单笔封顶（原${fmt(raw)}）</span>`;
+        else res = `<span class="res res-cut">截断至剩余额度（原${fmt(Math.min(raw,c.single))}）</span>`;
+      }
+    }
+    out[i] = {bonus,res};
+  });
+  body.innerHTML = '';
+  sims.forEach((s,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${s[0]}" onchange="sims[${i}][0]=this.value;runSim()"></td>
+      <td><select onchange="sims[${i}][1]=this.value;runSim()">${CHANNELS.map(c=>`<option${c===s[1]?' selected':''}>${c}</option>`).join('')}</select></td>
+      <td><input type="number" value="${s[2]}" onchange="sims[${i}][2]=this.value;runSim()"></td>
+      <td><select onchange="sims[${i}][3]=this.value;runSim()"><option${s[3]==='是'?' selected':''}>是</option><option${s[3]==='否'?' selected':''}>否</option></select></td>
+      <td>${out[i].bonus}</td><td>${out[i].res}</td>
+      <td><span class="op" onclick="delSim(${i})">删除</span></td>`;
+    body.appendChild(tr);
+  });
+  if(!sims.length) body.innerHTML = '<tr><td colspan="7" style="color:#767c8c;">暂无存款，点击「新增存款」添加</td></tr>';
+  const dailyTxt = c.daily===Infinity ? '未配置（按不封顶演示）' : (c.daily ? fmt(c.daily)+' 元' : '—');
+  document.getElementById('simTotal').innerHTML = cfgOk
+    ? `计算顺序：按到账时间先后，时间相同的按录入顺序（代表存款订单号升序）。<br>结果：派发 <b>${paid}</b> 笔，彩金合计 <b>${fmt(total)}</b> 元，每日上限 ${dailyTxt}，需完成出款流水 <b>${fmt(total*c.flow)}</b> 元（全场馆）。`
+    : '请先修正上方标红的配置项。';
+}
+function addSim(){ sims.push(['16:00:00','USDT (TRC20)',1000,'是']); runSim(); }
+function delSim(i){ sims.splice(i,1); runSim(); }
+
+const APPLY = [
+  ['user_a01','2026-11-01 10:12:08','112.199.81.2'],
+  ['user_b17','2026-11-01 14:33:51','103.166.80.82'],
+  ['user_c09','2026-11-02 09:05:44','47.76.91.34'],
+  ['user_d22','2026-11-03 21:47:19','139.162.49.6'],
+  ['user_e05','2026-11-05 16:20:02','45.125.64.197']
+];
+function renderApply(){
+  const kw = document.getElementById('fUser').value.trim().toLowerCase();
+  const s = document.getElementById('fStart').value, e = document.getElementById('fEnd').value;
+  const rows = APPLY.filter(r=>(!kw || r[0].toLowerCase().includes(kw)) && r[1]>=s && r[1]<=e);
+  document.getElementById('applyBody').innerHTML = rows.length ? rows.map(r=>`<tr><td>USDT笔笔加赠礼</td><td>${r[0]}</td><td>0</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')
+    : '<tr><td colspan="5" style="color:#999;">暂无记录</td></tr>';
+  document.getElementById('applyPager').innerHTML = `总计 ${rows.length} 个记录, 分为 ${rows.length?1:0} 页, 当前第 ${rows.length?1:0} 页`;
+}
+validateAll();
+renderApply();
+
+</script>
+</body>
+</html>
