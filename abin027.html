@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USDT笔笔加赠礼 - 用户端领取交互原型</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --ok-bg:#e4f6ec;
+    --danger:#c23b3b;
+    --danger-bg:#fdeaea;
+    --disabled-bg:#f1f2f6;
+    --disabled-text:#a7abba;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:12px 20px;
+    font-size:14px;
+    font-weight:600;
+  }
+
+  /* ---- 场景切换工具条（原型辅助，非正式UI，z-index高于弹窗，方便弹窗开着也能切场景） ---- */
+  .sim-bar{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:#fff3d6;
+    border-bottom:1px solid #e8c877;
+    padding:10px 20px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .sim-bar .sim-label{
+    font-weight:600;
+    color:#7a5c00;
+    margin-right:4px;
+  }
+  .sim-btn{
+    border:1px solid #d8b448;
+    background:#fff;
+    color:#7a5c00;
+    padding:4px 10px;
+    border-radius:3px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+
+  .page{
+    max-width:640px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    padding-bottom:30px;
+  }
+
+  /* ---- 活动内页：低保真占位区块 ---- */
+  .placeholder-block{
+    background:repeating-linear-gradient(45deg,#f4f5f9,#f4f5f9 10px,#eceef4 10px,#eceef4 20px);
+    border:1px dashed #c7ccdb;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .banner-block{
+    height:120px;
+    margin:16px 16px 0;
+    border-radius:4px;
+  }
+  .hero-block{
+    height:260px;
+    margin:14px 16px 0;
+    border-radius:4px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-block .hero-label{
+    position:absolute;
+    top:10px;left:10px;
+    font-size:11px;
+    color:#9aa0b4;
+    background:rgba(255,255,255,.7);
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .hero-actions{
+    position:absolute;
+    left:0;right:0;bottom:16px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+  }
+  .hero-btn{
+    padding:11px 28px;
+    border-radius:22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    border:none;
+  }
+  .hero-btn.primary{background:var(--accent);color:#fff;}
+  .hero-btn.primary:hover{background:#2f5ed6;}
+  .hero-btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  .hero-btn.secondary:hover{background:var(--accent-soft);}
+
+  .text-block{
+    margin:14px 16px 0;
+    padding:14px 16px;
+  }
+  .text-block .ln{
+    height:11px;
+    background:#eceef4;
+    border-radius:3px;
+    margin-bottom:9px;
+  }
+  .text-block .ln:last-child{margin-bottom:0;}
+
+  .page-footnote{
+    margin-top:18px;
+    padding:0 16px;
+    font-size:11px;
+    color:#a7abba;
+    text-align:center;
+  }
+
+  /* ---- 弹窗通用 ---- */
+  .modal-mask{
+    position:fixed;inset:0;
+    background:rgba(20,20,30,.45);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    z-index:40;
+    padding:76px 20px 20px;
+    overflow-y:auto;
+  }
+  .modal-mask.show{display:flex;}
+  .modal-mask.top{z-index:60;}
+
+  /* ---- 领取交互弹窗（宽版） ---- */
+  .claim-modal{
+    width:100%;
+    max-width:440px;
+    max-height:78vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+    padding:0;
+  }
+  .claim-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .claim-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .claim-modal .cm-close{
+    cursor:pointer;
+    color:var(--muted);
+    font-size:18px;
+    line-height:1;
+  }
+  .claim-modal .cm-body{padding:16px 18px 18px;}
+
+  .quota-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:14px;
+    margin-bottom:14px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .quota-row .label{font-size:13px;color:var(--muted);}
+  .quota-row .value{font-size:13px;}
+  .quota-row .value b{color:var(--accent);font-size:18px;margin:0 2px;}
+  .quota-row .value.zero b{color:var(--danger);}
+
+  .state-msg{
+    text-align:center;
+    padding:26px 10px;
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.9;
+  }
+  .spinner{
+    width:20px;height:20px;
+    border:2.5px solid #dfe3ee;
+    border-top-color:var(--accent);
+    border-radius:50%;
+    margin:0 auto 10px;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .banner{
+    border-radius:4px;
+    padding:9px 12px;
+    font-size:12px;
+    line-height:1.7;
+    margin-bottom:12px;
+    border:1px solid;
+  }
+  .banner.info{background:var(--accent-soft);border-color:#b9cdfa;color:#2a4baf;}
+  .banner.warn{background:var(--warn-bg);border-color:#f0d3ae;color:#7a4a12;}
+
+  .order-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:12px 12px;
+    margin-bottom:8px;
+  }
+  .order-card.disabled-card{background:#fafafc;}
+  .order-card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  .order-card .order-id{font-family:Consolas,monospace;}
+  .order-card .countdown{color:var(--danger);}
+  .order-card.disabled-card .countdown{color:var(--muted);}
+
+  .order-card .mid-row{
+    display:flex;
+    gap:16px;
+    margin-bottom:11px;
+  }
+  .order-card .item .k{font-size:11px;color:var(--muted);margin-bottom:2px;}
+  .order-card .item .v{font-size:14px;font-weight:700;}
+  .order-card .item .v.accent{color:var(--accent);}
+
+  .claim-btn{
+    width:100%;
+    padding:8px;
+    border-radius:4px;
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .claim-btn:hover{background:var(--accent-soft);}
+  .claim-btn:disabled{
+    border-color:var(--border);
+    background:var(--disabled-bg);
+    color:var(--disabled-text);
+    cursor:not-allowed;
+  }
+  .claim-btn.loading{color:var(--muted);border-color:var(--border);}
+
+  /* ---- 成功/失败 结果弹窗（占位结构，视觉由UI设计） ---- */
+  .result-box{
+    width:300px;
+    background:#fff;
+    border-radius:6px;
+    padding:22px 20px;
+    text-align:center;
+  }
+  .result-box .icon{
+    width:36px;height:36px;
+    border-radius:50%;
+    font-size:18px;
+    line-height:36px;
+    margin:0 auto 12px;
+  }
+  .result-box .title{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .result-box .desc{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:12px;}
+  .result-box .draft-tag{
+    display:inline-block;
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    color:#7a5c00;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-bottom:16px;
+  }
+  .result-box button{
+    width:100%;
+    padding:9px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .result-box button:hover{background:var(--disabled-bg);}
+
+  /* ---- 领取记录弹窗：表格展示 ---- */
+  .records-modal{
+    width:100%;
+    max-width:560px;
+    max-height:74vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+  }
+  .records-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .records-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .records-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+  }
+  .records-table th{
+    text-align:left;
+    padding:9px 14px;
+    background:#f4f6fb;
+    color:var(--muted);
+    font-weight:600;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .records-table td{
+    padding:9px 14px;
+    border-bottom:1px solid #eef0f6;
+    white-space:nowrap;
+  }
+  .records-table td.id{font-family:Consolas,monospace;font-size:11.5px;}
+  .status-badge{
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    font-weight:600;
+  }
+  .status-badge.success{background:var(--ok-bg);color:var(--ok);}
+  .status-badge.failed{background:var(--danger-bg);color:var(--danger);}
+  .records-empty{text-align:center;padding:30px 10px;color:var(--muted);font-size:12.5px;}
+
+  /* ---- 原型说明 ---- */
+  .proto-note{margin:24px 16px 0;}
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:12px;
+    line-height:1.85;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:18px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  .table-block{height:110px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .rule-block{height:150px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .order-card .mid-row{gap:0;justify-content:space-between;}
+  .order-card .item{flex:1;}
+  .cut-note{font-size:11.5px;color:var(--warn);background:var(--warn-bg);border-radius:3px;padding:5px 8px;margin:-3px 0 10px;}
+  .cut-note.info{background:var(--accent-soft);color:#2a4baf;}
+  .status-badge.expired{background:var(--disabled-bg);color:var(--muted);}
+  .sim-sep{width:1px;height:18px;background:#e8c877;margin:0 6px;}
+  .login-box .icon{background:var(--accent-soft);color:var(--accent);}
+  .rec-note{padding:10px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid #eef0f6;}
+</style>
+</head>
+<body>
+
+<div class="topbar">USDT笔笔加赠礼 · 用户端领取交互</div>
+
+<div class="sim-bar">
+  <span class="sim-label">模拟场景：</span>
+  <button class="sim-btn" id="sc-guest" onclick="setScene('guest')">未登录</button>
+  <button class="sim-btn active" id="sc-has" onclick="setScene('has')">有待领取</button>
+  <button class="sim-btn" id="sc-none" onclick="setScene('none')">无待领取</button>
+  <button class="sim-btn" id="sc-full" onclick="setScene('full')">今日额度已满</button>
+  <span class="sim-sep"></span>
+  <span class="sim-label">下次领取结果：</span>
+  <button class="sim-btn active" id="rs-ok" onclick="setResult('ok')">成功</button>
+  <button class="sim-btn" id="rs-occupied" onclick="setResult('occupied')">已参与其他活动</button>
+  <button class="sim-btn" id="rs-expired" onclick="setResult('expired')">已过期</button>
+  <button class="sim-btn" id="rs-error" onclick="setResult('error')">系统异常</button>
+</div>
+
+<div class="page">
+  <div class="placeholder-block banner-block">Banner 占位（活动主视觉，素材由UI/设计提供）</div>
+
+  <div class="placeholder-block hero-block">
+    <span class="hero-label">UI图片描述素材占位</span>
+    <div class="hero-actions">
+      <button class="hero-btn primary" onclick="openClaim()">立即领取</button>
+      <button class="hero-btn secondary" onclick="openRecords()">领取记录</button>
+    </div>
+  </div>
+
+  <div class="placeholder-block table-block">档位静态表格（单笔充值 / 加赠比例 / 单笔彩金上限 / 每日领取上限）<br>由活动组按后台最终配置制作，须与后台一致</div>
+  <div class="placeholder-block rule-block">活动规则文案（由活动组提供，须与后台配置一致）<br>需写明：仅USDT渠道；自到账起24小时内领取，逾期视同放弃；<br>每日领取上限按领取时间计算；同一笔存款仅可参与一个存款类活动，以先发放的活动为准</div>
+
+  <div class="proto-note">
+    <div class="inner">
+      <div><span class="tag">原型说明</span>聚焦状态与逻辑分支走查，视觉为低保真占位，美术方案由UI另行设计。</div>
+      <ol>
+        <li><b>查询时机：</b>活动页不发起查询；点击「立即领取」打开弹窗时查询一次，不轮询；重新打开弹窗时刷新。未登录点击「立即领取」或「领取记录」均跳转登录。</li>
+        <li><b>待领取清单：</b>USDT存款到账后20分钟内生成；时效自存款到账时间起算24小时，按剩余时效从短到长排序，剩余时效为打开弹窗时的静态值，不实时倒计时。卡片金额为生成时锁定的金额。查询时已被其他存款活动占用的彩金不展示，直接记入领取记录。</li>
+        <li><b>今日额度：</b>按领取成功时间所在自然日累计（平台时区），每日0点刷新。彩金大于今日剩余额度时按剩余额度发放，实发金额在成功弹窗中注明；额度为0时按钮统一置灰，未过期的彩金次日仍可领取。</li>
+        <li><b>领取核验：</b>点击后同步核验（时效、今日额度、存款是否已被其他存款活动占用），当场返回结果；提交期间同批其他按钮禁用，并发与重复领取以后端为准（存款订单号唯一）。</li>
+        <li><b>结果处理：</b>成功弹窗显示实际到账金额，卡片移出清单；已参与其他活动（领取前一刻被其他活动占用）、已过期（停留页面直至过期后点击）两种失败不可逆，卡片移出清单并写入领取记录；系统异常时卡片保留，可重试，不写记录。</li>
+        <li><b>领取记录：</b>表格按时间倒序，展示近30天；状态含领取成功、领取失败（附原因）、已过期。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="claimModal">
+  <div class="claim-modal">
+    <div class="cm-head"><div class="cm-title">USDT笔笔加赠礼 · 立即领取</div><div class="cm-close" onclick="closeM('claimModal')">✕</div></div>
+    <div class="cm-body">
+      <div class="quota-row">
+        <div class="label">今日剩余可领额度</div>
+        <div class="value" id="quotaValue">¥<b id="quotaNum">1,500</b> / 8,888</div>
+      </div>
+      <div id="listWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask top" id="okModal">
+  <div class="result-box">
+    <div class="icon" style="background:var(--ok-bg);color:var(--ok);">✓</div>
+    <div class="title">领取成功</div>
+    <div class="desc" id="okDesc"></div>
+    <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+    <button onclick="closeM('okModal')">我知道了</button>
+  </div>
+</div>
+<div class="modal-mask top" id="failModal">
+  <div class="result-box">
+    <div class="icon" style="background:var(--danger-bg);color:var(--danger);">✕</div>
+    <div class="title">领取失败</div>
+    <div class="desc" id="failDesc"></div>
+    <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+    <button onclick="closeM('failModal')">我知道了</button>
+  </div>
+</div>
+<div class="modal-mask top" id="loginModal">
+  <div class="result-box login-box">
+    <div class="icon">→</div>
+    <div class="title">请先登录</div>
+    <div class="desc">未登录状态，正式页面直接跳转登录页。</div>
+    <button onclick="closeM('loginModal')">我知道了</button>
+  </div>
+</div>
+
+<div class="modal-mask" id="recModal">
+  <div class="records-modal">
+    <div class="cm-head"><div class="cm-title">领取记录</div><div class="cm-close" onclick="closeM('recModal')">✕</div></div>
+    <div style="overflow-x:auto;">
+    <table class="records-table" id="recTable">
+      <thead><tr><th>存款订单号</th><th>到账金额</th><th>彩金</th><th>时间</th><th>状态</th></tr></thead>
+      <tbody id="recBody"></tbody>
+    </table>
+    </div>
+    <div class="records-empty" id="recEmpty" style="display:none;">暂无领取记录</div>
+    <div class="rec-note">仅展示近30天记录</div>
+  </div>
+</div>
+
+<script>
+const BASE = [
+  {id:'DP2026102009150012', time:'10-20 09:15', amt:120000, rate:'2%',   bonus:1888, raw:2400, remainMin:115},
+  {id:'DP2026102013402271', time:'10-20 13:40', amt:5000,   rate:'1.5%', bonus:75,   remainMin:380},
+  {id:'DP2026102022051833', time:'10-20 22:05', amt:800,    rate:'1%',   bonus:8,    remainMin:885},
+  {id:'DP2026102105334410', time:'10-21 05:33', amt:20000,  rate:'2%',   bonus:400,  remainMin:1333},
+];
+let items = [], quota = 1500, scene = 'has', result = 'ok';
+let records = [
+  {id:'DP2026101918223305', amt:3000,  bonus:30, time:'10-20 08:02', st:'success'},
+  {id:'DP2026101915010928', amt:10000, bonus:0,  time:'10-19 16:47', st:'occupied'},
+  {id:'DP2026101809120017', amt:600,   bonus:0,  time:'10-19 09:12', st:'expired'},
+];
+const fmt = n => Number(n).toLocaleString('zh-CN');
+const hm = m => `${Math.floor(m/60)}小时${String(m%60).padStart(2,'0')}分`;
+const $ = id => document.getElementById(id);
+function closeM(id){ $(id).classList.remove('show'); }
+function act(prefix,key){ document.querySelectorAll(`.sim-btn[id^="${prefix}-"]`).forEach(b=>b.classList.toggle('active', b.id===prefix+'-'+key)); }
+function setScene(s){
+  scene = s; act('sc', s);
+  items = s==='none' ? [] : BASE.map(o=>({...o}));
+  quota = s==='full' ? 0 : 1500;
+  if($('claimModal').classList.contains('show')){ if(s==='guest') closeM('claimModal'); else render(); }
+}
+function setResult(r){ result = r; act('rs', r); }
+function openClaim(){
+  if(scene==='guest'){ $('loginModal').classList.add('show'); return; }
+  $('claimModal').classList.add('show');
+  $('quotaValue').style.visibility='hidden';
+  $('listWrap').innerHTML = '<div class="state-msg"><div class="spinner"></div>正在查询可领取的彩金…</div>';
+  setTimeout(()=>{ $('quotaValue').style.visibility='visible'; render(); }, 600);
+}
+function render(){
+  $('quotaNum').textContent = fmt(quota);
+  $('quotaValue').classList.toggle('zero', quota===0);
+  const wrap = $('listWrap');
+  if(!items.length){
+    wrap.innerHTML = (quota===0 ? '<div class="banner warn">今日领取额度已用完，次日0点刷新。</div>' : '') +
+      '<div class="state-msg">暂无可领取的彩金<br>USDT存款到账后20分钟内生成，自到账起24小时内有效</div>';
+    return;
+  }
+  const list = items.slice().sort((a,b)=>a.remainMin-b.remainMin);
+  const full = quota===0;
+  let h = full ? '<div class="banner warn">今日领取额度已用完，次日0点刷新；未过期的彩金可在次日继续领取。</div>' : '';
+  h += list.map(o=>{
+    return `<div class="order-card ${full?'disabled-card':''}">
+      <div class="top-row"><div class="order-id">存款订单号 ${o.id}</div><div class="countdown">剩余 ${hm(o.remainMin)}</div></div>
+      <div class="mid-row">
+        <div class="item"><div class="k">到账时间</div><div class="v" style="font-size:13px;">${o.time}</div></div>
+        <div class="item"><div class="k">到账金额</div><div class="v">¥${fmt(o.amt)}</div></div>
+        <div class="item"><div class="k">加赠比例</div><div class="v">${o.rate}</div></div>
+        <div class="item"><div class="k">可领彩金</div><div class="v accent">¥${fmt(o.bonus)}</div></div>
+      </div>
+      <button class="claim-btn" data-id="${o.id}" ${full?'disabled':''} onclick="claim('${o.id}')">${full?'今日额度已满':'领取彩金'}</button>
+    </div>`;}).join('');
+  wrap.innerHTML = h;
+}
+function claim(id){
+  const btns = [...document.querySelectorAll('.claim-btn')];
+  const btn = btns.find(b=>b.dataset.id===id);
+  if(!btn || btn.disabled) return;
+  btns.forEach(b=>b.disabled=true);
+  btn.classList.add('loading'); btn.textContent='核验中，请稍候…';
+  setTimeout(()=>{
+    const o = items.find(x=>x.id===id);
+    const now = '今天 '+new Date().toTimeString().slice(0,5);
+    if(result==='ok'){
+      const pay = Math.min(o.bonus, quota);
+      quota -= pay;
+      items = items.filter(x=>x.id!==id);
+      records.unshift({id, amt:o.amt, bonus:pay, time:now, st:'success'});
+      $('okDesc').innerHTML = `¥${fmt(pay)} 彩金已发放至账户余额${pay<o.bonus?`（今日剩余额度不足，原¥${fmt(o.bonus)}）`:''}。<br>出款需完成彩金×3倍流水。`;
+      $('okModal').classList.add('show');
+    }else if(result==='occupied'){
+      items = items.filter(x=>x.id!==id);
+      records.unshift({id, amt:o.amt, bonus:0, time:now, st:'occupied'});
+      $('failDesc').innerHTML = '该笔存款已参与其他存款活动，无法领取本活动彩金。<br>同一笔存款仅可参与一个存款类活动。';
+      $('failModal').classList.add('show');
+    }else if(result==='expired'){
+      items = items.filter(x=>x.id!==id);
+      records.unshift({id, amt:o.amt, bonus:0, time:now, st:'expired'});
+      $('failDesc').innerHTML = '该笔彩金已超过24小时领取时效，视同自动放弃。';
+      $('failModal').classList.add('show');
+    }else{
+      $('failDesc').innerHTML = '网络异常，请稍后重试。';
+      $('failModal').classList.add('show');
+    }
+    render();
+  }, 800);
+}
+function openRecords(){
+  if(scene==='guest'){ $('loginModal').classList.add('show'); return; }
+  const empty = !records.length;
+  $('recTable').style.display = empty?'none':''; $('recEmpty').style.display = empty?'block':'none';
+  const ST = {success:['success','领取成功'], occupied:['failed','领取失败 · 已参与其他存款活动'], expired:['expired','已过期']};
+  $('recBody').innerHTML = records.map(r=>`<tr><td class="id">${r.id}</td><td>¥${fmt(r.amt)}</td><td>${r.st==='success'?'¥'+fmt(r.bonus):'-'}</td><td>${r.time}</td><td><span class="status-badge ${ST[r.st][0]}">${ST[r.st][1]}</span></td></tr>`).join('');
+  $('recModal').classList.add('show');
+}
+setScene('has');
+</script>
+</body>
+</html>
