@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>九耀娱乐 · H5 活动（交互原型）</title>
+<style>
+:root{
+  color-scheme: light;
+  --brand:#8A2E4A; --brand-d:#6E2139; --brand-l:#A8476A; --brand-t:#F6E9EE; --head:#8B4A5E;
+  --red:#C2304E; --green:#2E8B57;
+  --bg:#F4F1F2; --line:#EEE7EA;
+  --t1:#2B2326; --t2:#6D6266; --t3:#A59AA0;
+  --shadow:0 2px 10px rgba(110,33,57,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Noto Sans SC",system-ui,sans-serif;background:#E9E4E6;color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit;border:0;background:none;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--brand-l);outline-offset:2px}
+svg{display:block}
+
+/* ---------- 演示舞台 ---------- */
+.stage{min-height:100%;display:flex;justify-content:center;align-items:flex-start;gap:36px;padding:28px 24px}
+.phone{flex:none;width:390px;height:min(844px,calc(100vh - 56px));min-height:640px;border-radius:48px;background:#1B1418;padding:12px;box-shadow:0 30px 60px rgba(60,20,35,.28);position:sticky;top:28px}
+.screen{user-select:none;-webkit-user-select:none;cursor:grab;position:relative;width:100%;height:100%;border-radius:38px;overflow:hidden;background:var(--bg);isolation:isolate}
+
+/* ---------- 说明面板 ---------- */
+.notes{position:sticky;top:28px;max-height:calc(100vh - 56px);overflow-y:auto;width:400px;max-width:100%;background:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);font-size:13px;line-height:1.75;color:var(--t2)}
+.notes h1{font-size:18px;color:var(--t1);margin-bottom:4px}
+.notes .sub{color:var(--t3);font-size:12px;margin-bottom:14px}
+.notes section{border:1.5px dashed #E0A800;background:#FFF9E3;color:#6B5200;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.notes section b{color:#4A3800}
+.notes section h3{font-size:14px;color:#4A3800;margin-bottom:4px}
+.notes .cur{border-style:solid;box-shadow:0 0 0 3px rgba(224,168,0,.18)}
+.notes .flow{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.notes .flow button{padding:4px 10px;border-radius:14px;background:#fff;border:1px solid #E8D58A;font-size:12px;color:#6B5200}
+.notes .flow button:hover{background:#FFF1B8}
+
+/* ---------- 通用 ---------- */
+.screen.dragging,.screen.dragging *{cursor:grabbing!important}
+.screen button{cursor:pointer}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.sb{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 34px;font-size:15px;font-weight:600;color:#111}
+.sb.light{color:#fff}
+.sb i{display:flex;gap:5px;align-items:center}
+.base{z-index:1}
+.base.hide{visibility:hidden}
+.push{z-index:30;transform:translateX(100%);transition:transform .32s cubic-bezier(.3,.7,.3,1);box-shadow:-8px 0 24px rgba(0,0,0,.08)}
+.push.on{transform:none}
+.dot{position:absolute;width:8px;height:8px;border-radius:50%;background:#F2463A;border:1.5px solid #fff}
+.hidden-dot .dot{display:none}
+
+/* ---------- Tab bar ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:20;height:83px;padding-bottom:26px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr)}
+.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:#B2A8AC;position:relative}
+.tabbar button svg{width:24px;height:24px}
+.tabbar button.on{color:var(--brand)}
+.tabbar .dot{top:6px;left:calc(50% + 8px)}
+.homebar{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#111;z-index:80;pointer-events:none}
+
+/* ---------- 首页 ---------- */
+.h-top{flex:none;background:#fff}
+.h-hd{display:flex;align-items:center;padding:4px 14px 8px;gap:4px}
+.h-hd .lg{display:flex;align-items:center;gap:4px;margin-right:auto}
+.h-hd .lg b{font-size:16px;color:var(--brand);letter-spacing:1px}
+.h-hd .lg small{display:block;font-size:7px;color:var(--t3);letter-spacing:2px;margin-top:-2px}
+.h-hd .ib{width:34px;height:34px;display:grid;place-items:center;color:#4A4246;position:relative}
+.h-hd .ib .dot{top:5px;right:4px}
+.h-user{display:flex;align-items:center;gap:10px;padding:4px 14px 12px;background:#fff}
+.h-user .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#F3D9E2,#E0C0CF);display:grid;place-items:center;color:var(--brand)}
+.h-user .nm{font-size:15px;display:flex;align-items:center;gap:6px}
+.vip{font-size:10px;font-weight:700;font-style:italic;background:linear-gradient(90deg,#6E2139,#A8476A);color:#fff;border-radius:8px;padding:0 6px;line-height:15px}
+.h-user .bal{color:var(--red);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.h-user .acts{margin-left:auto;display:flex;gap:12px}
+.h-user .acts button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--t2)}
+.h-user .acts span{width:30px;height:30px;border-radius:9px;background:var(--brand-t);display:grid;place-items:center;color:var(--brand)}
+.h-body{padding:12px 14px 120px}
+.notice{display:flex;align-items:center;gap:8px;padding:10px 4px;font-size:12.5px;color:var(--t2)}
+.notice span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notice small{color:var(--t3);white-space:nowrap}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 10px}
+.sec-hd b{font-size:16px;display:flex;gap:6px;align-items:center}
+.sec-hd b svg{color:var(--brand)}
+.sec-hd small{color:var(--brand);font-size:12px}
+.lotto{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
+.lotto::-webkit-scrollbar{display:none}
+.lotto .lc{flex:0 0 150px;background:#fff;border-radius:12px;padding:10px 8px 12px;text-align:center}
+.lotto .lc b{font-size:13.5px}
+.lotto .lc .ic{width:62px;height:56px;margin:6px auto 2px}
+.lotto .lc small{display:block;font-size:10.5px;color:var(--t3)}
+.balls{display:flex;justify-content:center;gap:3px;margin:4px 0}
+.balls i{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#D26A88,#8A2E4A);color:#fff;font-style:normal;font-size:10px;display:grid;place-items:center}
+.lotto .lc .t{color:var(--red);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.fav{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fav div{aspect-ratio:1;border-radius:12px;position:relative;overflow:hidden}
+.fav div span{position:absolute;left:6px;top:6px;font-size:10px;background:#8A5BE0;color:#fff;border-radius:6px;padding:0 6px}
+
+/* 悬浮礼包 */
+.gift{position:absolute;right:12px;bottom:104px;z-index:15;transition:transform .3s cubic-bezier(.3,.7,.3,1)}
+.gift .gb{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#E25A7C,#8A2E4A 70%);display:grid;place-items:center;box-shadow:0 8px 18px rgba(138,46,74,.4);position:relative;animation:wob 3.2s ease-in-out infinite}
+.gift .gb small{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:#F2C26B;color:#4A1A0C;font-size:10px;font-weight:700;border-radius:8px;padding:0 6px;white-space:nowrap}
+.gift .dot{top:2px;right:2px}
+.gift .x{position:absolute;top:-8px;left:-8px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center}
+.gift.min{transform:translateX(44px)}
+.gift.min .gb{animation:none;opacity:.85}
+.gift.min .x{display:none}
+@keyframes wob{0%,82%,100%{transform:rotate(0)}86%{transform:rotate(-12deg)}90%{transform:rotate(10deg)}94%{transform:rotate(-6deg)}}
+
+/* ---------- 我的 ---------- */
+.m-sb{background:var(--head)}
+.m-hd{background:var(--head);padding:6px 18px 70px;color:#fff;position:relative}
+.m-hd .mail{position:absolute;right:16px;top:0;width:34px;height:34px;display:grid;place-items:center}
+.m-hd .mail .dot{top:4px;right:3px;background:#F2C26B;border-color:var(--head)}
+.m-hd .row{display:flex;align-items:center;gap:16px;margin-top:14px}
+.m-hd .av{width:72px;height:72px;border-radius:50%;background:#fff;display:grid;place-items:center;color:#3A3034}
+.m-hd b{font-size:18px;font-weight:600}
+.m-hd .v{display:inline-flex;align-items:center;gap:4px;margin:6px 0 4px;background:rgba(255,255,255,.88);color:#5A6080;border-radius:8px;padding:1px 8px 1px 4px;font-size:11px;font-weight:800;font-style:italic}
+.m-hd .days{font-size:12.5px;opacity:.9}
+.m-hd .days em{font-style:normal;color:#F2C26B}
+.m-body{padding:0 14px 120px;margin-top:-58px;position:relative}
+.card{background:#fff;border-radius:16px;box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+.wallet{padding:16px 18px 0}
+.wallet .t{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2)}
+.wallet .t a{margin-left:auto;font-size:12px;cursor:pointer}
+.wallet .num{font-size:26px;font-weight:600;margin:10px 0 14px;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.wallet .ops{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.wallet .ops button{height:50px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--brand);font-size:15px;font-weight:500;position:relative}
+.wallet .ops button+button::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:1px;background:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 0;text-align:center}
+.stats button small{display:block;font-size:12px;color:var(--t2)}
+.stats button b{display:block;font-size:17px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+.ents{display:grid;grid-template-columns:repeat(3,1fr);padding:18px 0 14px;text-align:center}
+.ents button{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:14px;transition:transform .12s}
+.ents button:active{transform:scale(.94)}
+.ents .ei{width:62px;height:62px;border-radius:14px;background:#F6E9EE;display:grid;place-items:center;position:relative}
+.ents .ei .dot{top:-3px;right:-3px;width:10px;height:10px}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;height:58px;padding:0 16px;font-size:14.5px;text-align:left;position:relative}
+.menu button+button::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.menu .mi{width:36px;height:36px;border-radius:9px;background:#F6E9EE;display:grid;place-items:center;color:var(--brand)}
+.menu .ver{margin-left:auto;color:var(--t3);font-size:12.5px}
+.menu .chev{margin-left:auto;color:#9A8F93}
+.menu .ver+.chev{margin-left:6px}
+.logout{display:block;margin:22px auto 0;color:var(--t2);font-size:15px}
+
+/* ---------- 二级页导航 ---------- */
+.nav{flex:none;background:#fff;border-bottom:1px solid var(--line)}
+.nav .bar{height:44px;display:flex;align-items:center;justify-content:center;position:relative}
+.nav .bar b{font-size:17px;font-weight:600;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .back{position:absolute;left:4px;top:0;width:44px;height:44px;display:grid;place-items:center;color:var(--t1)}
+
+/* ---------- Banner ---------- */
+.banner{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:2.05/1;background:#2A2230;touch-action:pan-y;user-select:none}
+.slides{display:flex;height:100%;transition:transform .45s cubic-bezier(.65,0,.35,1)}
+.slide{flex:0 0 100%;height:100%;position:relative;display:flex;align-items:center;padding:0 0 0 18px;overflow:hidden;cursor:pointer}
+.slide h2{font-size:22px;font-weight:900;font-style:italic;line-height:1.15;letter-spacing:1px;background:linear-gradient(180deg,#FFF6D8 10%,#F2C26B 60%,#C98A2B);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35));position:relative;z-index:2}
+.slide p{color:#F3E6EA;margin-top:6px;font-size:10.5px;position:relative;z-index:2;max-width:200px}
+.slide .deco{position:absolute;right:4%;top:10%;width:40%;height:82%}
+.dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px}
+.dots i{width:5px;height:5px;border-radius:3px;background:rgba(255,255,255,.45);transition:width .3s,background .3s}
+.dots i.on{width:16px;background:#fff}
+
+/* ---------- 活动列表 ---------- */
+.p-body{padding:12px 14px 30px}
+.chips-wrap{position:sticky;top:0;z-index:5;background:var(--bg);margin:0 -14px;padding:12px 0 10px;transition:box-shadow .2s}
+.chips-wrap.stuck{background:#fff;box-shadow:0 4px 12px rgba(110,33,57,.08)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 14px;scroll-padding:0 14px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:5px;height:34px;padding:0 13px 0 10px;border-radius:17px;background:#fff;border:1px solid var(--line);font-size:13.5px;color:var(--t1);transition:background .2s,color .2s,transform .12s}
+.chip:active{transform:scale(.95)}
+.chip svg{width:16px;height:16px;color:var(--brand)}
+.chip small{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+.chip.on{background:linear-gradient(135deg,var(--brand-l),var(--brand-d));color:#fff;border-color:transparent;box-shadow:0 4px 10px rgba(138,46,74,.25);font-weight:600}
+.chip.on svg{color:#fff}.chip.on small{color:rgba(255,255,255,.75)}
+.list{display:flex;flex-direction:column;gap:14px;margin-top:4px;transition:opacity .16s}
+.list.fading{opacity:0}
+.pc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);text-align:left;width:100%;transition:transform .12s}
+.pc:active{transform:scale(.98)}
+.pc:active .more{background:var(--brand);color:#fff}
+.pc .ft{padding:11px 14px;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--line)}
+.vis{position:relative;aspect-ratio:584/310;padding:0 18px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.vis .h{font-size:21px;font-weight:900;line-height:1.25;color:var(--brand-d);position:relative;z-index:2;max-width:62%}
+.vis .s{font-size:12px;color:var(--t1);margin-top:6px;position:relative;z-index:2;font-weight:500}
+.vis .hl{font-size:12px;color:var(--red);font-weight:700;position:relative;z-index:2;margin-top:1px}
+.vis .more{align-self:flex-start;margin-top:10px;font-size:11px;padding:2px 12px;border-radius:11px;background:rgba(138,46,74,.12);color:var(--brand);position:relative;z-index:2;transition:background .15s,color .15s}
+.vis .art{position:absolute;right:2%;bottom:3%;width:44%;height:90%;z-index:1}
+.th-rose{background:linear-gradient(120deg,#FDF2F5 0%,#F6DCE5 100%)}
+.th-gold{background:linear-gradient(120deg,#FFF8EA 0%,#F9E1CB 100%)}
+.th-violet{background:linear-gradient(120deg,#F5F1FD 0%,#E4DAF7 100%)}
+.th-sky{background:linear-gradient(120deg,#F1F6FD 0%,#DCE6F8 100%)}
+.th-dark{background:linear-gradient(120deg,#3A2433 0%,#22161F 100%)}
+.th-dark .h{color:#F6D58E}.th-dark .s{color:#F0E4E8}.th-dark .hl{color:#FF8FA6}.th-dark .more{background:rgba(255,255,255,.15);color:#fff}
+.empty{background:#fff;border-radius:14px;padding:44px 20px;text-align:center;color:var(--t2);font-size:13px}
+.empty b{display:block;font-size:15px;color:var(--t1);margin:10px 0 4px}
+.empty button{margin-top:14px;padding:8px 22px;border-radius:18px;background:var(--brand);color:#fff}
+.endline{text-align:center;color:var(--t3);font-size:12px;margin:18px 0 6px}
+
+/* ---------- 活动内页 ---------- */
+.draft{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:#F1EEF0;border:1px dashed #C9BCC2;color:var(--t2);font-size:12px;margin-bottom:12px}
+.d-body{padding:12px 14px 24px}
+.d-body .hero{border-radius:14px;overflow:hidden}
+.panel{background:#fff;border-radius:14px;padding:16px;margin-top:12px}
+.panel h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.panel h3::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--brand)}
+.meta{display:grid;grid-template-columns:70px 1fr;row-gap:8px;font-size:13px}
+.meta dt{color:var(--t3)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;text-align:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{background:var(--brand-t);color:var(--brand-d);font-weight:600;padding:9px 6px}
+td{padding:9px 6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+td.em{color:var(--red);font-weight:700}
+ol.rules{padding-left:18px;line-height:1.8;color:var(--t2);font-size:13px}
+ol.rules li::marker{color:var(--brand);font-weight:700}
+.abar{flex:none;background:#fff;border-top:1px solid var(--line);padding:10px 14px 30px;display:flex;align-items:center;gap:12px}
+.abar .info{flex:1;min-width:0}
+.abar .info small{display:block;font-size:11px;color:var(--t3)}
+.abar .info b{font-size:16px;color:var(--red);font-variant-numeric:tabular-nums}
+.btn{flex:none;min-width:150px;height:44px;padding:0 20px;border-radius:22px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.btn.pri{background:linear-gradient(90deg,var(--brand-l),var(--brand-d));color:#fff;box-shadow:0 6px 14px rgba(138,46,74,.3)}
+.btn.sec{background:var(--brand-t);color:var(--brand)}
+.btn[disabled]{background:#ECE6E9;color:var(--t3);box-shadow:none}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- 弹窗 / Toast ---------- */
+.mask{position:absolute;inset:0;z-index:90;background:rgba(30,15,22,.5);display:grid;place-items:center;padding:30px;opacity:0;pointer-events:none;transition:opacity .2s}
+.mask.on{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px;width:100%;padding:22px 20px 18px;text-align:center;transform:scale(.94);transition:transform .2s}
+.mask.on .modal{transform:none}
+.modal h4{font-size:17px;margin-bottom:8px}
+.modal p{font-size:13.5px;color:var(--t2);line-height:1.7}
+.modal .ops{display:flex;gap:10px;margin-top:18px}
+.modal .ops .btn{flex:1;min-width:0;height:40px;font-size:14px}
+.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.95);z-index:95;background:rgba(40,22,30,.9);color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;max-width:80%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* ---------- 真机打开时全屏 ---------- */
+@media (max-width:520px){
+  body{background:var(--bg)}
+  .stage{padding:0;display:block}
+  .phone{width:100%;height:100dvh;min-height:0;border-radius:0;padding:0;box-shadow:none;position:static}
+  .screen{border-radius:0}
+  .notes,.homebar{display:none}
+}
+@media (max-width:900px) and (min-width:521px){.stage{flex-direction:column;align-items:center}.phone{position:static}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+ <div class="phone"><div class="screen" id="screen">
+
+  <!-- ================= 首页（截取首屏） ================= -->
+  <div class="view base" id="vHome">
+   <div class="h-top">
+    <div class="sb"><span>9:41</span><i>__SBICONS__</i></div>
+    <div class="h-hd">
+     <div class="lg"><svg width="34" height="28" viewBox="0 0 42 34"><defs><linearGradient id="lgh" x1="0" x2="1"><stop offset="0" stop-color="#6E2139"/><stop offset="1" stop-color="#C2304E"/></linearGradient></defs><text x="0" y="28" font-size="30" font-weight="900" font-style="italic" fill="url(#lgh)" font-family="Arial Black,Arial">9Y</text><path d="M34 2l1.6 3.4L39 7l-3.4 1.6L34 12l-1.6-3.4L29 7l3.4-1.6z" fill="#E9B44C"/></svg><div><b>九耀娱乐</b><small>九星连珠 耀世辉煌</small></div></div>
+     <button class="ib" data-toast="网络检测"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg></button>
+     <button class="ib" data-toast="在线客服"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="7" rx="1.5"/><rect x="17" y="13" width="4" height="7" rx="1.5"/></svg></button>
+     <button class="ib" data-toast="聊天室"><span class="dot"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+     <button class="ib" data-toast="换肤"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0z"/></svg></button>
+    </div>
+   </div>
+   <div class="scroll" id="homeScroll">
+    <div class="h-user">
+     <div class="av"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+     <div><div class="nm">Squall <span class="vip">V0</span></div><div class="bal">$123,456,789.99</div></div>
+     <div class="acts">
+      <button data-toast="充值"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></span>充值</button>
+      <button data-toast="转账"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9h16l-4-4M20 15H4l4 4"/></svg></span>转账</button>
+      <button data-toast="提现"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>提现</button>
+     </div>
+    </div>
+    <div class="h-body">
+     <div class="banner" data-carousel></div>
+     <div class="notice"><svg width="16" height="16" viewBox="0 0 24 24" fill="#C2304E"><path d="M3 10v4h4l5 4V6L7 10z"/><path d="M16 9a4 4 0 0 1 0 6" stroke="#C2304E" stroke-width="2" fill="none"/></svg><span>【通知】11/10 全新彩种《哈希分分彩》震撼登场！</span><small>更多 ›</small></div>
+     <div class="sec-hd"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 2-5 0 2 1 3 2 3 0-4 2-6 2-10z"/></svg>热门彩票</b><small>更多 ›</small></div>
+     <div class="lotto" id="lotto"></div>
+     <div class="sec-hd"><b><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"/></svg>我的收藏</b><small>更多 ›</small></div>
+     <div class="fav"><div class="th-rose"><span>彩票</span></div><div class="th-sky"><span>彩票</span></div><div class="th-gold"><span>彩票</span></div></div>
+     <p class="endline">— 首页其余模块沿用现状，此处仅截取首屏 —</p>
+    </div>
+   </div>
+   <div class="gift" id="gift">
+    <button class="gb" id="giftBtn" aria-label="活动"><span class="dot"></span><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9h18M12 9v12M12 9c-2-4-6-5-6-2s6 2 6 2zM12 9c2-4 6-5 6-2s-6 2-6 2z"/></svg><small>活动</small></button>
+    <button class="x" id="giftX" aria-label="收起"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+   </div>
+  </div>
+
+  <!-- ================= 我的 ================= -->
+  <div class="view base hide" id="vMine">
+   <div class="sb light m-sb"><span>9:41</span><i>__SBICONS__</i></div>
+   <div class="scroll" id="mineScroll">
+    <div class="m-hd">
+     <button class="mail" data-toast="站内信"><span class="dot"></span><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2 .5V7l7 5 7-5v-.5z"/></svg></button>
+     <div class="row">
+      <div class="av"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#3A3034"/><circle cx="12" cy="9.5" r="3.5" fill="#fff"/><path d="M5.5 18.5a7.5 7.5 0 0 1 13 0" fill="#fff"/></svg></div>
+      <div><b>squall</b><br><button class="v" data-toast="VIP 页面"><svg width="14" height="14" viewBox="0 0 24 24" fill="#8E95B5"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/></svg>V1</button><div class="days">加入九耀已 <em>23</em> 天</div></div>
+     </div>
+    </div>
+    <div class="m-body">
+     <div class="card wallet">
+      <div class="t">我的钱包 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><a data-toast="充提记录">充提记录 ›</a></div>
+      <div class="num">¥123,456,789.99</div>
+      <div class="ops">
+       <button data-toast="提现"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V4M7 9l5-5 5 5M4 15v4h16v-4"/></svg>提现</button>
+       <button data-toast="转账"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>转账</button>
+       <button data-toast="充值"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>充值</button>
+      </div>
+     </div>
+     <div class="card stats">
+      <button data-toast="个人报表总览"><small>今日盈亏</small><b style="color:var(--green)">+¥18</b></button>
+      <button data-toast="投注记录"><small>有效投注</small><b style="color:var(--brand)">¥46</b></button>
+      <button data-toast="投注记录"><small>我的注单</small><b style="color:var(--brand)">2 笔</b></button>
+     </div>
+     <div class="card ents">
+      <button data-toast="多彩"><span class="ei"><span style="font:900 italic 19px Arial;color:#7A2440;letter-spacing:-.5px">m<span style="color:#4A3B9A">cai</span></span></span>多彩</button>
+      <button data-toast="托管"><span class="ei" style="background:#F9EAD3"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#9A6A2A" stroke-width="1.8"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>托管</button>
+      <button id="entPromo"><span class="ei"><span class="dot"></span><svg width="30" height="30" viewBox="0 0 24 24" fill="#8A2E4A"><rect x="3" y="10" width="18" height="11" rx="2"/><rect x="2" y="7" width="20" height="4" rx="1.5"/><path d="M12 7c-2-4-6-4-6-1.5S12 7 12 7zm0 0c2-4 6-4 6-1.5S12 7 12 7z" fill="#B85A78"/><rect x="11" y="7" width="2" height="14" fill="#F6E9EE"/></svg></span>活动</button>
+     </div>
+     <div class="card menu" id="menu"></div>
+     <button class="logout" data-toast="退出登录">退出登录</button>
+    </div>
+   </div>
+  </div>
+
+  <!-- ================= 活动列表（二级页） ================= -->
+  <div class="view push" id="vPromo">
+   <div class="nav"><div class="sb"><span>9:41</span><i>__SBICONS__</i></div><div class="bar"><button class="back" data-back aria-label="返回"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>活动</b></div></div>
+   <div class="scroll" id="promoScroll">
+    <div class="p-body" style="padding-top:0">
+     <div id="chipSentinel"></div>
+     <div class="chips-wrap" id="chipsWrap"><div class="chips" id="chips" role="tablist"></div></div>
+     <div class="list" id="list"></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ================= 活动内页（仅供参考） ================= -->
+  <div class="view push" id="vDetail">
+   <div class="nav"><div class="sb"><span>9:41</span><i>__SBICONS__</i></div><div class="bar"><button class="back" data-back aria-label="返回"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b id="dTitle">活动详情</b></div></div>
+   <div class="scroll" id="detailScroll"><div class="d-body" id="dBody"></div></div>
+   <div class="abar" id="abar"></div>
+  </div>
+
+  <!-- Tab bar -->
+  <nav class="tabbar" id="tabbar">
+   <button data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>首页</button>
+   <button data-toast="彩票"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5" fill="#fff"/><text x="12" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor">8</text></svg>彩票</button>
+   <button data-toast="娱乐"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="14" height="16" rx="3"/><rect x="7" y="8" width="8" height="5" rx="1" fill="#fff"/><path d="M19 7v6h2" stroke="currentColor" stroke-width="2" fill="none"/></svg>娱乐</button>
+   <button data-toast="报表"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/></svg>报表</button>
+   <button data-toast="团队"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="4"/><path d="M1 21a8 8 0 0 1 16 0z"/><circle cx="17" cy="7" r="3" opacity=".7"/><path d="M17 13a6 6 0 0 1 6 8h-4" opacity=".7"/></svg>团队</button>
+   <button data-tab="mine"><span class="dot" id="tabDot"></span><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9.5" r="3.5" fill="#fff"/><path d="M5.5 18.5a7.5 7.5 0 0 1 13 0" fill="#fff"/></svg>我的</button>
+  </nav>
+
+  <div class="mask" id="mask"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+  <div class="toast" id="toast"></div>
+  <div class="homebar"></div>
+ </div></div>
+
+ <!-- ================= 交互说明 ================= -->
+ <aside class="notes" id="notes">
+  <h1>H5 · 活动页交互原型</h1>
+  <p class="sub">左侧为手机演示：点击即可操作，<b>鼠标按住拖动</b>可模拟手指滑动（页面上下滚动、分类标签左右滑动、Banner 左右切换，松手带惯性）；当前所在页面的说明会高亮。</p>
+  <section>
+   <h3>演示路径</h3>
+   <div class="flow">
+    <button data-demo="mine">我的 → 活动</button>
+    <button data-demo="banner">首页 Banner → 活动内页</button>
+    <button data-demo="gift">首页悬浮礼包 → 活动</button>
+    <button data-demo="dot">重置红点</button>
+   </div>
+  </section>
+  <section data-n="all">
+   <h3>A. 入口与曝光</h3>
+   · 移动端活动入口放在【我的】→【活动】二级页，底部 Tab 保持 6 个不变。<br>
+   · <b>红点联动</b>：有新活动上线时，底部「我的」Tab、我的页「活动」图标、首页悬浮礼包同时显示红点；进入活动列表页后三处红点同时清除。<br>
+   · 首页 Banner 与悬浮礼包作为补充入口，弥补活动放在二级页带来的曝光下降。
+  </section>
+  <section data-n="home">
+   <h3>B. 首页（截取首屏）</h3>
+   · <b>Banner</b>：沿用首页组件，4 秒自动轮播、循环播放，支持左右滑动，手指按住时暂停；点击直达关联的活动内页（后台 Banner 配置关联），返回回到首页。<br>
+   · <b>悬浮礼包</b>：固定在首页右下角、Tab 栏上方，不随页面滚动；每隔几秒轻微晃动吸引注意。点击进入活动列表页；点左上角「×」收起贴到屏幕右边缘，只露出半个图标，点击后重新展开；收起状态在本次访问内保持。<br>
+   · 首页其余模块沿用现状，不做改动。
+  </section>
+  <section data-n="mine">
+   <h3>C. 我的</h3>
+   · 「多彩 / 托管 / 活动」为 PC 首页对应入口在移动端的位置，按现有 UI 稿还原。<br>
+   · 点击「活动」从右侧滑入活动列表页（二级页），按下时图标轻微缩小作为点击反馈。<br>
+   · 有新活动时「活动」图标右上角显示红点，与底部「我的」Tab 红点联动。<br>
+   · 页面其余模块与跳转保持现状。
+  </section>
+  <section data-n="promo">
+   <h3>D. 活动列表页（二级页）</h3>
+   · <b>框架</b>：顶部导航栏（左侧返回 + 标题「活动」），隐藏底部 Tab。点击返回（或右滑）回到上一页。<br>
+   · <b>不设 Banner</b>：首页 Banner 已承担活动推广并可直达内页，二级页直接从分类开始，首屏可多展示约一张卡片。<br>
+   · <b>分类</b>：读取后台活动配置中的分类组件，横向滑动的胶囊标签，标签内为图标 + 名称 + 活动数；「全部优惠」固定第一位并默认选中。选中态为酒红渐变底白字；点击后下方卡片淡出淡入切换，被遮挡的标签自动滚动到可视区中间。<br>
+   · <b>吸顶</b>：上滑时分类栏吸顶于导航栏下方，吸顶后背景变白并带阴影；吸顶状态下切换分类，自动回到列表顶部。<br>
+   · <b>卡片</b>：一行一个，通栏展示活动图 + 活动标题（超长单行省略）；展示与否由后台「活动展示时间」控制，排序按后台排序配置。按下时卡片轻微缩小、「查看详情」变为酒红底白字；点击整张卡片进入活动内页。<br>
+   · <b>空状态</b>：分类下无活动时显示「该分类暂时没有活动」，并提供「查看全部优惠」按钮。<br>
+   · <b>状态保留</b>：从内页返回时保留分类与滚动位置；从「我的」或悬浮礼包重新进入时，重置为「全部优惠」并回到顶部。
+  </section>
+  <section data-n="detail">
+   <h3>E. 活动内页（尚未定档，仅供参考）</h3>
+   · 顶部导航返回上一页（列表页或首页）；内容为活动头图 → 活动信息 → 活动内容 → 活动规则。<br>
+   · 底部固定操作栏（仅供参考）：按「活动起止时间 × 领取方式」切换为未开始、立即申请、自动派发引导或已结束。
+  </section>
+ </aside>
+</div>
+
+<script>
+/* ================= 数据 ================= */
+const CATS=[
+ {id:'all',name:'全部优惠',en:'All promotions',ic:'grid'},
+ {id:'vip',name:'VIP尊享',en:'VIP Exclusive',ic:'crown'},
+ {id:'new',name:'新人专属',en:'Newcomers Only',ic:'gift'},
+ {id:'deposit',name:'存提优惠',en:'Deposit & Withdrawal',ic:'wallet'},
+ {id:'limited',name:'限时优惠',en:'Limited-Time',ic:'clock'},
+ {id:'lottery',name:'彩票优惠',en:'Lottery Bonus',ic:'ball'},
+ {id:'daily',name:'日常优惠',en:'Daily Activities',ic:'cal'}
+];
+const H=3600e3, D=24*H;
+/* 原型数据基于 2026-11-05 的时间点 */
+let simBase=new Date('2026-11-05T10:30:00').getTime(), simT0=Date.now();
+const now=()=>simBase+(Date.now()-simT0);
+const ts=s=>new Date(s.replace(' ','T')).getTime();
+/* 后台配置字段：show=活动展示时间[起,止]  act=活动起止时间[起,止]  way=领取方式（新增：自动派发 / 手动申请） */
+const PROMOS=[
+ {id:'p01',cats:['limited','deposit'],title:'双11狂欢 · 存款加赠11%',h:'双11狂欢夜<br>存款加赠11%',s:'单笔最高加赠 11,111 元',hl:'仅限 11 月 11 日当天',art:'coins',th:'th-dark',order:1,
+  show:['2026-11-01 00:00:00','2026-11-12 23:59:59'],act:['2026-11-11 00:00:00','2026-11-11 23:59:59'],way:'手动申请',target:'全体会员',
+  table:{head:['单笔存款','加赠比例','最高赠送','流水要求'],rows:[['≥ 100','11%','1,111','10 倍'],['≥ 1,000','11%','5,555','10 倍'],['≥ 10,000','11%','11,111','12 倍']]},
+  rules:['活动期间每位会员仅可申请 1 次，需在存款后、投注前申请。','赠送彩金需完成对应流水后方可提款。','同一 IP、设备、银行卡视为同一会员。','本活动不与其他存款类优惠同时享受。']},
+ {id:'p02',cats:['lottery','limited'],title:'哈希分分彩 · 上线首发礼',h:'哈希分分彩<br>震撼登场',s:'11/10 16:00 正式开售',hl:'首周投注返奖 1.5%',art:'ball',th:'th-violet',order:2,
+  show:['2026-11-03 00:00:00','2026-11-20 23:59:59'],act:['2026-11-10 16:00:00','2026-11-17 15:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['首周累计投注','返奖比例','最高返奖'],rows:[['≥ 1,000','0.8%','800'],['≥ 10,000','1.2%','5,000'],['≥ 100,000','1.5%','30,000']]},
+  rules:['统计周期为开售后 7 天内的有效投注。','返奖于周期结束后次日 15:00 前自动派发至中心钱包。','撤单、和局注单不计入有效投注。']},
+ {id:'p11',cats:['lottery'],title:'九星连珠 · 彩票加奖',h:'九星连珠<br>彩票加奖',s:'指定彩种中奖额外加奖',hl:'单注最高加奖 9%',art:'ball',th:'th-dark',order:3,
+  show:['2026-10-20 00:00:00','2026-11-10 23:59:59'],act:['2026-10-20 00:00:00','2026-11-07 23:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['彩种','加奖比例'],rows:[['重庆时时彩','3%'],['福彩3D','5%'],['黑龙江11选5','6%'],['哈希分分彩','9%']]},
+  rules:['加奖于开奖后随派奖一并发放。','单注加奖上限 9,999 元。']},
+ {id:'p03',cats:['vip'],title:'VIP 晋级礼金',h:'VIP 晋级礼金<br>最高 88,888',s:'每升一级即送一次',hl:'彩金 1 倍流水即可提',art:'crown',th:'th-gold',order:4,
+  show:['2026-01-01 00:00:00','2026-12-31 23:59:59'],act:['2026-01-01 00:00:00','2026-12-31 23:59:59'],way:'自动派发',target:'VIP1 及以上会员',
+  table:{head:['VIP 等级','累计有效投注','晋级礼金'],rows:[['VIP1','10,000','18'],['VIP3','300,000','388'],['VIP5','3,000,000','3,888'],['VIP7','30,000,000','18,888'],['VIP9','300,000,000','88,888']]},
+  rules:['会员达到对应等级后，晋级礼金在 24 小时内自动派发。','跳级晋升可同时领取跨越等级的全部礼金。','礼金仅需 1 倍流水即可提款。']},
+ {id:'p06',cats:['new'],title:'新人首存加赠 100%',h:'新人首存<br>加赠 100%',s:'注册 7 天内首次存款',hl:'最高送 2,888 元',art:'gift',th:'th-rose',order:5,
+  show:['2026-07-01 00:00:00','2026-12-31 23:59:59'],act:['2026-07-01 00:00:00','2026-12-31 23:59:59'],way:'手动申请',target:'注册 7 天内且未存款的新会员',
+  table:{head:['首存金额','加赠比例','最高赠送','流水要求'],rows:[['100 – 999','100%','999','15 倍'],['1,000 – 2,888','100%','2,888','15 倍']]},
+  rules:['仅限首次存款，存款后请勿投注，直接申请。','每位会员、每个手机号、每张银行卡仅限 1 次。','需完成手机号绑定。']},
+ {id:'p08',cats:['deposit'],title:'USDT 存款加赠 1.5%',h:'USDT 存款<br>加赠 1.5%',s:'每笔都送 无上限',hl:'1 倍流水即可提款',art:'wallet',th:'th-sky',order:6,
+  show:['2026-06-01 00:00:00','2027-05-31 23:59:59'],act:['2026-06-01 00:00:00','2027-05-31 23:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['存款方式','加赠比例','单笔上限'],rows:[['USDT-TRC20','1.5%','无上限'],['USDT-ERC20','1.2%','无上限']]},
+  rules:['到账后加赠彩金即时派发。','加赠部分需 1 倍流水。']},
+ {id:'p14',cats:['daily','limited'],title:'周末返水加码',h:'周末返水<br>加码 0.3%',s:'11 月每周六、周日',hl:'无上限 · 自动到账',art:'clock',th:'th-sky',order:7,
+  show:['2026-11-01 00:00:00','2026-11-30 23:59:59'],act:['2026-11-01 00:00:00','2026-11-30 23:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['游戏类型','日常返水','周末返水'],rows:[['体育','0.8%','1.1%'],['真人','0.7%','1.0%'],['电子','1.0%','1.3%'],['彩票','0.5%','0.8%']]},
+  rules:['仅活动期间内的周六、周日注单享受加码。','返水于次日 15:00 前自动派发，1 倍流水即可提款。']},
+ {id:'p13',cats:['daily'],title:'每日签到领彩金',h:'每日签到<br>领彩金',s:'连续签到 7 天额外大礼',hl:'累计最高 77 元/周',art:'cal',th:'th-gold',order:8,
+  show:['2026-11-01 00:00:00','2026-11-30 23:59:59'],act:['2026-11-01 00:00:00','2026-11-30 23:59:59'],way:'手动申请',target:'当日存款 ≥ 100 的会员',
+  table:{head:['连续签到','当日奖励'],rows:[['第 1 – 3 天','3'],['第 4 – 6 天','8'],['第 7 天','38']]},
+  rules:['当日需存款 ≥ 100 方可签到。','中断签到将从第 1 天重新计算。']},
+ {id:'p04',cats:['vip'],title:'VIP 每月俸禄',h:'每月俸禄<br>准时到账',s:'每月 1 日自动发放',hl:'VIP 等级越高俸禄越多',art:'coins',th:'th-rose',order:9,
+  show:['2026-01-01 00:00:00','2026-12-31 23:59:59'],act:['2026-01-01 00:00:00','2026-12-31 23:59:59'],way:'自动派发',target:'VIP2 及以上会员',
+  table:{head:['VIP 等级','上月存款要求','月俸禄'],rows:[['VIP2','1,000','28'],['VIP4','10,000','188'],['VIP6','100,000','1,288'],['VIP9','1,000,000','8,888']]},
+  rules:['每月 1 日 12:00 前自动发放上月俸禄。','上月需满足对应存款要求方可领取。']},
+ {id:'p07',cats:['new'],title:'新手任务大礼包',h:'新手任务<br>步步有礼',s:'完成 5 个新手任务',hl:'累计可领 188 元',art:'cal',th:'th-sky',order:10,
+  show:['2026-07-01 00:00:00','2026-12-31 23:59:59'],act:['2026-07-01 00:00:00','2026-12-31 23:59:59'],way:'自动派发',target:'注册 30 天内的新会员',
+  table:{head:['任务','奖励'],rows:[['绑定手机号','8'],['完成实名认证','18'],['首次存款','38'],['首次投注彩票','48'],['下载并登录 APP','76']]},
+  rules:['任务完成后奖励即时到账。','每项任务每位会员仅可完成 1 次。']},
+ {id:'p09',cats:['deposit','daily'],title:'每日首存赠送',h:'每日首存<br>天天送彩金',s:'每天首笔存款即送',hl:'最高 588 元/天',art:'coins',th:'th-gold',order:11,
+  show:['2026-10-01 00:00:00','2026-12-31 23:59:59'],act:['2026-10-01 00:00:00','2026-12-31 23:59:59'],way:'手动申请',target:'全体会员',
+  table:{head:['当日首存','赠送'],rows:[['≥ 100','8'],['≥ 1,000','58'],['≥ 10,000','588']]},
+  rules:['每日 00:00 – 23:59 内首笔存款有效。','需在投注前申请，3 倍流水。']},
+ {id:'p12',cats:['lottery','daily'],title:'彩票连中奖励',h:'彩票连中<br>好运连连',s:'同一彩种连中 3 期起',hl:'最高奖励 8,888 元',art:'ball',th:'th-rose',order:12,
+  show:['2026-09-01 00:00:00','2026-12-31 23:59:59'],act:['2026-09-01 00:00:00','2026-12-31 23:59:59'],way:'手动申请',target:'全体会员',
+  table:{head:['连中期数','每期最低投注','奖励'],rows:[['3 期','10','18'],['5 期','10','88'],['8 期','50','888'],['12 期','100','8,888']]},
+  rules:['需为同一彩种连续期号中奖。','每日可申请 1 次。']},
+ {id:'p10',cats:['deposit'],title:'提款极速到账',h:'提款极速到账<br>超时就赔',s:'5 分钟未到账赔付 1%',hl:'每日 5 次免手续费',art:'clock',th:'th-violet',order:13,
+  show:['2026-01-01 00:00:00','2026-12-31 23:59:59'],act:['2026-01-01 00:00:00','2026-12-31 23:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['到账时长','赔付'],rows:[['5 – 15 分钟','提款额 1%'],['15 分钟以上','提款额 2%（最高 888）']]},
+  rules:['以提交提款申请时间为准计算。','赔付彩金次日自动派发。']},
+ {id:'p05',cats:['vip'],title:'VIP 生日礼金',h:'生日快乐<br>专属礼金',s:'生日当月登录即可领取',hl:'最高 18,888 元',art:'gift',th:'th-violet',order:14,
+  show:['2026-01-01 00:00:00','2026-12-31 23:59:59'],act:['2026-01-01 00:00:00','2026-12-31 23:59:59'],way:'手动申请',target:'VIP3 及以上且完成实名认证的会员',
+  table:{head:['VIP 等级','生日礼金'],rows:[['VIP3','188'],['VIP5','888'],['VIP7','5,888'],['VIP9','18,888']]},
+  rules:['生日当月内申请有效，逾期视为放弃。','需与实名认证信息一致。']},
+ {id:'p15',cats:['daily'],title:'幸运转盘',h:'幸运转盘<br>天天转不停',s:'每日投注满额即可抽奖',hl:'最高抽中 6,666 元',art:'wheel',th:'th-violet',order:15,
+  show:['2026-08-01 00:00:00','2026-12-31 23:59:59'],act:['2026-08-01 00:00:00','2026-12-31 23:59:59'],way:'手动申请',target:'全体会员',
+  table:{head:['当日有效投注','可抽次数'],rows:[['≥ 1,000','1'],['≥ 10,000','3'],['≥ 50,000','8']]},
+  rules:['次数当日有效，过期作废。','奖品即时到账。']},
+ {id:'p16',cats:['limited'],title:'万圣节狂欢 · 投注送礼',h:'万圣节狂欢<br>投注送礼',s:'投注满额领神秘礼包',hl:'最高 1,888 元',art:'gift',th:'th-dark',order:16,
+  show:['2026-10-20 00:00:00','2026-11-07 23:59:59'],act:['2026-10-25 00:00:00','2026-10-31 23:59:59'],way:'手动申请',target:'全体会员',
+  table:{head:['活动期间累计投注','神秘礼包'],rows:[['≥ 5,000','18'],['≥ 50,000','188'],['≥ 500,000','1,888']]},
+  rules:['活动结束后 3 天内申请有效。','每位会员限领 1 次。']},
+ {id:'p17',cats:['limited','deposit'],title:'感恩节回馈 · 存款返利',h:'感恩节回馈<br>存款返利 5%',s:'活动期间累计存款返利',hl:'最高返 8,888 元',art:'coins',th:'th-gold',order:17,
+  show:['2026-11-20 00:00:00','2026-11-30 23:59:59'],act:['2026-11-26 00:00:00','2026-11-27 23:59:59'],way:'自动派发',target:'全体会员',
+  table:{head:['累计存款','返利比例'],rows:[['≥ 1,000','3%'],['≥ 10,000','5%']]},
+  rules:['返利于活动结束次日自动派发。','1 倍流水即可提款。']}
+];
+const BANNERS=[
+ {h:'九星连珠<br>耀世辉煌',p:'九耀娱乐 与您开启财富新纪元',bg:'radial-gradient(circle at 75% 50%,#5A3550 0%,#2A1A28 55%,#1B1119 100%)',art:'ball',to:'p11'},
+ {h:'双11狂欢夜<br>存款加赠11%',p:'单笔最高加赠 11,111 元 · 仅限 11 月 11 日',bg:'radial-gradient(circle at 75% 50%,#7A2440 0%,#3F1424 60%,#200A12 100%)',art:'coins',to:'p01'},
+ {h:'哈希分分彩<br>震撼登场',p:'2026-11-10 16:00 正式开售 · 首周投注返奖 1.5%',bg:'radial-gradient(circle at 75% 50%,#4A3A8A 0%,#251C4D 60%,#130E28 100%)',art:'ball',to:'p02'},
+ {h:'VIP 晋级礼金<br>最高 88,888',p:'每升一级即送一次 · 1 倍流水即可提款',bg:'radial-gradient(circle at 75% 50%,#6B4A1E 0%,#33220E 60%,#1A1107 100%)',art:'crown',to:'p03'}
+];
+
+/* ================= 图标 / 插画 ================= */
+const ICON={
+ grid:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="4"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',
+ crown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>',
+ gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9h18M12 9v12M12 9c-2-4-6-5-6-2s6 2 6 2zM12 9c2-4 6-5 6-2s-6 2-6 2z"/></svg>',
+ wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a2 2 0 0 1 2-2h11v3"/><path d="M15 13.5h5"/><circle cx="16" cy="13.5" r=".5" fill="currentColor"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>',
+ ball:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>'
+};
+let gid=0;
+function art(type){
+ const g='g'+(++gid);
+ const defs=`<defs>
+  <radialGradient id="${g}a" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFF4C9"/><stop offset=".45" stop-color="#F2BE4F"/><stop offset="1" stop-color="#B9721D"/></radialGradient>
+  <radialGradient id="${g}b" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFC3D2"/><stop offset=".5" stop-color="#D2426A"/><stop offset="1" stop-color="#7A1838"/></radialGradient>
+  <radialGradient id="${g}c" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#E6D6FF"/><stop offset=".5" stop-color="#8A5BE0"/><stop offset="1" stop-color="#43218F"/></radialGradient>
+  <linearGradient id="${g}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E25A7C"/><stop offset="1" stop-color="#8A2E4A"/></linearGradient>
+ </defs>`;
+ const sh='<ellipse cx="80" cy="128" rx="48" ry="7" fill="#000" opacity=".12"/>';
+ const sp=(x,y,s)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0-8L2-2 8 0 2 2 0 8-2 2-8 0-2-2z" fill="#FFE7A3"/>`;
+ const coin=(x,y,r)=>`<g><ellipse cx="${x}" cy="${y+3}" rx="${r}" ry="${r*.38}" fill="#A8621A"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.38}" fill="url(#${g}a)"/><ellipse cx="${x}" cy="${y}" rx="${r*.62}" ry="${r*.22}" fill="none" stroke="#C88A2E" stroke-width="1.5"/></g>`;
+ let b='';
+ switch(type){
+  case 'ball': b=`${sh}<circle cx="78" cy="72" r="46" fill="url(#${g}a)"/><circle cx="78" cy="72" r="26" fill="#fff"/><text x="78" y="83" text-anchor="middle" font-size="30" font-weight="900" fill="#8A2E4A" font-family="Arial Black,Arial">9</text>
+    <circle cx="128" cy="36" r="18" fill="url(#${g}b)"/><circle cx="128" cy="36" r="9" fill="#fff"/><text x="128" y="41" text-anchor="middle" font-size="12" font-weight="900" fill="#8A2E4A">7</text>
+    <circle cx="30" cy="108" r="14" fill="url(#${g}c)"/><circle cx="30" cy="108" r="7" fill="#fff"/><text x="30" y="112" text-anchor="middle" font-size="10" font-weight="900" fill="#43218F">3</text>${sp(126,96,1)}${sp(26,32,.8)}`;break;
+  case 'coins': b=`${sh}${coin(80,118,42)}${coin(80,106,42)}${coin(80,94,42)}${coin(76,82,42)}${coin(82,70,42)}${coin(80,58,42)}<circle cx="128" cy="40" r="20" fill="url(#${g}a)"/><text x="128" y="47" text-anchor="middle" font-size="20" font-weight="900" fill="#8B4E10">¥</text>${sp(30,40,1)}${sp(140,96,.8)}`;break;
+  case 'crown': b=`${sh}<path d="M24 104L16 40l36 28L80 22l28 46 36-28-8 64z" fill="url(#${g}a)" stroke="#A8621A" stroke-width="2" stroke-linejoin="round"/><rect x="22" y="104" width="116" height="16" rx="4" fill="url(#${g}a)" stroke="#A8621A" stroke-width="2"/><circle cx="80" cy="84" r="11" fill="url(#${g}b)"/><circle cx="46" cy="88" r="7" fill="url(#${g}c)"/><circle cx="114" cy="88" r="7" fill="url(#${g}c)"/><circle cx="16" cy="40" r="5" fill="#FFE7A3"/><circle cx="80" cy="22" r="6" fill="#FFE7A3"/><circle cx="144" cy="40" r="5" fill="#FFE7A3"/>${sp(140,16,1)}`;break;
+  case 'gift': b=`${sh}<rect x="26" y="62" width="108" height="62" rx="6" fill="url(#${g}d)"/><rect x="18" y="46" width="124" height="22" rx="5" fill="#E9708F"/><rect x="72" y="46" width="16" height="78" fill="url(#${g}a)"/><path d="M80 46c-14-24-40-26-38-10 2 12 38 10 38 10zM80 46c14-24 40-26 38-10-2 12-38 10-38 10z" fill="url(#${g}a)" stroke="#B9721D" stroke-width="1.5"/>${coin(136,112,16)}${coin(136,102,16)}${sp(26,26,1)}${sp(142,30,.8)}`;break;
+  case 'wallet': b=`${sh}<rect x="18" y="44" width="124" height="80" rx="12" fill="url(#${g}d)"/><path d="M30 44l70-26 12 26" fill="#E9708F"/><rect x="102" y="70" width="44" height="28" rx="8" fill="#6E2139"/><circle cx="116" cy="84" r="6" fill="url(#${g}a)"/>${coin(52,30,20)}${coin(52,20,20)}<text x="60" y="98" font-size="22" font-weight="900" fill="#fff" font-family="Arial Black,Arial">₮</text>${sp(142,26,1)}`;break;
+  case 'clock': b=`${sh}<circle cx="80" cy="70" r="50" fill="url(#${g}d)"/><circle cx="80" cy="70" r="40" fill="#fff"/><path d="M80 44v26l16 10" stroke="#8A2E4A" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="80" cy="70" r="5" fill="#8A2E4A"/><rect x="70" y="12" width="20" height="10" rx="3" fill="#8A2E4A"/>${coin(132,116,18)}${coin(132,104,18)}${sp(24,30,1)}`;break;
+  case 'cal': b=`${sh}<rect x="22" y="30" width="116" height="94" rx="12" fill="#fff" stroke="#E9C7D3" stroke-width="2"/><path d="M22 42a12 12 0 0 1 12-12h92a12 12 0 0 1 12 12v12H22z" fill="url(#${g}d)"/><rect x="48" y="20" width="8" height="20" rx="4" fill="#6E2139"/><rect x="104" y="20" width="8" height="20" rx="4" fill="#6E2139"/><path d="M58 88l14 14 30-30" stroke="#C2304E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>${coin(134,116,18)}${sp(146,22,.9)}`;break;
+  case 'wheel': {let seg='';const cs=['#C2304E','#F2BE4F','#8A5BE0','#F2BE4F','#C2304E','#F2BE4F','#8A5BE0','#F2BE4F'];for(let i=0;i<8;i++){const a1=i*Math.PI/4,a2=(i+1)*Math.PI/4;seg+=`<path d="M80 68L${80+48*Math.cos(a1)} ${68+48*Math.sin(a1)}A48 48 0 0 1 ${80+48*Math.cos(a2)} ${68+48*Math.sin(a2)}z" fill="${cs[i]}"/>`}
+   b=`${sh}<circle cx="80" cy="68" r="54" fill="url(#${g}a)"/>${seg}<circle cx="80" cy="68" r="12" fill="#fff" stroke="#8A2E4A" stroke-width="3"/><path d="M80 6l9 18H71z" fill="#8A2E4A"/>${sp(146,30,1)}${sp(18,110,.8)}`;}
+ }
+ return `<svg class="art" viewBox="0 0 160 140" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">${defs}${b}</svg>`;
+}
+
+
+
+/* ================= 工具 ================= */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const status=p=>{const n=now();return n<ts(p.act[0])?'soon':n>ts(p.act[1])?'end':'live'};
+const visible=p=>{const n=now();return n>=ts(p.show[0])&&n<=ts(p.show[1])};
+function fmtLeft(ms){if(ms<=0)return null;const d=Math.floor(ms/D),h=Math.floor(ms%D/H),m=Math.floor(ms%H/6e4),s=Math.floor(ms%6e4/1e3);return (d?d+'天 ':'')+pad(h)+':'+pad(m)+':'+pad(s)}
+let tt;function toast(m){const t=$('#toast');t.innerHTML=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1600)}
+const SBI='<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 24 18" fill="currentColor"><path d="M12 18l3.5-4a5 5 0 0 0-7 0zM4.5 9.5a11 11 0 0 1 15 0l2-2.3a14 14 0 0 0-19 0zM.5 5a17 17 0 0 1 23 0"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="currentColor"/><rect x="23.5" y="4" width="1.5" height="4" rx=".7" fill="currentColor" opacity=".4"/></svg>';
+document.querySelectorAll('.sb i').forEach(i=>i.innerHTML=SBI);
+
+/* ================= 首页内容 ================= */
+$('#lotto').innerHTML=[['重庆时时彩','ball'],['福彩3D','ball'],['黑龙江11选5','ball']].map(([n,a])=>`<div class="lc"><b>${n}</b><div class="ic">${art(a)}</div><small>上期开奖号</small><div class="balls">${[1,2,3,4,5].map(x=>`<i>${x}</i>`).join('')}</div><small>本期截止</small><div class="t" data-clock>23:59:59</div></div>`).join('');
+const MENU=[['资金账户','<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>'],['安全中心','<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>'],['体育规则','<circle cx="12" cy="12" r="9"/><path d="M5 7c4 2 4 8 0 10M19 7c-4 2-4 8 0 10"/>'],['USDT教程','<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/>'],['帮助中心','<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>'],['常见问题','<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>'],['检查更新','<path d="M6 3h9l4 4v14H6z"/><path d="M12 10v6m-3-3l3 3 3-3"/>']];
+$('#menu').innerHTML=MENU.map(([n,p])=>`<button data-toast="${n}"><span class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg></span>${n}${n==='检查更新'?'<span class="ver">1.1.0 (137)</span>':''}<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button>`).join('');
+
+/* ================= Banner 组件 ================= */
+function carousel(root){
+ root.innerHTML=`<div class="slides">${BANNERS.map(b=>`<div class="slide" style="background:${b.bg}" data-to="${b.to}"><div><h2>${b.h}</h2><p>${b.p}</p></div><div class="deco">${art(b.art)}</div></div>`).join('')}</div><div class="dots">${BANNERS.map(()=>'<i></i>').join('')}</div>`;
+ const sl=root.querySelector('.slides'),dots=[...root.querySelectorAll('.dots i')];let i=0,tm;
+ const go=k=>{i=(k+BANNERS.length)%BANNERS.length;sl.style.transition='';sl.style.transform=`translateX(-${i*100}%)`;dots.forEach((d,j)=>d.classList.toggle('on',j===i))};
+ const auto=()=>{clearInterval(tm);tm=setInterval(()=>go(i+1),4000)};
+ /* 拖动由全局手势处理器驱动 */
+ root._drag={start(){clearInterval(tm);sl.style.transition='none'},move(dx){sl.style.transform=`translateX(calc(-${i*100}% + ${dx}px))`},end(dx){if(dx<-40)go(i+1);else if(dx>40)go(i-1);else go(i);auto()}};
+ root.addEventListener('click',()=>openDetail(BANNERS[i].to));
+ go(0);auto();
+}
+document.querySelectorAll('[data-carousel]').forEach(carousel);
+
+/* ================= 模拟手指拖动（鼠标按住拖动 = 手指滑动） ================= */
+(function(){
+ const scr=$('#screen');let dg=null,raf=0,suppress=false;
+ const stop=()=>cancelAnimationFrame(raf);
+ function inertia(el,axis,v){
+  let last=performance.now();
+  const step=t=>{const dt=Math.min(t-last,32);last=t;v*=Math.pow(.95,dt/16);if(Math.abs(v)<.02)return;
+   const before=axis==='x'?el.scrollLeft:el.scrollTop;
+   if(axis==='x')el.scrollLeft-=v*dt;else el.scrollTop-=v*dt;
+   if((axis==='x'?el.scrollLeft:el.scrollTop)===before)return;
+   raf=requestAnimationFrame(step)};
+  raf=requestAnimationFrame(step);
+ }
+ scr.addEventListener('pointerdown',e=>{
+  if(e.button!==0||e.target.closest('.mask'))return;
+  const ban=e.target.closest('.banner');
+  if(e.pointerType!=='mouse'&&!ban)return;          /* 真机触摸保留原生滚动，仅 Banner 需要手势 */
+  stop();
+  dg={id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,axis:null,ban,
+      h:e.target.closest('.chips,.lotto'),v:e.target.closest('.scroll'),touch:e.pointerType!=='mouse',samples:[]};
+ });
+ window.addEventListener('pointermove',e=>{
+  if(!dg||e.pointerId!==dg.id)return;
+  const dx=e.clientX-dg.x,dy=e.clientY-dg.y;
+  if(!dg.axis){
+   if(Math.hypot(dx,dy)<6)return;
+   dg.axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+   if(dg.touch&&dg.axis==='y'){dg=null;return}
+   dg.el=dg.axis==='x'?(dg.ban||dg.h):dg.v;
+   if(!dg.el){dg=null;return}
+   if(dg.el===dg.ban)dg.ban._drag.start();
+   scr.classList.add('dragging');
+   try{scr.setPointerCapture(e.pointerId)}catch(_){}
+  }
+  const ddx=e.clientX-dg.lx,ddy=e.clientY-dg.ly;dg.lx=e.clientX;dg.ly=e.clientY;
+  if(dg.el===dg.ban){dg.ban._drag.move(dx);return}
+  if(dg.axis==='x')dg.el.scrollLeft-=ddx;else dg.el.scrollTop-=ddy;
+  const t=performance.now();dg.samples.push([t,dg.axis==='x'?ddx:ddy]);
+  while(dg.samples.length&&t-dg.samples[0][0]>100)dg.samples.shift();
+ });
+ function up(e){
+  if(!dg||e.pointerId!==dg.id)return;
+  if(dg.axis){
+   suppress=true;setTimeout(()=>suppress=false,60);
+   if(dg.el===dg.ban)dg.ban._drag.end(e.clientX-dg.x);
+   else if(dg.samples.length>1&&performance.now()-dg.samples[dg.samples.length-1][0]<80){
+    const span=dg.samples[dg.samples.length-1][0]-dg.samples[0][0]||16,sum=dg.samples.reduce((a,b)=>a+b[1],0);
+    inertia(dg.el,dg.axis,sum/span);
+   }
+  }
+  scr.classList.remove('dragging');dg=null;
+ }
+ window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+ scr.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopPropagation();suppress=false}},true);
+ scr.addEventListener('dragstart',e=>e.preventDefault());
+ scr.addEventListener('wheel',stop,{passive:true});
+})();
+
+/* ================= 导航栈 ================= */
+let base='home';const stack=[];
+function setBase(n){base=n;$('#vHome').classList.toggle('hide',n!=='home');$('#vMine').classList.toggle('hide',n!=='mine');document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));notes()}
+function push(n){const el=$('#v'+n);if(stack.includes(n)){notes();return}stack.push(n);el.style.zIndex=30+stack.length;requestAnimationFrame(()=>el.classList.add('on'));notes()}
+function back(){const n=stack.pop();if(!n)return;$('#v'+n).classList.remove('on');notes()}
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=back);
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setBase(b.dataset.tab));
+function notes(){const top=stack[stack.length-1]||base;document.querySelectorAll('#notes [data-n]').forEach(s=>s.classList.toggle('cur',s.dataset.n===top));const c=document.querySelector('#notes .cur'),nt=$('#notes');if(c&&nt.scrollHeight>nt.clientHeight)nt.scrollTo({top:c.offsetTop-120,behavior:'smooth'})}
+
+/* ================= 红点 ================= */
+let hasNew=true;
+function dots(){[$('#tabDot'),$('#entPromo .dot'),$('#giftBtn .dot')].forEach(d=>d.style.display=hasNew?'':'none')}
+dots();
+
+/* ================= 活动列表 ================= */
+const state={cat:'all'};
+const count=id=>PROMOS.filter(p=>visible(p)&&(id==='all'||p.cats.includes(id))).length;
+function openPromo(){
+ state.cat='all';renderChips();renderList(false);$('#promoScroll').scrollTop=0;$('#chips').scrollLeft=0;
+ hasNew=false;dots();push('Promo');
+}
+function renderChips(){
+ $('#chips').innerHTML=CATS.map(c=>`<button class="chip${c.id===state.cat?' on':''}" role="tab" aria-selected="${c.id===state.cat}" data-cat="${c.id}">${ICON[c.ic]}${c.name}<small>${count(c.id)}</small></button>`).join('');
+}
+function cardHTML(p){return `<button class="pc" data-id="${p.id}"><div class="vis ${p.th}"><div class="h">${p.h}</div><div class="s">${p.s}</div><div class="hl">${p.hl}</div><span class="more">查看详情</span>${art(p.art)}</div><div class="ft">${p.title}</div></button>`}
+function renderList(anim){
+ const a=PROMOS.filter(p=>visible(p)&&(state.cat==='all'||p.cats.includes(state.cat))).sort((x,y)=>x.order-y.order);
+ const fill=()=>{$('#list').innerHTML=a.length?a.map(cardHTML).join('')+'<p class="endline">— 没有更多活动了 —</p>':`<div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D9C4CD" stroke-width="1.5" style="margin:0 auto"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9h18M12 9v12"/></svg><b>该分类暂时没有活动</b>新活动上线后会第一时间展示在这里<br><button data-jump>查看全部优惠</button></div>`};
+ if(anim){$('#list').classList.add('fading');setTimeout(()=>{fill();$('#list').classList.remove('fading')},150)}else fill();
+}
+function pickCat(id){
+ if(id===state.cat)return;state.cat=id;renderChips();renderList(true);
+ const chip=$(`#chips [data-cat="${id}"]`),cw=$('#chips');cw.scrollTo({left:chip.offsetLeft-(cw.clientWidth-chip.offsetWidth)/2,behavior:'smooth'});
+ const sc=$('#promoScroll'),top=$('#chipSentinel').offsetTop;if(sc.scrollTop>top)sc.scrollTo({top,behavior:'smooth'});
+}
+$('#chips').onclick=e=>{const c=e.target.closest('.chip');if(c)pickCat(c.dataset.cat)};
+$('#list').onclick=e=>{if(e.target.closest('[data-jump]'))return pickCat('all');const c=e.target.closest('.pc');if(c)openDetail(c.dataset.id)};
+$('#promoScroll').addEventListener('scroll',e=>$('#chipsWrap').classList.toggle('stuck',e.target.scrollTop>$('#chipSentinel').offsetTop-1),{passive:true});
+
+/* ================= 活动内页 ================= */
+const applied=new Set();let cur=null;
+function openDetail(id){
+ const p=PROMOS.find(x=>x.id===id);if(!p)return;cur=p;
+ $('#dTitle').textContent=p.title;
+ $('#dBody').innerHTML=`<div class="draft"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>活动内页尚未定档，以下设计仅供参考</div>
+  <div class="hero"><div class="vis ${p.th}"><div class="h">${p.h}</div><div class="s">${p.s}</div><div class="hl">${p.hl}</div>${art(p.art)}</div></div>
+  <div class="panel"><h3>活动信息</h3><dl class="meta"><dt>活动时间</dt><dd>${p.act[0]}<br>至 ${p.act[1]}</dd><dt>活动对象</dt><dd>${p.target}</dd><dt>领取方式</dt><dd>${p.way}</dd></dl></div>
+  <div class="panel"><h3>活动内容</h3><table><thead><tr>${p.table.head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${p.table.rows.map(r=>`<tr>${r.map((v,i)=>`<td${i===r.length-1?' class="em"':''}>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+  <div class="panel"><h3>活动规则</h3><ol class="rules">${p.rules.map(r=>`<li>${r}</li>`).join('')}<li>九耀娱乐保留本活动的最终解释权。</li></ol></div>`;
+ $('#detailScroll').scrollTop=0;renderBar();push('Detail');
+}
+function renderBar(){
+ const p=cur,st=status(p);let info,btn;
+ const guide=p.cats.includes('lottery')?'去投注':'去存款';
+ if(st==='soon'){info=`<small>距离活动开始</small><b data-cd="${ts(p.act[0])}"></b>`;btn=`<button class="btn" disabled>活动未开始</button>`}
+ else if(st==='end'){info=`<small>活动状态</small><b style="color:var(--t3)">已结束</b>`;btn=`<button class="btn" disabled>活动已结束</button>`}
+ else{info=`<small>距离活动结束</small><b data-cd="${ts(p.act[1])}"></b>`;
+  if(p.way==='自动派发')btn=`<button class="btn pri" data-act="go">${guide}</button>`,info+=`<small>达标后自动派发</small>`;
+  else if(applied.has(p.id))btn=`<button class="btn" disabled>已申请 · 审核中</button>`;
+  else btn=`<button class="btn pri" data-act="apply">立即申请</button>`}
+ $('#abar').innerHTML=`<div class="info">${info}</div>${btn}`;tick();
+}
+$('#abar').onclick=e=>{const a=e.target.closest('[data-act]');if(!a)return;
+ if(a.dataset.act==='go')toast(`原型演示：跳转「${a.textContent}」`);
+ if(a.dataset.act==='apply'){
+  $('#modal').innerHTML=`<h4>确认申请该活动？</h4><p>「${cur.title}」<br>提交后将进入审核，结果通过站内信通知。</p><div class="ops"><button class="btn sec" data-m="0">再想想</button><button class="btn pri" data-m="1">确认申请</button></div>`;
+  $('#mask').classList.add('on');
+ }};
+$('#modal').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;
+ if(b.dataset.m==='0')return $('#mask').classList.remove('on');
+ b.disabled=true;b.innerHTML='<span class="spin"></span>提交中';
+ setTimeout(()=>{applied.add(cur.id);$('#mask').classList.remove('on');renderBar();toast('申请成功，请等待审核')},900)};
+$('#mask').onclick=e=>{if(e.target.id==='mask')$('#mask').classList.remove('on')};
+
+function tick(){
+ document.querySelectorAll('[data-cd]').forEach(el=>{const l=fmtLeft(+el.dataset.cd-now());if(!l)renderBar();else el.textContent=l});
+ const d=new Date(),left=86399-(d.getHours()*3600+d.getMinutes()*60+d.getSeconds())%86400;
+ document.querySelectorAll('[data-clock]').forEach(el=>el.textContent=`${pad(Math.floor(left/3600))}:${pad(Math.floor(left%3600/60))}:${pad(left%60)}`);
+}
+setInterval(tick,1000);tick();
+
+/* ================= 入口 ================= */
+$('#entPromo').onclick=openPromo;
+$('#giftBtn').onclick=()=>{if($('#gift').classList.contains('min')){$('#gift').classList.remove('min');return}openPromo()};
+$('#giftX').onclick=()=>$('#gift').classList.add('min');
+document.addEventListener('click',e=>{const t=e.target.closest('[data-toast]');if(t)toast(`原型演示：「${t.dataset.toast}」不在本次范围`)});
+
+/* ================= 演示路径 ================= */
+function reset(){while(stack.length)back();}
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{
+ const k=b.dataset.demo;
+ if(k==='dot'){hasNew=true;dots();toast('红点已重置');return}
+ reset();
+ if(k==='mine'){setBase('mine');$('#mineScroll').scrollTop=0;setTimeout(()=>{$('#entPromo').animate([{transform:'scale(1)'},{transform:'scale(.9)'},{transform:'scale(1)'}],{duration:400});setTimeout(openPromo,420)},350)}
+ if(k==='banner'){setBase('home');$('#homeScroll').scrollTop=0;setTimeout(()=>openDetail(BANNERS[0].to),350)}
+ if(k==='gift'){setBase('home');$('#gift').classList.remove('min');setTimeout(openPromo,350)}
+});
+setBase('home');
+</script>
+</body>
+</html>
