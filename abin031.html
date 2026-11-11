@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>九耀迎新大转盘 - 用户端交互原型</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --ok-bg:#e4f6ec;
+    --danger:#c23b3b;
+    --danger-bg:#fdeaea;
+    --disabled-bg:#f1f2f6;
+    --disabled-text:#a7abba;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:12px 20px;
+    font-size:14px;
+    font-weight:600;
+  }
+
+  /* ---- 场景切换工具条（原型辅助，非正式UI，z-index高于弹窗，方便弹窗开着也能切场景） ---- */
+  .sim-bar{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:#fff3d6;
+    border-bottom:1px solid #e8c877;
+    padding:10px 20px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .sim-bar .sim-label{
+    font-weight:600;
+    color:#7a5c00;
+    margin-right:4px;
+  }
+  .sim-btn{
+    border:1px solid #d8b448;
+    background:#fff;
+    color:#7a5c00;
+    padding:4px 10px;
+    border-radius:3px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+
+  .page{
+    max-width:640px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    padding-bottom:30px;
+  }
+
+  /* ---- 活动内页：低保真占位区块 ---- */
+  .placeholder-block{
+    background:repeating-linear-gradient(45deg,#f4f5f9,#f4f5f9 10px,#eceef4 10px,#eceef4 20px);
+    border:1px dashed #c7ccdb;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .banner-block{
+    height:120px;
+    margin:16px 16px 0;
+    border-radius:4px;
+  }
+  .hero-block{
+    height:260px;
+    margin:14px 16px 0;
+    border-radius:4px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-block .hero-label{
+    position:absolute;
+    top:10px;left:10px;
+    font-size:11px;
+    color:#9aa0b4;
+    background:rgba(255,255,255,.7);
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .hero-actions{
+    position:absolute;
+    left:0;right:0;bottom:16px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+  }
+  .hero-btn{
+    padding:11px 28px;
+    border-radius:22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    border:none;
+  }
+  .hero-btn.primary{background:var(--accent);color:#fff;}
+  .hero-btn.primary:hover{background:#2f5ed6;}
+  .hero-btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  .hero-btn.secondary:hover{background:var(--accent-soft);}
+
+  .text-block{
+    margin:14px 16px 0;
+    padding:14px 16px;
+  }
+  .text-block .ln{
+    height:11px;
+    background:#eceef4;
+    border-radius:3px;
+    margin-bottom:9px;
+  }
+  .text-block .ln:last-child{margin-bottom:0;}
+
+  .page-footnote{
+    margin-top:18px;
+    padding:0 16px;
+    font-size:11px;
+    color:#a7abba;
+    text-align:center;
+  }
+
+  /* ---- 弹窗通用 ---- */
+  .modal-mask{
+    position:fixed;inset:0;
+    background:rgba(20,20,30,.45);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    z-index:40;
+    padding:76px 20px 20px;
+    overflow-y:auto;
+  }
+  .modal-mask.show{display:flex;}
+  .modal-mask.top{z-index:60;}
+
+  /* ---- 领取交互弹窗（宽版） ---- */
+  .claim-modal{
+    width:100%;
+    max-width:440px;
+    max-height:78vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+    padding:0;
+  }
+  .claim-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .claim-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .claim-modal .cm-close{
+    cursor:pointer;
+    color:var(--muted);
+    font-size:18px;
+    line-height:1;
+  }
+  .claim-modal .cm-body{padding:16px 18px 18px;}
+
+  .quota-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:14px;
+    margin-bottom:14px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .quota-row .label{font-size:13px;color:var(--muted);}
+  .quota-row .value{font-size:13px;}
+  .quota-row .value b{color:var(--accent);font-size:18px;margin:0 2px;}
+  .quota-row .value.zero b{color:var(--danger);}
+
+  .state-msg{
+    text-align:center;
+    padding:26px 10px;
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.9;
+  }
+  .spinner{
+    width:20px;height:20px;
+    border:2.5px solid #dfe3ee;
+    border-top-color:var(--accent);
+    border-radius:50%;
+    margin:0 auto 10px;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .banner{
+    border-radius:4px;
+    padding:9px 12px;
+    font-size:12px;
+    line-height:1.7;
+    margin-bottom:12px;
+    border:1px solid;
+  }
+  .banner.info{background:var(--accent-soft);border-color:#b9cdfa;color:#2a4baf;}
+  .banner.warn{background:var(--warn-bg);border-color:#f0d3ae;color:#7a4a12;}
+
+  .order-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:12px 12px;
+    margin-bottom:8px;
+  }
+  .order-card.disabled-card{background:#fafafc;}
+  .order-card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  .order-card .order-id{font-family:Consolas,monospace;}
+  .order-card .countdown{color:var(--danger);}
+  .order-card.disabled-card .countdown{color:var(--muted);}
+
+  .order-card .mid-row{
+    display:flex;
+    gap:16px;
+    margin-bottom:11px;
+  }
+  .order-card .item .k{font-size:11px;color:var(--muted);margin-bottom:2px;}
+  .order-card .item .v{font-size:14px;font-weight:700;}
+  .order-card .item .v.accent{color:var(--accent);}
+
+  .claim-btn{
+    width:100%;
+    padding:8px;
+    border-radius:4px;
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .claim-btn:hover{background:var(--accent-soft);}
+  .claim-btn:disabled{
+    border-color:var(--border);
+    background:var(--disabled-bg);
+    color:var(--disabled-text);
+    cursor:not-allowed;
+  }
+  .claim-btn.loading{color:var(--muted);border-color:var(--border);}
+
+  /* ---- 成功/失败 结果弹窗（占位结构，视觉由UI设计） ---- */
+  .result-box{
+    width:300px;
+    background:#fff;
+    border-radius:6px;
+    padding:22px 20px;
+    text-align:center;
+  }
+  .result-box .icon{
+    width:36px;height:36px;
+    border-radius:50%;
+    font-size:18px;
+    line-height:36px;
+    margin:0 auto 12px;
+  }
+  .result-box .title{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .result-box .desc{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:12px;}
+  .result-box .draft-tag{
+    display:inline-block;
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    color:#7a5c00;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-bottom:16px;
+  }
+  .result-box button{
+    width:100%;
+    padding:9px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .result-box button:hover{background:var(--disabled-bg);}
+
+  /* ---- 领取记录弹窗：表格展示 ---- */
+  .records-modal{
+    width:100%;
+    max-width:560px;
+    max-height:74vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+  }
+  .records-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .records-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .records-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+  }
+  .records-table th{
+    text-align:left;
+    padding:9px 14px;
+    background:#f4f6fb;
+    color:var(--muted);
+    font-weight:600;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .records-table td{
+    padding:9px 14px;
+    border-bottom:1px solid #eef0f6;
+    white-space:nowrap;
+  }
+  .records-table td.id{font-family:Consolas,monospace;font-size:11.5px;}
+  .status-badge{
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    font-weight:600;
+  }
+  .status-badge.success{background:var(--ok-bg);color:var(--ok);}
+  .status-badge.failed{background:var(--danger-bg);color:var(--danger);}
+  .records-empty{text-align:center;padding:30px 10px;color:var(--muted);font-size:12.5px;}
+
+  /* ---- 原型说明 ---- */
+  .proto-note{margin:24px 16px 0;}
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:12px;
+    line-height:1.85;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:18px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  .table-block{height:100px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .rule-block{height:130px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .sim-sep{width:1px;height:18px;background:#e8c877;margin:0 6px;}
+  .sim-bar select{font-size:11.5px;padding:3px 4px;border:1px solid #d8b448;border-radius:3px;color:#7a5c00;}
+  .panel{margin:14px 16px 0;border:1px solid var(--border);border-radius:6px;padding:14px 16px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .panel-title{font-size:14px;font-weight:700;}
+  .lk{font-size:12px;color:var(--accent);cursor:pointer;}
+  .status-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+  .status-row b{color:var(--accent);font-size:18px;margin:0 2px;}
+  .notice{font-size:12px;border-radius:4px;padding:8px 10px;margin-bottom:12px;line-height:1.7;}
+  .notice.warn{background:var(--warn-bg);color:#7a4a12;border:1px solid #f0d3ae;}
+  .notice.info{background:var(--accent-soft);color:#2a4baf;border:1px solid #b9cdfa;}
+  .notice.end{background:var(--disabled-bg);color:var(--muted);border:1px solid var(--border);}
+  .wheel-wrap{position:relative;width:260px;height:260px;margin:6px auto 4px;}
+  .wheel{width:100%;height:100%;border-radius:50%;border:3px solid #9aa3c0;position:relative;transition:transform 2.6s cubic-bezier(.17,.67,.2,1);
+    background:conic-gradient(#f4f5f9 0 45deg,#e6e9f2 45deg 90deg,#f4f5f9 90deg 135deg,#e6e9f2 135deg 180deg,#f4f5f9 180deg 225deg,#e6e9f2 225deg 270deg,#f4f5f9 270deg 315deg,#e6e9f2 315deg 360deg);}
+  .seg{position:absolute;left:50%;top:50%;width:0;height:0;}
+  .seg span{position:absolute;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#40465a;white-space:nowrap;}
+  .pointer{position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:20px solid var(--danger);z-index:2;}
+  .spin-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:14px;cursor:pointer;z-index:3;line-height:1.3;}
+  .spin-btn:disabled{background:#c3c8d6;cursor:not-allowed;}
+  .wheel-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.7;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+  .wcard{border:1px solid var(--border);border-radius:6px;padding:10px 6px;text-align:center;}
+  .wcard .ch{font-size:22px;font-weight:700;}
+  .wcard .cnt{font-size:11.5px;color:var(--muted);margin:2px 0 8px;}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:4px;}
+  .stepper button{width:24px;height:24px;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:14px;line-height:1;}
+  .stepper button:disabled{color:var(--disabled-text);cursor:not-allowed;background:var(--disabled-bg);}
+  .stepper .n{width:22px;text-align:center;font-weight:700;}
+  .sel-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:10px;}
+  .sel-row .tip{color:var(--muted);}
+  .sel-row .tip b{color:var(--accent);}
+  .btn-row{display:flex;gap:8px;}
+  .btn-row .claim-btn{flex:1;}
+  .claim-btn.primary{background:var(--accent);color:#fff;}
+  .claim-btn.primary:hover{background:#2f5ed6;}
+  .claim-btn.primary:disabled{background:var(--disabled-bg);color:var(--disabled-text);border-color:var(--border);}
+  .result-box .big{font-size:22px;font-weight:700;color:var(--accent);margin:4px 0 8px;}
+  .confirm-btns{display:flex;gap:8px;}
+  .confirm-btns button.ok{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .rec-note{padding:10px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid #eef0f6;}
+  .grand{border:2px solid #d8b448;background:#fffaf0;}
+  .grand .panel-title{color:#7a5c00;}
+  .grand-sub{font-size:12px;color:#7a5c00;margin:-6px 0 12px;}
+  .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+  .slot{border:2px dashed #d9dce6;border-radius:8px;padding:12px 4px;text-align:center;background:#fff;}
+  .slot .ch{font-size:26px;font-weight:700;color:#c3c8d6;}
+  .slot .st{font-size:11px;color:var(--muted);margin-top:2px;}
+  .slot.on{border:2px solid #d8b448;background:#fff3d6;}
+  .slot.on .ch{color:#7a5c00;}
+  .grand-info{display:flex;justify-content:space-between;font-size:12.5px;color:#7a5c00;margin-bottom:10px;}
+  .grand-info b{font-size:16px;}
+  .grand-btn{width:100%;padding:12px;border-radius:24px;border:none;background:#e0a82e;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .grand-btn:hover{background:#c99320;}
+  .grand-btn:disabled{background:var(--disabled-bg);color:var(--disabled-text);cursor:not-allowed;}
+  .grand-block{height:230px;margin:14px 16px 0;border-radius:4px;position:relative;line-height:1.8;padding-bottom:60px;}
+  .ref-tip{display:block;font-size:10.5px;color:#a7abba;text-align:right;}
+  .grand-block .hero-label{position:absolute;top:10px;left:10px;font-size:11px;color:#9aa0b4;background:rgba(255,255,255,.7);padding:2px 8px;border-radius:3px;}
+  .grand-block .grand-btn{width:auto;padding:11px 34px;}
+  .result-box.gold{border:2px solid #d8b448;}
+  .result-box.gold .big{color:#c99320;font-size:28px;}
+  .status-badge.card{background:var(--accent-soft);color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="topbar">九耀迎新大转盘 · 用户端交互</div>
+<div class="sim-bar">
+  <span class="sim-label">模拟场景：</span>
+  <button class="sim-btn" id="sc-guest" onclick="setScene('guest')">未登录</button>
+  <button class="sim-btn active" id="sc-active" onclick="setScene('active')">第1~30天</button>
+  <button class="sim-btn" id="sc-grace" onclick="setScene('grace')">第31~33天</button>
+  <button class="sim-btn" id="sc-ended" onclick="setScene('ended')">活动已结束</button>
+  <span class="sim-sep"></span>
+  <span class="sim-label">抽奖次数：</span>
+  <button class="sim-btn active" id="ch-has" onclick="setChances(3)">有次数</button>
+  <button class="sim-btn" id="ch-none" onclick="setChances(0)">无次数</button>
+  <span class="sim-sep"></span>
+  <span class="sim-label">大奖兑换接口：</span>
+  <button class="sim-btn active" id="gr-ok" onclick="setGr('ok')">成功</button>
+  <button class="sim-btn" id="gr-stale" onclick="setGr('stale')">字卡不足</button>
+  <span class="sim-sep"></span>
+  <span class="sim-label">下次抽中：</span>
+  <select id="forcePrize"><option value="">按概率随机</option></select>
+</div>
+
+<div class="page">
+  <div class="placeholder-block banner-block">Banner 占位（活动主视觉，素材由UI/设计提供）</div>
+
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">迎新大转盘</div><div><span class="lk" onclick="openRec('draw')">抽奖记录</span>　<span class="lk" onclick="openRec('ex')">兑换记录</span></div></div>
+    <div id="drawNotice"></div>
+    <div class="status-row"><div id="chanceRow">剩余抽奖次数 <b id="chanceNum">3</b> 次</div><div id="deadline">注册后33天内有效<span class="ref-tip">（仅供参考，正式文案由活动组和美术设计确认）</span></div></div>
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+      <button class="spin-btn" id="spinBtn" onclick="spin()">抽奖</button>
+    </div>
+    <div class="wheel-hint" id="wheelHint"></div>
+  </div>
+
+  <div class="placeholder-block grand-block">
+    <span class="hero-label">终极大奖主视觉占位</span>
+    <div>财神手举【九】【耀】【娱】【乐】四字（素材由UI/设计提供）<br>文案：集齐四字 兑换888元迎新大奖 · 可重复兑换</div>
+    <div class="hero-actions"><button class="grand-btn" id="grandBtn" onclick="askGrand()">兑换888元大奖</button></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title">字卡兑换彩金</div></div>
+    <div id="exNotice"></div>
+    <div class="cards" id="cards"></div>
+    <div class="sel-row"><div>已选 <b id="selNum">0</b> / 3 张</div></div>
+    <button class="claim-btn primary" id="exBtn" onclick="askExchange()">兑换彩金</button>
+  </div>
+
+  <div class="placeholder-block table-block">奖品与兑换规则静态表格<br>由活动组按后台最终配置制作，须与后台一致</div>
+  <div class="placeholder-block rule-block">活动规则文案（由活动组提供）<br>需写明：获得条件与每日最多1次；次日12:00前发放；次数可累积；<br>注册第33天23:59:59截止，逾期次数与字卡作废；兑换后扣减字卡</div>
+
+  <div class="proto-note">
+    <div class="inner">
+      <div><span class="tag">原型说明</span>聚焦状态与逻辑分支走查，视觉为低保真占位，转盘与字卡美术由UI另行设计。</div>
+      <ol>
+        <li><b>查询时机：</b>进入活动页请求一次（剩余次数、四种字卡数量、活动状态）；未登录时剩余次数显示「登录后查看」，字卡持有数显示「--」，不轮询、不做刷新按钮；抽奖、兑换成功后以接口返回结果更新页面。未登录时点击任何操作均跳转登录。</li>
+        <li><b>抽奖：</b>单次抽奖，结果由后端决定，转盘动画仅做展示；动画期间按钮禁用防止重复提交。现金奖即时到账，字卡放入库存。库存用完的奖项前端无感，转盘仍展示该奖项。</li>
+        <li><b>兑换：</b>会员用加减按钮自选每种字卡的张数，左下角显示「已选 X / 3 张」，合计等于3张时【兑换彩金】按钮才可用；提交前弹窗确认所用字卡与彩金金额（全部同字10元，否则5元），所有兑换的确认文案统一，不做条件触发的提醒。</li>
+        <li><b>终极大奖：</b>静态主视觉（财神手举四字）+ 按钮，不展示收集进度（下方字卡板块已展示持有数）。按钮仅在活动结束后置灰。点击时前端用进入页面时获取的持有数判断：未集齐弹窗提示还差哪几个字；已集齐弹出确认窗，确认后调用兑换接口，接口再次校验，字卡不足时提示失败并刷新持有数。不单独提供检查接口；可重复兑换，每次各扣1张。</li>
+        <li><b>静态文案：</b>转盘区「注册后33天内有效」与获得条件提示为写死文案，仅供参考，正式文案由活动组和美术设计确认；发放时间等详细口径放在活动规则文案中。</li>
+        <li><b>时间状态：</b>第1~30天正常；第31~33天提示「已停止获得抽奖机会」，仍可抽奖、兑换；第33天23:59:59后转盘与兑换全部置灰，剩余次数与字卡作废。</li>
+        <li><b>记录：</b>抽奖记录、兑换记录均按时间倒序，展示活动期内全部记录。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask top" id="resModal"><div class="result-box">
+  <div class="icon" id="resIcon" style="background:var(--ok-bg);color:var(--ok);">✓</div>
+  <div class="title" id="resTitle"></div>
+  <div class="big" id="resBig"></div>
+  <div class="desc" id="resDesc"></div>
+  <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+  <button onclick="closeM('resModal')">我知道了</button>
+</div></div>
+
+<div class="modal-mask top" id="cfmModal"><div class="result-box">
+  <div class="title">确认兑换</div>
+  <div class="desc" id="cfmDesc"></div>
+  <div class="confirm-btns"><button onclick="closeM('cfmModal')">取消</button><button class="ok" onclick="doExchange()">确认兑换</button></div>
+</div></div>
+
+<div class="modal-mask top" id="gcfmModal"><div class="result-box gold">
+  <div class="title">🏆 兑换迎新大奖</div>
+  <div class="big">¥888</div>
+  <div class="desc">将使用【九】【耀】【娱】【乐】各1张兑换，<br>兑换后所用字卡将从库存扣除，不可撤回。</div>
+  <div class="confirm-btns"><button onclick="closeM('gcfmModal')">再想想</button><button class="ok" style="background:#e0a82e;border-color:#e0a82e;" onclick="doExchange()">确认兑换</button></div>
+</div></div>
+
+<div class="modal-mask top" id="lackModal"><div class="result-box">
+  <div class="icon" style="background:var(--warn-bg);color:var(--warn);">!</div>
+  <div class="title" id="lackTitle">还未集齐四字</div>
+  <div class="desc" id="lackDesc"></div>
+  <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+  <button onclick="closeM('lackModal')">继续集字</button>
+</div></div>
+
+<div class="modal-mask top" id="loginModal"><div class="result-box">
+  <div class="icon" style="background:var(--accent-soft);color:var(--accent);">→</div>
+  <div class="title">请先登录</div>
+  <div class="desc">未登录状态，正式页面直接跳转登录页。</div>
+  <button onclick="closeM('loginModal')">我知道了</button>
+</div></div>
+
+<div class="modal-mask" id="recModal"><div class="records-modal">
+  <div class="cm-head"><div class="cm-title" id="recTitle"></div><div class="cm-close" onclick="closeM('recModal')">✕</div></div>
+  <div style="overflow-x:auto;"><table class="records-table"><thead id="recHead"></thead><tbody id="recBody"></tbody></table></div>
+  <div class="records-empty" id="recEmpty" style="display:none;">暂无记录</div>
+</div></div>
+
+<script>
+const PRIZES=[{n:'3元',t:'cash',v:3,p:9},{n:'8元',t:'cash',v:8,p:2},{n:'18元',t:'cash',v:18,p:0.5},{n:'38元',t:'cash',v:38,p:0.1},
+  {n:'九',t:'card',p:29.45},{n:'耀',t:'card',p:0.06},{n:'娱',t:'card',p:29.45},{n:'乐',t:'card',p:29.45}];
+const CARDS=['九','耀','娱','乐'], NEED=3, MIX=5, SAME=10, GRAND=888, FLOW=3;
+let scene='active', chances=3, inv={九:4,耀:1,娱:2,乐:1}, sel={九:0,耀:0,娱:0,乐:0}, spinning=false, angle=0, pendingEx=null;
+let drawRec=[{time:'11-03 10:12',prize:'【九】字卡',st:'card'},{time:'11-02 09:30',prize:'8元',st:'cash'}];
+let exRec=[{time:'11-03 10:20',cards:'【娱】×2、【乐】×1',amt:5}];
+const $=id=>document.getElementById(id);
+function closeM(id){$(id).classList.remove('show');}
+function act(prefix,key){document.querySelectorAll(`.sim-btn[id^="${prefix}-"]`).forEach(b=>b.classList.toggle('active',b.id===prefix+'-'+key));}
+$('forcePrize').innerHTML+=PRIZES.map((p,i)=>`<option value="${i}">${p.t==='card'?'【'+p.n+'】':p.n}</option>`).join('');
+$('wheel').innerHTML=PRIZES.map((p,i)=>{const a=(i*45+22.5-90)*Math.PI/180,r=88;return `<div class="seg"><span style="left:${Math.cos(a)*r}px;top:${Math.sin(a)*r}px;">${p.t==='card'?'【'+p.n+'】':p.n}</span></div>`;}).join('');
+function setScene(s){scene=s;act('sc',s);render();}
+let gr='ok';
+function setGr(k){gr=k;act('gr',k);}
+function setChances(n){chances=n;act('ch',n?'has':'none');render();}
+const ended=()=>scene==='ended';
+function render(){
+  $('chanceRow').innerHTML = scene==='guest' ? '剩余抽奖次数 <span style="color:var(--accent);">登录后查看</span>' : `剩余抽奖次数 <b id="chanceNum">${ended()?0:chances}</b> 次`;
+  $('drawNotice').innerHTML = scene==='grace'?'<div class="notice warn">已停止获得抽奖机会（注册满30天），剩余次数与字卡请于 12-03 23:59:59 前使用。</div>'
+    : ended()?'<div class="notice end">活动已结束，剩余抽奖次数与字卡已作废。</div>':'';
+  $('exNotice').innerHTML = ended()?'<div class="notice end">活动已结束，不可兑换。</div>':'';
+  const canSpin=!ended()&&chances>0&&!spinning;
+  $('spinBtn').disabled=!canSpin && scene!=='guest';
+  $('spinBtn').innerHTML=ended()?'已结束':(chances>0||scene==='guest'?'抽奖':'暂无<br>次数');
+  $('wheelHint').innerHTML = ended()||scene==='grace' ? '' : '每日充值、投注达标可获得1次抽奖机会，次数可累积';
+  $('cards').innerHTML=CARDS.map(c=>{const dis=ended();return `<div class="wcard"><div class="ch">${c}</div><div class="cnt">${scene==='guest'?'持有 -- 张':'持有 '+(ended()?0:inv[c])+' 张'}</div>
+    <div class="stepper"><button onclick="step('${c}',-1)" ${dis||sel[c]<=0?'disabled':''}>−</button><span class="n">${sel[c]}</span><button onclick="step('${c}',1)" ${dis||sel[c]>=inv[c]||total()>=NEED?'disabled':''}>+</button></div></div>`;}).join('');
+  const t=total(); $('selNum').textContent=t;
+  $('exBtn').disabled = ended() || (t!==NEED && scene!=='guest');
+  $('grandBtn').disabled = ended();
+  $('grandBtn').textContent = ended()?'活动已结束':'兑换888元大奖';
+}
+const total=()=>CARDS.reduce((s,c)=>s+sel[c],0);
+function step(c,d){if(scene==='guest'){$('loginModal').classList.add('show');return;} sel[c]=Math.max(0,Math.min(inv[c],sel[c]+d)); render();}
+function pick(){const f=$('forcePrize').value; if(f!=='') return +f;
+  const sum=PRIZES.reduce((s,p)=>s+p.p,0); let r=Math.random()*sum; for(let i=0;i<PRIZES.length;i++){r-=PRIZES[i].p; if(r<0) return i;} return 0;}
+function spin(){
+  if(scene==='guest'){$('loginModal').classList.add('show');return;}
+  if(spinning||chances<=0||ended()) return;
+  spinning=true; chances--; render();
+  const i=pick(), target=360-(i*45+22.5);
+  angle += 360*5 + ((target-angle%360)+360)%360;
+  $('wheel').style.transform=`rotate(${angle}deg)`;
+  setTimeout(()=>{
+    const p=PRIZES[i], now='今天 '+new Date().toTimeString().slice(0,5);
+    if(p.t==='cash'){ drawRec.unshift({time:now,prize:p.n,st:'cash'});
+      showRes('ok','恭喜获得彩金',`¥${p.v}`,`彩金已发放至账户余额，出款需完成彩金×${FLOW}倍流水。`);
+    }else{ inv[p.n]++; drawRec.unshift({time:now,prize:`【${p.n}】字卡`,st:'card'});
+      showRes('card','恭喜获得字卡',`【${p.n}】×1`,'字卡已放入「我的字卡」，可用于兑换彩金。'); }
+    spinning=false; render();
+  },2700);
+}
+function showRes(kind,title,big,desc){
+  $('resModal').querySelector('.result-box').classList.toggle('gold',kind==='gold');
+  $('resIcon').style.background=kind==='card'?'var(--accent-soft)':'var(--ok-bg)'; $('resIcon').style.color=kind==='card'?'var(--accent)':'var(--ok)';
+  $('resIcon').textContent=kind==='card'?'字':kind==='gold'?'🏆':'✓'; $('resTitle').textContent=title; $('resBig').textContent=big; $('resDesc').innerHTML=desc; $('resModal').classList.add('show');
+}
+const desc=o=>CARDS.filter(c=>o[c]>0).map(c=>`【${c}】×${o[c]}`).join('、');
+function askExchange(){
+  if(scene==='guest'){$('loginModal').classList.add('show');return;}
+  const same=CARDS.some(c=>sel[c]===NEED);
+  pendingEx={type:'ex',use:{...sel},amt:same?SAME:MIX};
+  $('cfmDesc').innerHTML=`使用 ${desc(sel)}<br>兑换 <b>${pendingEx.amt}元</b> 彩金，兑换后所用字卡将从库存扣除，不可撤回。`;
+  $('cfmModal').classList.add('show');
+}
+function askGrand(){
+  if(scene==='guest'){$('loginModal').classList.add('show');return;}
+  const miss=CARDS.filter(c=>inv[c]<1);
+  if(miss.length){
+    $('lackTitle').textContent='还未集齐四字';
+    $('lackDesc').innerHTML=`还差 ${miss.map(c=>'【'+c+'】').join('')}，继续抽奖集字吧！`;
+    $('lackModal').classList.add('show'); return;
+  }
+  pendingEx={type:'grand',use:{九:1,耀:1,娱:1,乐:1},amt:GRAND};
+  $('gcfmModal').classList.add('show');
+}
+function doExchange(){
+  closeM('cfmModal'); closeM('gcfmModal'); const e=pendingEx; if(!e) return;
+  if(e.type==='grand' && gr==='stale'){
+    inv.耀=0; pendingEx=null; render();
+    $('lackTitle').textContent='兑换失败';
+    $('lackDesc').innerHTML='字卡数量已变化（可能已在其他设备使用），当前字卡不足，请刷新后查看。';
+    $('lackModal').classList.add('show'); return;
+  }
+  CARDS.forEach(c=>inv[c]-=e.use[c]); sel={九:0,耀:0,娱:0,乐:0};
+  exRec.unshift({time:'今天 '+new Date().toTimeString().slice(0,5),cards:desc(e.use),amt:e.amt});
+  if(e.type==='grand') showRes('gold','🏆 恭喜获得迎新大奖',`¥${e.amt}`,`大奖已发放至账户余额，出款需完成彩金×${FLOW}倍流水。<br>再次集齐四字可继续兑换。`);
+  else showRes('ok','兑换成功',`¥${e.amt}`,`彩金已发放至账户余额，出款需完成彩金×${FLOW}倍流水。`);
+  pendingEx=null; render();
+}
+function openRec(k){
+  if(scene==='guest'){$('loginModal').classList.add('show');return;}
+  if(k==='draw'){ $('recTitle').textContent='抽奖记录'; $('recHead').innerHTML='<tr><th>时间</th><th>奖品</th><th>状态</th></tr>';
+    $('recBody').innerHTML=drawRec.map(r=>`<tr><td>${r.time}</td><td>${r.prize}</td><td><span class="status-badge ${r.st==='cash'?'success':'card'}">${r.st==='cash'?'已到账':'已入库'}</span></td></tr>`).join('');
+    $('recEmpty').style.display=drawRec.length?'none':'block';
+  }else{ $('recTitle').textContent='兑换记录'; $('recHead').innerHTML='<tr><th>时间</th><th>使用字卡</th><th>彩金</th></tr>';
+    $('recBody').innerHTML=exRec.map(r=>`<tr><td>${r.time}</td><td>${r.cards}</td><td>¥${r.amt}</td></tr>`).join('');
+    $('recEmpty').style.display=exRec.length?'none':'block'; }
+  $('recModal').classList.add('show');
+}
+render();
+</script>
+</body>
+</html>
