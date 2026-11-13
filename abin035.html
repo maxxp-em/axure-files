@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>负盈利阶梯抽奖 - 用户端交互原型</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --ok-bg:#e4f6ec;
+    --danger:#c23b3b;
+    --danger-bg:#fdeaea;
+    --disabled-bg:#f1f2f6;
+    --disabled-text:#a7abba;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:12px 20px;
+    font-size:14px;
+    font-weight:600;
+  }
+
+  /* ---- 场景切换工具条（原型辅助，非正式UI，z-index高于弹窗，方便弹窗开着也能切场景） ---- */
+  .sim-bar{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:#fff3d6;
+    border-bottom:1px solid #e8c877;
+    padding:10px 20px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .sim-bar .sim-label{
+    font-weight:600;
+    color:#7a5c00;
+    margin-right:4px;
+  }
+  .sim-btn{
+    border:1px solid #d8b448;
+    background:#fff;
+    color:#7a5c00;
+    padding:4px 10px;
+    border-radius:3px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+
+  .page{
+    max-width:640px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    padding-bottom:30px;
+  }
+
+  /* ---- 活动内页：低保真占位区块 ---- */
+  .placeholder-block{
+    background:repeating-linear-gradient(45deg,#f4f5f9,#f4f5f9 10px,#eceef4 10px,#eceef4 20px);
+    border:1px dashed #c7ccdb;
+    color:var(--muted);
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .banner-block{
+    height:120px;
+    margin:16px 16px 0;
+    border-radius:4px;
+  }
+  .hero-block{
+    height:260px;
+    margin:14px 16px 0;
+    border-radius:4px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-block .hero-label{
+    position:absolute;
+    top:10px;left:10px;
+    font-size:11px;
+    color:#9aa0b4;
+    background:rgba(255,255,255,.7);
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .hero-actions{
+    position:absolute;
+    left:0;right:0;bottom:16px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+  }
+  .hero-btn{
+    padding:11px 28px;
+    border-radius:22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    border:none;
+  }
+  .hero-btn.primary{background:var(--accent);color:#fff;}
+  .hero-btn.primary:hover{background:#2f5ed6;}
+  .hero-btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  .hero-btn.secondary:hover{background:var(--accent-soft);}
+
+  .text-block{
+    margin:14px 16px 0;
+    padding:14px 16px;
+  }
+  .text-block .ln{
+    height:11px;
+    background:#eceef4;
+    border-radius:3px;
+    margin-bottom:9px;
+  }
+  .text-block .ln:last-child{margin-bottom:0;}
+
+  .page-footnote{
+    margin-top:18px;
+    padding:0 16px;
+    font-size:11px;
+    color:#a7abba;
+    text-align:center;
+  }
+
+  /* ---- 弹窗通用 ---- */
+  .modal-mask{
+    position:fixed;inset:0;
+    background:rgba(20,20,30,.45);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    z-index:40;
+    padding:76px 20px 20px;
+    overflow-y:auto;
+  }
+  .modal-mask.show{display:flex;}
+  .modal-mask.top{z-index:60;}
+
+  /* ---- 领取交互弹窗（宽版） ---- */
+  .claim-modal{
+    width:100%;
+    max-width:440px;
+    max-height:78vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+    padding:0;
+  }
+  .claim-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .claim-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .claim-modal .cm-close{
+    cursor:pointer;
+    color:var(--muted);
+    font-size:18px;
+    line-height:1;
+  }
+  .claim-modal .cm-body{padding:16px 18px 18px;}
+
+  .quota-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:14px;
+    margin-bottom:14px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .quota-row .label{font-size:13px;color:var(--muted);}
+  .quota-row .value{font-size:13px;}
+  .quota-row .value b{color:var(--accent);font-size:18px;margin:0 2px;}
+  .quota-row .value.zero b{color:var(--danger);}
+
+  .state-msg{
+    text-align:center;
+    padding:26px 10px;
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.9;
+  }
+  .spinner{
+    width:20px;height:20px;
+    border:2.5px solid #dfe3ee;
+    border-top-color:var(--accent);
+    border-radius:50%;
+    margin:0 auto 10px;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .banner{
+    border-radius:4px;
+    padding:9px 12px;
+    font-size:12px;
+    line-height:1.7;
+    margin-bottom:12px;
+    border:1px solid;
+  }
+  .banner.info{background:var(--accent-soft);border-color:#b9cdfa;color:#2a4baf;}
+  .banner.warn{background:var(--warn-bg);border-color:#f0d3ae;color:#7a4a12;}
+
+  .order-card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:12px 12px;
+    margin-bottom:8px;
+  }
+  .order-card.disabled-card{background:#fafafc;}
+  .order-card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  .order-card .order-id{font-family:Consolas,monospace;}
+  .order-card .countdown{color:var(--danger);}
+  .order-card.disabled-card .countdown{color:var(--muted);}
+
+  .order-card .mid-row{
+    display:flex;
+    gap:16px;
+    margin-bottom:11px;
+  }
+  .order-card .item .k{font-size:11px;color:var(--muted);margin-bottom:2px;}
+  .order-card .item .v{font-size:14px;font-weight:700;}
+  .order-card .item .v.accent{color:var(--accent);}
+
+  .claim-btn{
+    width:100%;
+    padding:8px;
+    border-radius:4px;
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .claim-btn:hover{background:var(--accent-soft);}
+  .claim-btn:disabled{
+    border-color:var(--border);
+    background:var(--disabled-bg);
+    color:var(--disabled-text);
+    cursor:not-allowed;
+  }
+  .claim-btn.loading{color:var(--muted);border-color:var(--border);}
+
+  /* ---- 成功/失败 结果弹窗（占位结构，视觉由UI设计） ---- */
+  .result-box{
+    width:300px;
+    background:#fff;
+    border-radius:6px;
+    padding:22px 20px;
+    text-align:center;
+  }
+  .result-box .icon{
+    width:36px;height:36px;
+    border-radius:50%;
+    font-size:18px;
+    line-height:36px;
+    margin:0 auto 12px;
+  }
+  .result-box .title{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .result-box .desc{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:12px;}
+  .result-box .draft-tag{
+    display:inline-block;
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    color:#7a5c00;
+    font-size:10.5px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-bottom:16px;
+  }
+  .result-box button{
+    width:100%;
+    padding:9px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .result-box button:hover{background:var(--disabled-bg);}
+
+  /* ---- 领取记录弹窗：表格展示 ---- */
+  .records-modal{
+    width:100%;
+    max-width:560px;
+    max-height:74vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:8px;
+  }
+  .records-modal .cm-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid #eef0f6;
+  }
+  .records-modal .cm-head .cm-title{font-size:14px;font-weight:700;}
+  .records-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+  }
+  .records-table th{
+    text-align:left;
+    padding:9px 14px;
+    background:#f4f6fb;
+    color:var(--muted);
+    font-weight:600;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .records-table td{
+    padding:9px 14px;
+    border-bottom:1px solid #eef0f6;
+    white-space:nowrap;
+  }
+  .records-table td.id{font-family:Consolas,monospace;font-size:11.5px;}
+  .status-badge{
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    font-weight:600;
+  }
+  .status-badge.success{background:var(--ok-bg);color:var(--ok);}
+  .status-badge.failed{background:var(--danger-bg);color:var(--danger);}
+  .records-empty{text-align:center;padding:30px 10px;color:var(--muted);font-size:12.5px;}
+
+  /* ---- 原型说明 ---- */
+  .proto-note{margin:24px 16px 0;}
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:12px;
+    line-height:1.85;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:18px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  .sim-sep{width:1px;height:18px;background:#e8c877;margin:0 6px;}
+  .sim-bar select{font-size:11.5px;padding:3px 4px;border:1px solid #d8b448;border-radius:3px;color:#7a5c00;}
+  .table-block{height:100px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .rule-block{height:130px;margin:14px 16px 0;border-radius:4px;line-height:1.8;}
+  .stage{position:relative;height:400px;margin:14px 16px 0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#fbfcfe;}
+  .stage-head{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;z-index:5;}
+  .stage-title{font-size:14px;font-weight:700;}
+  .lk{font-size:12px;color:var(--accent);cursor:pointer;}
+  .ring-card{position:absolute;left:50%;top:52%;width:78px;height:110px;margin:-55px 0 0 -39px;border-radius:8px;border:2px solid #b9c0d4;
+    background:repeating-linear-gradient(45deg,#eef0f6 0 8px,#e3e6ef 8px 16px);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:11.5px;font-weight:700;color:#40465a;text-align:center;line-height:1.4;transition:transform 1.4s cubic-bezier(.55,.06,.68,.19),opacity 1.4s;padding:4px;}
+  .ring-card small{font-weight:400;color:#7a8099;font-size:10px;margin-top:3px;}
+  .center-btn{position:absolute;left:50%;top:52%;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;border:none;background:var(--accent);color:#fff;
+    font-size:15px;font-weight:700;cursor:pointer;z-index:4;box-shadow:0 0 0 8px rgba(59,111,240,.15);}
+  .center-btn:disabled{opacity:.7;cursor:wait;}
+  .stage-tip{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:11.5px;color:var(--warn);}
+  .face{width:150px;height:210px;margin:6px auto 10px;border-radius:10px;border:2px solid #d8b448;background:#fff3d6;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    animation:flip .7s ease-out;}
+  .face .lv{font-size:16px;font-weight:700;color:#7a5c00;}
+  .face .amt{font-size:28px;font-weight:700;color:#c99320;margin-top:8px;}
+  .face .art{font-size:10.5px;color:#a88b3b;margin-top:10px;}
+  @keyframes flip{from{transform:perspective(600px) rotateY(90deg);}to{transform:perspective(600px) rotateY(0);}}
+</style>
+</head>
+<body>
+
+<div class="topbar">负盈利阶梯抽奖 · 用户端交互（皇家金卡秘宝 · 翻卡牌）</div>
+<div class="sim-bar">
+  <span class="sim-label">点击后接口返回：</span>
+  <select id="simRes" onchange="simRes=this.value">
+    <option value="win">中奖</option>
+    <option value="done">今日已翻牌</option>
+    <option value="none">无资格</option>
+    <option value="calc">统计中</option>
+    <option value="err">网络异常</option>
+  </select>
+  <span class="sim-label">中奖档位：</span>
+  <select id="simTier" onchange="simTier=+this.value"></select>
+  <span class="sim-sep"></span>
+  <span class="sim-label">登录状态：</span>
+  <button class="sim-btn active" id="lg-in" onclick="setLogin(true)">登录</button>
+  <button class="sim-btn" id="lg-out" onclick="setLogin(false)">未登录</button>
+</div>
+
+<div class="page">
+  <div class="placeholder-block banner-block">Banner 占位（活动主视觉，素材由UI/设计提供）</div>
+
+  <div class="stage" id="stage">
+    <div class="stage-head"><div class="stage-title">皇家金卡秘宝</div><span class="lk" onclick="openRec()">领取记录</span></div>
+    <div id="ring"></div>
+    <button class="center-btn" id="flipBtn" onclick="flip()">立即翻牌</button>
+    <div class="stage-tip">每日限翻牌1次，当日23:59:59截止，逾期作废</div>
+  </div>
+
+  <div class="placeholder-block table-block">卡牌等级与彩金静态表格<br>由活动组按后台最终配置制作，须与后台一致</div>
+  <div class="placeholder-block rule-block">活动规则文案（由活动组提供）<br>需写明：统计场馆与负盈利口径；每日翻牌开放时间（如03:00后）；<br>D日负盈利于D+1日翻牌、当日23:59:59截止；彩金20分钟内到账；出款流水场馆</div>
+
+  <div class="proto-note">
+    <div class="inner">
+      <div><span class="tag">原型说明</span>视觉为低保真占位，5张卡牌、螺旋动画与翻牌素材由UI/美术另行设计。</div>
+      <ol>
+        <li><b>页面静态：</b>所有会员看到同一画面——5张等级卡牌环绕中央【立即翻牌】按钮；进入页面不发起任何查询，不展示负盈利金额、资格或可翻等级。</li>
+        <li><b>一次请求：</b>点击按钮后请求一个接口，后端一次完成判定与抽奖（统计是否完成、资格、是否已翻、抽取金额、扣减库存、标记已翻），返回结果类型与金额；不设确认框；请求期间按钮禁用。</li>
+        <li><b>仅中奖播放动画：</b>中奖时5张牌螺旋吸入按钮（动画最短约1.5秒），随后弹窗翻开对应等级的牌，显示等级与金额，提示20分钟内到账。今日已翻牌、无资格、统计中、网络异常均不播放动画，直接弹窗。</li>
+        <li><b>弹窗文案：</b>今日已翻牌——显示已获得的等级与金额；无资格——只提示门槛，不展示会员负盈利；统计中——提示暂未开放；网络异常——提示稍后再试，重试时若实际已翻牌则返回今日已翻牌。未登录点击任何操作跳转登录。</li>
+        <li><b>领取记录：</b>展示日期（年-月-日）、等级、彩金，按时间倒序。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask top" id="winModal"><div class="result-box">
+  <div class="title">恭喜翻开</div>
+  <div class="face" id="face"></div>
+  <div class="desc">彩金将于20分钟内到账，出款需完成彩金×X倍流水（仅计算真人、棋牌）。</div>
+  <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+  <button onclick="closeWin()">我知道了</button>
+</div></div>
+<div class="modal-mask top" id="msgModal"><div class="result-box">
+  <div class="icon" id="msgIcon"></div>
+  <div class="title" id="msgTitle"></div>
+  <div class="desc" id="msgDesc"></div>
+  <div class="draft-tag">文案供参考，最终版本由UI输出</div>
+  <button onclick="closeM('msgModal')">我知道了</button>
+</div></div>
+<div class="modal-mask top" id="loginModal"><div class="result-box">
+  <div class="icon" style="background:var(--accent-soft);color:var(--accent);">→</div>
+  <div class="title">请先登录</div>
+  <div class="desc">未登录状态，正式页面直接跳转登录页。</div>
+  <button onclick="closeM('loginModal')">我知道了</button>
+</div></div>
+<div class="modal-mask" id="recModal"><div class="records-modal">
+  <div class="cm-head"><div class="cm-title">领取记录</div><div class="cm-close" onclick="closeM('recModal')">✕</div></div>
+  <div style="overflow-x:auto;"><table class="records-table"><thead><tr><th>日期</th><th>等级</th><th>彩金</th></tr></thead><tbody id="recBody"></tbody></table></div>
+</div></div>
+
+<script>
+const TIERS=[['青铜守护卡',1000,[18,88]],['黄金庇护卡',3000,[68,288]],['铂金救援卡',10000,[288,888]],['钻石逆转卡',50000,[888,3888]],['至尊王者卡',300000,[3888,18888]]];
+let simRes='win', simTier=2, guest=false, claimed=null, busy=false;
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('zh-CN');
+const ymd=off=>{const d=new Date();d.setDate(d.getDate()+off);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+let recs=[{d:ymd(-2),tier:'黄金庇护卡',amt:68},{d:ymd(-5),tier:'青铜守护卡',amt:18}];
+$('simTier').innerHTML=TIERS.map((t,i)=>`<option value="${i}" ${i===2?'selected':''}>第${i+1}档 ${t[0]}</option>`).join('');
+function closeM(id){$(id).classList.remove('show');}
+function setLogin(on){guest=!on;$('lg-in').classList.toggle('active',on);$('lg-out').classList.toggle('active',!on);}
+const R=140;
+function pos(i){const a=(-90+i*72)*Math.PI/180;return [Math.cos(a)*R,Math.sin(a)*R*0.82];}
+function layRing(){
+  $('ring').innerHTML=TIERS.map((t,i)=>{const [x,y]=pos(i);return `<div class="ring-card" id="rc${i}" style="transform:translate(${x}px,${y}px) rotate(${(i-2)*8}deg);">${t[0]}<small>第${i+1}档</small></div>`;}).join('');
+}
+function spiral(){
+  TIERS.forEach((t,i)=>{const el=$('rc'+i); el.style.transform='translate(0,0) rotate(720deg) scale(.15)'; el.style.opacity='0';});
+}
+function msg(kind,title,desc){
+  const ok=kind==='info';
+  $('msgIcon').style.background=ok?'var(--accent-soft)':'var(--danger-bg)'; $('msgIcon').style.color=ok?'var(--accent)':'var(--danger)';
+  $('msgIcon').textContent=ok?'i':'!'; $('msgTitle').textContent=title; $('msgDesc').innerHTML=desc; $('msgModal').classList.add('show');
+}
+function flip(){
+  if(guest){$('loginModal').classList.add('show');return;}
+  if(busy) return; busy=true; $('flipBtn').disabled=true; $('flipBtn').textContent='请稍候…';
+  setTimeout(()=>{   // 模拟接口返回（判定+抽奖一次完成）
+    const r=simRes;
+    const end=()=>{busy=false;$('flipBtn').disabled=false;$('flipBtn').textContent='立即翻牌';};
+    if(r==='win'){
+      const t=TIERS[simTier], amt=Math.random()<0.85?t[2][0]:t[2][1];
+      claimed={tier:t[0],amt}; recs.unshift({d:ymd(0),tier:t[0],amt});
+      spiral();
+      setTimeout(()=>{ $('face').innerHTML=`<div class="lv">${t[0]}</div><div class="amt">¥${fmt(amt)}</div><div class="art">卡牌正面素材占位</div>`;
+        $('winModal').classList.add('show'); end(); },1500);
+      return;
+    }
+    end();
+    if(r==='done'){ const c=claimed||{tier:TIERS[simTier][0],amt:TIERS[simTier][2][0]};
+      msg('info','今日已翻牌',`今日已获得【${c.tier}】¥${fmt(c.amt)}，明日再来～`); }
+    else if(r==='none') msg('info','暂无翻牌机会',`昨日未满足翻牌条件。<br>真人、棋牌场馆单日负盈利≥¥${fmt(TIERS[0][1])}，次日即可翻牌。`);
+    else if(r==='calc') msg('info','暂未开放',`今日翻牌暂未开放，请稍后再来。`);
+    else msg('err','翻牌失败','网络异常，请稍后再试。');
+  },300);
+}
+function closeWin(){closeM('winModal'); layRing();}
+function openRec(){
+  if(guest){$('loginModal').classList.add('show');return;}
+  $('recBody').innerHTML=recs.map(r=>`<tr><td>${r.d}</td><td>${r.tier}</td><td>¥${fmt(r.amt)}</td></tr>`).join('');
+  $('recModal').classList.add('show');
+}
+layRing();
+</script>
+</body>
+</html>
