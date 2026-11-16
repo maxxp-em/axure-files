@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>活动管理 - 领取明细（USDT笔笔加赠礼）</title>
+<style>
+  :root{
+    --bar:#3b4b87;
+    --bar-dark:#2f3c6e;
+    --border:#c7ccdb;
+    --bg:#eef0f6;
+    --panel:#ffffff;
+    --text:#2b2f3a;
+    --muted:#767c8c;
+    --accent:#3b6ff0;
+    --accent-soft:#eaf0ff;
+    --warn:#b4530a;
+    --warn-bg:#fdf1e6;
+    --ok:#1a7f4b;
+    --danger:#c23b3b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  .topbar{
+    background:var(--bar);
+    color:#fff;
+    padding:10px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar .crumb{font-size:13px;opacity:.9;}
+  .topbar .crumb b{font-weight:600;}
+  .topbar .back{
+    background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.3);
+    color:#fff;
+    padding:5px 12px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  .wrap{max-width:1180px;margin:18px auto;padding:0 20px 60px;}
+  .section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:4px;
+    margin-bottom:18px;
+    overflow:hidden;
+  }
+  .section-head{
+    background:var(--bar);
+    color:#fff;
+    padding:9px 14px;
+    font-weight:600;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-head .tag{
+    font-weight:400;
+    font-size:11px;
+    background:rgba(255,255,255,.18);
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .section-body{padding:16px 20px;}
+  .row{
+    display:flex;
+    align-items:flex-start;
+    padding:9px 0;
+    border-bottom:1px dashed #e6e8f0;
+    gap:14px;
+  }
+  .row:last-child{border-bottom:none;}
+  .label{
+    width:220px;
+    flex-shrink:0;
+    padding-top:6px;
+    color:#40465a;
+  }
+  .label .req{color:var(--danger);margin-right:3px;}
+  .field{flex:1;}
+  input[type=text], input[type=number], select{
+    border:1px solid #cfd4e2;
+    border-radius:3px;
+    padding:6px 8px;
+    font-size:13px;
+    background:#fff;
+    color:var(--text);
+    font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);
+  }
+  .w-s{width:110px;}
+  .w-m{width:220px;}
+  .w-l{width:400px;}
+  .hint{color:var(--muted);font-size:11.5px;margin-top:5px;line-height:1.5;}
+  .radio-group label{margin-right:18px;font-size:13px;}
+  .radio-group input{margin-right:4px;vertical-align:-1px;}
+  .checks{display:flex;flex-wrap:wrap;gap:10px 18px;}
+  .checks label{font-size:13px;white-space:nowrap;}
+  .checks input{margin-right:4px;}
+  .dual-toggle{display:flex;gap:36px;align-items:flex-start;}
+  .dual-toggle .tgroup{display:flex;flex-direction:column;gap:6px;}
+  .dual-toggle .tlabel{font-size:11.5px;color:var(--muted);}
+
+  table.rule-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:6px;
+  }
+  table.rule-table th{
+    background:#f2f4fa;
+    border:1px solid var(--border);
+    padding:7px 8px;
+    font-weight:600;
+    font-size:12.5px;
+    color:#40465a;
+  }
+  table.rule-table td{
+    border:1px solid var(--border);
+    padding:5px 8px;
+    text-align:center;
+  }
+  table.rule-table input{width:100%;text-align:center;}
+  table.rule-table .op{color:var(--danger);cursor:pointer;font-size:12px;}
+  table.rule-table .op:hover{text-decoration:underline;}
+  .add-row-btn{
+    margin-top:8px;
+    background:#fff;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:5px 14px;
+    border-radius:3px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .add-row-btn:hover{background:var(--accent-soft);}
+
+  .subhead{
+    font-weight:600;
+    font-size:13px;
+    margin:22px 0 8px;
+    padding-left:9px;
+    border-left:3px solid var(--accent);
+  }
+  .subhead:first-child{margin-top:0;}
+
+  .exclude-list{
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .exclude-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+    border-bottom:1px solid #eef0f6;
+    font-size:12.5px;
+  }
+  .exclude-item:last-child{border-bottom:none;}
+  .exclude-item:nth-child(odd){background:#fafbfd;}
+  .exclude-item .dot{
+    width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  }
+  .exclude-item .name{width:150px;flex-shrink:0;font-weight:600;color:#2b2f3a;}
+  .exclude-item .desc{flex:1;color:var(--muted);}
+  .status-pill{
+    flex-shrink:0;
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:10px;
+    white-space:nowrap;
+  }
+  .status-confirmed{background:#e4f6ec;color:var(--ok);}
+  .status-pending{background:var(--warn-bg);color:var(--warn);}
+
+  .note-box{
+    background:var(--warn-bg);
+    border:1px solid #f0d3ae;
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#7a4a12;
+    line-height:1.7;
+    margin-top:10px;
+  }
+  .note-box b{color:var(--warn);}
+
+  .info-box{
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12.5px;
+    color:#4a5062;
+    line-height:1.8;
+    margin-top:8px;
+  }
+
+  .footer-bar{
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    border-top:1px solid var(--border);
+    padding:14px 20px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    box-shadow:0 -2px 8px rgba(0,0,0,.04);
+  }
+  .btn{
+    padding:8px 26px;
+    border-radius:3px;
+    font-size:13px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+  }
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  .placeholder-box{
+    border:1px dashed #cfd4e2;
+    border-radius:4px;
+    padding:30px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    background:#fafbfd;
+  }
+
+  .ref-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:#f4f6fb;
+    border:1px solid var(--border);
+    border-left:3px solid #8892ab;
+    border-radius:4px;
+    padding:11px 14px;
+    margin:4px 0 18px;
+  }
+  .ref-note .ref-icon{font-size:15px;flex-shrink:0;line-height:1.5;}
+  .ref-note .ref-text{font-size:12.5px;color:#565d70;line-height:1.8;}
+  .ref-note .ref-text b{color:#2b2f3a;}
+  .proto-note{
+    max-width:1180px;
+    margin:0 auto 40px;
+    padding:0 20px;
+  }
+  .proto-note .inner{
+    background:#fff8e6;
+    border:1px solid #f0d78c;
+    border-radius:6px;
+    padding:14px 18px;
+    font-size:12.5px;
+    line-height:1.9;
+    color:#7a5c00;
+  }
+  .proto-note b{color:#7a5c00;}
+  .proto-note .tag{
+    display:inline-block;
+    background:#f0d78c;
+    color:#5c4400;
+    border-radius:3px;
+    padding:1px 6px;
+    font-size:11px;
+    margin-right:6px;
+    font-weight:600;
+  }
+  .proto-note ol{margin:8px 0 0;padding-left:20px;}
+  .proto-note li{margin-bottom:6px;}
+  .proto-note li:last-child{margin-bottom:0;}
+
+  /* ---- 本次新增 ---- */
+  .view-bar{
+    position:sticky;top:0;z-index:100;
+    background:#fff3d6;border-bottom:1px solid #e8c877;
+    padding:9px 20px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .view-bar .sim-label{font-weight:600;color:#7a5c00;margin-right:4px;}
+  .sim-btn{border:1px solid #d8b448;background:#fff;color:#7a5c00;padding:4px 12px;border-radius:3px;font-size:11.5px;cursor:pointer;font-family:inherit;}
+  .sim-btn.active{background:#f0c94d;color:#4a3600;font-weight:600;}
+  .sim-btn:hover{background:#fbe9b8;}
+  .view{display:none;}
+  .view.on{display:block;}
+  table.rule-table td.ro{background:#f7f8fb;color:#40465a;text-align:left;padding-left:12px;}
+  table.rule-table td.ro .eight{font-family:Consolas,"Courier New",monospace;font-weight:700;color:var(--bar);letter-spacing:1px;}
+  table.rule-table input.err{border-color:var(--danger);background:#fdeaea;}
+  .lock{font-size:11px;color:var(--muted);}
+  .err-msg{color:var(--danger);font-size:11.5px;margin-top:6px;display:none;}
+  .sum-line{margin-top:8px;font-size:12px;color:#40465a;}
+  .sum-line b{color:var(--bar);}
+
+  /* 规则试算（原型辅助） */
+  .sim-box{margin-top:22px;border:1px dashed #e0bf5a;background:#fffbef;border-radius:4px;padding:12px 14px;}
+  .sim-box .sim-title{font-weight:600;color:#7a5c00;font-size:12.5px;margin-bottom:4px;}
+  .sim-box .sim-desc{font-size:11.5px;color:#8a7440;line-height:1.7;margin-bottom:8px;}
+  .sim-box table.rule-table th{background:#fbf1d2;}
+  .sim-box table.rule-table td{background:#fff;}
+  .res{font-size:12px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .res-ok{background:#e4f6ec;color:var(--ok);}
+  .res-void{background:#fdeaea;color:var(--danger);}
+  .res-skip{background:#f1f2f6;color:#767c8c;}
+  .sim-total{margin-top:10px;font-size:12.5px;color:#5c4400;}
+  .sim-total b{color:#4a3600;}
+
+  /* 申请参与列表（沿用现有页面样式） */
+  .legacy-head{background:#f4f5ef;border:1px solid #9fb0c8;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .legacy-head .t{font-weight:700;font-size:13.5px;}
+  .legacy-head .t span{color:#d62a2a;}
+  .legacy-btn{border:1px solid #9fb0c8;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .legacy-filter{background:#f4f5ef;border:1px solid #9fb0c8;padding:9px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;}
+  .legacy-filter input{padding:3px 6px;font-size:12px;}
+  .legacy-filter .lk{color:#1f4e8c;cursor:pointer;}
+  .legacy-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #1d8a9e;}
+  .legacy-table th{background:#8ea3c4;color:#fff;font-weight:600;padding:8px;font-size:12.5px;}
+  .legacy-table td{text-align:center;padding:8px;font-size:12.5px;border-bottom:1px solid #eef0f4;}
+  .legacy-pager{background:#fff;border:1px solid #1d8a9e;border-top:none;padding:8px 10px;font-size:12px;}
+  .keep-tag{display:inline-block;background:#e4f6ec;color:var(--ok);font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:400;}
+  .list-mock{width:100%;border-collapse:collapse;background:#fff;margin-bottom:14px;}
+  .list-mock th{background:#f2f4fa;border:1px solid var(--border);padding:7px;font-size:12px;}
+  .list-mock td{border:1px solid var(--border);padding:8px;font-size:12px;text-align:center;}
+  .list-mock .ops span{color:#1f4e8c;text-decoration:underline;margin:0 3px;cursor:pointer;}
+  .list-mock .ops span.hl{outline:2px solid var(--danger);outline-offset:2px;}
+  .chan-fixed{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .chan{background:#f2f4fa;border:1px solid var(--border);border-radius:3px;padding:4px 10px;font-size:12.5px;color:#40465a;}
+  input.err{border-color:var(--danger)!important;background:#fdeaea;}
+  /* 判定示例：独立色系（青绿），仅供开发参考 */
+  .dev-ref{margin-top:22px;border:1px solid #7cc4bd;background:#f0faf8;border-radius:4px;padding:12px 14px;}
+  .dev-head{font-weight:600;color:#0d5f57;font-size:13px;margin-bottom:4px;}
+  .dev-tag{font-weight:400;font-size:11px;background:#0f766e;color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px;}
+  .dev-desc{font-size:11.5px;color:#3c6f6a;line-height:1.7;margin-bottom:8px;}
+  .dev-scroll{overflow-x:auto;}
+  .dev-table{width:100%;min-width:860px;border-collapse:collapse;}
+  .dev-table th{background:#d5efeb;border:1px solid #9fd3cc;padding:7px 6px;font-size:12px;color:#0d5f57;}
+  .dev-table td{background:#fff;border:1px solid #c3e5e0;padding:4px 6px;text-align:center;font-size:12.5px;}
+  .dev-table input,.dev-table select{width:100%;text-align:center;padding:4px;}
+  .dev-table .op{color:var(--danger);cursor:pointer;font-size:12px;}
+  .dev-add{margin-top:8px;background:#fff;border:1px solid #0f766e;color:#0f766e;padding:5px 14px;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .dev-total{margin-top:10px;font-size:12.5px;color:#0d5f57;line-height:1.8;}
+  .dev-total b{color:#063f3a;}
+  .quota{background:#fff;border:1px solid #c3e5e0;border-radius:3px;padding:8px 12px;margin-bottom:8px;}
+  .q-txt{font-size:12.5px;color:#0d5f57;margin-bottom:6px;}
+  .q-txt b{color:#063f3a;}
+  .q-full{background:#fde2e2;color:#b42318;font-size:11px;padding:1px 8px;border-radius:10px;}
+  .q-bg{height:8px;background:#e3f3f0;border-radius:4px;overflow:hidden;}
+  .q-fg{height:100%;background:#14a094;transition:width .2s;}
+  .q-fg.full{background:#d9534f;}
+  .dev-table td.acc{color:#0d5f57;font-size:12px;}
+  .fixed-chk{accent-color:#3b6ff0;cursor:default;}
+  .dev-head{display:flex;align-items:center;}
+  .dev-toggle{margin-left:auto;background:#fff;border:1px solid #0f766e;color:#0f766e;padding:2px 12px;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:400;}
+  .dev-toggle:hover{background:#d5efeb;}
+  .res-cut{background:#fff3d6;color:#7a5c00;}
+  .tier-table{width:100%;max-width:460px;border-collapse:collapse;}
+  .tier-table th{background:#f2f4fa;border:1px solid var(--border);padding:7px;font-size:12px;font-weight:600;}
+  .tier-table td{border:1px solid var(--border);padding:5px 8px;text-align:center;font-size:12.5px;}
+  .tier-table input{width:100%;text-align:center;}
+  .res-fail{background:#fde2e2;color:#b42318;}
+  .q-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .q-row:last-child{margin-bottom:0;}
+  .q-row .q-txt{margin:0;min-width:330px;}
+  .q-row .q-bg{flex:1;}
+
+  .award-table{width:100%;table-layout:fixed;}
+  .award-table th{font-size:11.5px;padding:6px 4px;}
+  .award-table td{font-size:11.5px;padding:6px 4px;line-height:1.5;word-break:break-all;}
+  .award-table th:nth-child(1){width:6%;} .award-table th:nth-child(2){width:9%;} .award-table th:nth-child(3){width:7%;}
+  .award-table th:nth-child(4){width:5.5%;} .award-table th:nth-child(5){width:5.5%;} .award-table th:nth-child(6){width:4%;}
+  .award-table th:nth-child(7){width:5.5%;} .award-table th:nth-child(8){width:5%;} .award-table th:nth-child(9),.award-table th:nth-child(10),.award-table th:nth-child(11){width:6.5%;}
+  .award-table th:nth-child(12){width:13%;} .award-table th:nth-child(13){width:15%;}
+  .award-table tr.ref-row td{background:#f6f7fa;color:#8a90a2;}
+  .st{display:inline-block;padding:1px 6px;border-radius:8px;background:#eef0f6;color:#40465a;font-size:11px;}
+  .st.new{background:#dff5ea;color:#11795a;border:1px solid #9fdcc0;}
+  .omit-note{font-size:11.5px;color:#7a8099;background:#f6f7fa;border:1px dashed var(--border);border-radius:3px;padding:6px 10px;margin:8px 0;line-height:1.7;}
+  .full-scroll{overflow-x:auto;border:1px solid var(--border);}
+  .full-table{min-width:3200px;}
+  .full-table th,.full-table td{white-space:nowrap;font-size:12px;padding:7px 8px;}
+  .full-table .hlc{background:#e8f0ff;} .full-table th.hlc{background:#cfdcff;}
+  .change-table{margin-top:6px;} .change-table td.chg{background:#fff3d6;color:#7a5c00;font-weight:600;}
+
+  .entry-table{width:100%;}
+  .entry-table td,.entry-table th{text-align:center;}
+  .ops a{color:#2a4baf;text-decoration:underline;margin:0 3px;cursor:pointer;font-size:12.5px;}
+  .ops a.hl{outline:2px solid #d9534f;outline-offset:2px;}
+  .ops .new-tag{font-size:10.5px;background:#dff5ea;color:#11795a;border:1px solid #9fdcc0;border-radius:8px;padding:0 5px;margin-left:2px;}
+  .detail-table{width:100%;table-layout:fixed;}
+  .detail-table th{font-size:11.5px;padding:6px 4px;}
+  .detail-table td{font-size:11.5px;padding:6px 4px;line-height:1.5;word-break:break-all;text-align:center;}
+  .sumline{font-size:12px;color:#40465a;margin:8px 0;}
+  .sumline b{color:#2a4baf;}
+
+  .st.exp{background:#eef0f6;color:#8a90a2;}
+  .st.fail{background:#fde2e2;color:#b42318;border:1px solid #f3b4ae;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>领取明细</b><span class="keep-tag" style="background:#dff5ea;color:#11795a;">新增页面</span></div>
+  <div class="back">返回活动列表</div>
+</div>
+<div class="wrap" style="max-width:1280px;">
+
+  <div class="subhead" style="margin-top:0;">入口：活动管理列表 → 操作栏「领取明细」</div>
+  <table class="legacy-table entry-table">
+    <thead><tr><th>活动ID</th><th>活动名称(后台)</th><th>开始日期</th><th>结束日期</th><th>进行状态</th><th>启动状态</th><th>操作</th></tr></thead>
+    <tbody><tr><td>401</td><td>USDT笔笔加赠礼</td><td>2026-11-xx</td><td>长期</td><td style="color:#d9534f;">进行中</td><td style="color:#d9534f;">启用</td>
+      <td class="ops"><a>分配</a>|<a>修改</a>|<a>关闭</a>|<a>黑名单</a>|<a>白名单</a>|<a class="hl">领取明细</a><span class="new-tag">新增</span></td></tr></tbody>
+  </table>
+  <div class="hint" style="margin-top:4px;">仅「USDT笔笔加赠礼」模板的活动显示「领取明细」入口；其余操作沿用现有。</div>
+
+  <div class="legacy-head" style="margin-top:18px;"><div class="t">后台管理 <span>- 领取明细（USDT笔笔加赠礼-401）</span></div></div>
+  <div class="legacy-filter">
+    🔍 用户名称 <input type="text" id="fUser" style="width:100px;" oninput="render()">
+    　存款订单号 <input type="text" id="fOrder" style="width:150px;" oninput="render()">
+    　状态 <select id="fSt" onchange="render()"><option value="">全部</option><option>未领取</option><option>已领取</option><option>已过期</option><option>领取失败</option></select>
+    　存款到账时间 <input type="text" value="2026-11-13 00:00:00" style="width:130px;"> ~ <input type="text" value="2026-11-14 23:59:59" style="width:130px;">
+    <button class="legacy-btn" disabled style="opacity:.55;cursor:default;">搜索</button>
+    <span class="lk" style="color:#2a4baf;cursor:default;margin-left:6px;">Excel导出全部</span>
+  </div>
+  <div class="sumline" id="sumline"></div>
+  <table class="legacy-table detail-table">
+    <thead><tr>
+      <th style="width:6.5%;">用户名</th><th style="width:12%;">存款订单号</th><th style="width:7.5%;">存款渠道</th><th style="width:7.5%;">到账时间</th><th style="width:6%;">到账金额</th>
+      <th style="width:7%;">档位</th><th style="width:5.5%;">待领彩金</th><th style="width:5.5%;">实发彩金</th><th style="width:6%;">状态</th>
+      <th style="width:7.5%;">生成时间</th><th style="width:7.5%;">领取时间</th><th style="width:7.5%;">过期时间</th><th style="width:13%;">备注</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+  <div class="legacy-pager" id="pager"></div>
+  <div class="hint" style="margin-top:6px;">时间列省略年份，仅为原型展示；金额单位为元。</div>
+
+  <div class="dev-ref">
+    <div class="dev-head">与「活动派奖记录」的分工 <span class="dev-tag">仅供开发参考，不做进后台</span></div>
+    <table class="dev-table">
+      <thead><tr><th style="width:18%;">页面</th><th style="width:42%;">记录内容</th><th style="width:40%;">写入方式</th></tr></thead>
+      <tbody>
+        <tr><td>领取明细（新增）</td><td>本活动每笔USDT存款生成的待领取彩金全生命周期：未领取 / 已领取 / 已过期 / 领取失败</td><td>生成时写入，领取、过期、失败时更新同一条；与前端待领取清单、领取记录共用同一份数据</td></tr>
+        <tr><td>活动派奖记录（现有）</td><td>仅领取成功的彩金</td><td>领取成功时按实发金额写入一条，解锁流水同时写入；沿用现有「插入一次」逻辑，不新增状态</td></tr>
+      </tbody>
+    </table>
+    <div class="dev-desc" style="margin-top:10px;"><b>状态与前端对应</b></div>
+    <table class="dev-table">
+      <thead><tr><th style="width:18%;">状态</th><th style="width:42%;">含义</th><th style="width:40%;">前端对应</th></tr></thead>
+      <tbody>
+        <tr><td>未领取</td><td>待领取彩金已生成，会员尚未领取</td><td>「立即领取」弹窗·待领取清单</td></tr>
+        <tr><td>已领取</td><td>领取成功，实发彩金已写入活动派奖记录</td><td>领取记录·领取成功</td></tr>
+        <tr><td>已过期</td><td>超过存款到账后24小时未领取，不占用存款</td><td>领取记录·已过期</td></tr>
+        <tr><td>领取失败</td><td>该笔存款已被其他存款活动占用，备注写明占用活动</td><td>领取记录·领取失败·已参与其他存款活动</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="proto-note">
+  <div class="inner">
+    <div><span class="tag">原型说明</span></div>
+    <ol>
+      <li><b>入口：</b>活动管理列表操作栏新增「领取明细」，仅USDT笔笔加赠礼模板的活动显示，进入后默认筛选该活动。</li>
+      <li><b>筛选与导出：</b>可按用户名称、存款订单号、状态、存款到账时间筛选；「Excel导出全部」导出当前筛选结果的全部字段。按存款订单号搜索可直接定位单笔存款的处理结果。</li>
+      <li><b>数据来源：</b>与前端待领取清单、领取记录为同一份数据；生成时写入，领取、过期、失败时更新同一条记录，不新增。</li>
+      <li><b>金额：</b>待领彩金为生成时锁定的金额；实发彩金仅「已领取」有值，触顶截断时小于待领彩金，备注写明原因。</li>
+      <li><b>领取失败：</b>备注写明占用该存款的活动名称与ID，客服可据此解释。</li>
+      <li><b>汇总行：</b>展示当前筛选结果的笔数及已领取实发合计，参与统计只计「已领取」。</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+const ROWS=[["user_a01", "DP2026111420000188", "USDT (TRC20)", "11-14 20:00:00", "80,000", "第3档｜2%", "1,600", "661", "已领取", "11-14 20:12:44", "11-14 21:00:05", "11-15 20:00:00", "触顶截断，原待领1,600"], ["user_a01", "DP2026111409150012", "USDT (ERC20)", "11-14 09:15:00", "120,000", "第3档｜2%", "1,888", "1,888", "已领取", "11-14 09:28:10", "11-14 10:02:37", "11-15 09:15:00", "按比例2,400，单笔封顶"], ["user_b17", "DP2026111413402271", "USDT (BEP20)", "11-14 13:40:00", "5,000", "第2档｜1.5%", "75", "—", "未领取", "11-14 13:52:19", "—", "11-15 13:40:00", ""], ["user_d22", "DP2026111412000536", "USDT (SOL)", "11-14 12:00:00", "8,000", "第2档｜1.5%", "120", "—", "领取失败", "11-14 12:15:30", "—", "11-15 12:00:00", "已被【单笔存送-372】占用"], ["user_c09", "DP2026111307000917", "USDT (TRC20)", "11-13 07:00:00", "800", "第1档｜1%", "8", "—", "已过期", "11-13 07:14:02", "—", "11-14 07:00:00", ""], ["user_e05", "DP2026111306300045", "USDT (ARB)", "11-13 06:30:00", "1,000", "第2档｜1.5%", "15", "15", "已领取", "11-13 06:41:55", "11-13 18:20:31", "11-14 06:30:00", ""]];
+const ST={'未领取':'','已领取':'new','已过期':'exp','领取失败':'fail'};
+function render(){
+  const u=document.getElementById('fUser').value.trim().toLowerCase(), o=document.getElementById('fOrder').value.trim().toUpperCase(), st=document.getElementById('fSt').value;
+  const rs=ROWS.filter(r=>(!u||r[0].toLowerCase().includes(u))&&(!o||r[1].includes(o))&&(!st||r[8]===st));
+  document.getElementById('tb').innerHTML = rs.length ? rs.map(r=>'<tr>'+r.map((x,i)=> i===8?`<td><span class="st ${ST[x]}">${x}</span></td>`:`<td>${x||'—'}</td>`).join('')+'</tr>').join('') : '<tr><td colspan="13" style="color:#999;">暂无记录</td></tr>';
+  const paid=rs.filter(r=>r[8]==='已领取');
+  const sum=paid.reduce((s,r)=>s+Number(r[7].replace(/,/g,'')),0);
+  document.getElementById('sumline').innerHTML=`共 <b>${rs.length}</b> 笔；已领取 <b>${paid.length}</b> 笔，实发合计 <b>¥${sum.toLocaleString('zh-CN')}</b>`;
+  document.getElementById('pager').innerHTML=`总计 ${rs.length} 个记录, 分为 ${rs.length?1:0} 页, 当前第 ${rs.length?1:0} 页`;
+}
+render();
+</script>
+</body>
+</html>
