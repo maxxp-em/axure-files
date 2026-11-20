@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>圣诞元旦盛典 · 存款/流水进度条设计规范</title>
+<style>
+:root{--page:#FFFDF8;--ink:#23262E;--sub:#4A505B;--muted:#6A707B;--card:#FFFFFF;--line:#E6E1D6;--accent:#B3261E;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:14px;line-height:1.7}
+.wrap{max-width:1200px;margin:0 auto;padding:40px 32px 72px}
+header{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:8px}
+h1{margin:0 0 6px;font-size:30px;line-height:1.3;font-weight:900}
+h2{font-size:22px;font-weight:900;margin:40px 0 14px}
+h3{font-size:16px;margin:24px 0 10px}
+.lead{color:var(--sub);margin:0}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.g2,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card b.t{display:block;font-size:15px;margin-bottom:6px}
+.pre{white-space:pre-line}
+.tbl{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--card)}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{background:var(--ink);color:#fff;text-align:left;padding:9px 14px;font-size:13px}
+td{padding:9px 14px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{font-weight:700}
+.cnt{color:var(--accent);font-weight:900}
+ol.rules{margin:0;padding-left:20px}ol.rules li{margin:5px 0}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid #0002;vertical-align:-3px;margin-right:6px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.case{display:grid;grid-template-columns:280px minmax(0,1fr);gap:28px;align-items:start;margin:24px 0}
+@media (max-width:1100px){.case{grid-template-columns:1fr}}
+.case .code{background:var(--ink);color:#fff;font-weight:800;padding:2px 10px;border-radius:6px;margin-right:8px}
+.case .nm{font-size:17px;font-weight:800}
+.case .data{color:var(--accent);font-weight:700;margin:6px 0 2px}
+.scroll{overflow-x:auto;padding-bottom:4px}
+
+/* 进度卡（设计稿颜色） */
+.pb{width:760px;background:#fff;border:2px solid #EBCBB9;border-radius:18px;padding:20px 24px;color:#23262E;display:flex;flex-direction:column;gap:12px}
+.pb-h{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.pb-t{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800}
+.pb-step{width:26px;height:26px;border-radius:13px;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center}
+.btn-dep{border:0;background:linear-gradient(90deg,#E53935,#F06A5D);color:#fff;font:inherit;font-size:15px;font-weight:700;padding:10px 28px;border-radius:22px;min-height:44px}
+.tag{font-size:15px;font-weight:700;padding:7px 18px;border-radius:18px;display:inline-flex;align-items:center;gap:6px}
+.tag.cap{background:linear-gradient(90deg,#C8322B,#E8743B);color:#fff}
+.tag.lock{background:#ECECEC;color:#5E5E5E}
+.pb-m{display:flex;align-items:baseline;gap:8px;font-size:15px;color:#4A505B}
+.pb-m b{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:168px}
+.start{position:absolute;left:0;top:52px;width:82px;height:92px;border:1.5px dashed #C9B9A6;border-radius:10px;background:#FFF8EE;color:#9A8670;font-size:12px;line-height:1.5;display:flex;align-items:center;justify-content:center;text-align:center}
+.area{position:absolute;left:92px;right:4px;top:0;bottom:0}
+.track{position:absolute;left:0;right:0;top:108px;height:22px;border-radius:11px;border:3px solid;overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#B71C1C,#E9573F 60%,#F6B26B);border-radius:0 11px 11px 0}
+.lockseg{position:absolute;top:0;bottom:0;right:0;background:repeating-linear-gradient(45deg,#DADADA 0 6px,#C6C6C6 6px 12px)}
+.grp{position:absolute;top:14px;transform:translateX(-50%);width:84px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.amt{height:22px;white-space:nowrap;font-size:15px;font-weight:800}
+.amt small{font-size:11px;font-weight:500}
+.node{position:absolute;transform:translateX(-50%);border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center}
+.bubble{position:absolute;top:142px;transform:translateX(-50%);background:#B3261E;color:#fff;font-size:11px;font-weight:700;padding:1px 8px;border-radius:9px;white-space:nowrap}
+.hint{align-self:center;max-width:100%;border-radius:22px;padding:10px 22px;font-size:14.5px;line-height:1.5;text-align:center}
+.hint .n{color:#FFE08A;font-weight:800}
+.hint s{color:#FFD2C7;font-size:12px}
+.x{display:inline-block;background:#FFD54F;color:#7A3E00;font-weight:900;padding:0 6px;border-radius:6px;font-size:13px;margin:0 4px}
+.atom{position:relative;height:156px;background:#FFFDF6;border-radius:8px;margin:8px 0}
+.atom .strip{position:absolute;left:0;right:0;top:104px;height:20px;border-top:3px solid;border-bottom:3px solid}
+.atom .grp{left:50%;top:8px;width:120px}
+.atom .bubble{left:50%;top:134px}
+.seg{position:relative;height:22px;border-radius:11px;border:3px solid;overflow:hidden;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>存款 / 流水进度条 设计规范</h1>
+  <p class="lead">适用：「① 先存款，定档位」「② 再投注，领加码」两张进度卡。彩金不累加，只领当前档。</p>
+</header>
+
+<h2>1 状态清单</h2>
+<div class="tbl"><table>
+<thead><tr><th style="width:110px">层级</th><th style="width:260px">状态</th><th style="width:60px">数量</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>节点组</td><td>当前档 / 已越过 / 未达成 / 锁定</td><td class="cnt">4</td><td>当前档是今日唯一可领档位，只有它打勾、标红；比它低的为已越过。锁定只出现在流水卡。</td></tr>
+<tr><td>轨道段</td><td>未填充 / 已填充 / 锁定段 / 整条锁定</td><td class="cnt">4</td><td>全部 CSS 绘制，长度随数据变化，不切图。</td></tr>
+<tr><td>标签</td><td>上限 第N档 / 未解锁 / 当前 / ×2</td><td class="cnt">4</td><td></td></tr>
+<tr><td>存款卡</td><td class="pre">D-1 未达第 1 档　D-2 恰好达到某档
+D-3 处于两档之间　D-4 已达最高档</td><td class="cnt">4</td><td>另附翻倍日示例 D-5。</td></tr>
+<tr><td>流水卡</td><td class="pre">F-1 未解锁　F-2 未达第 1 档
+F-3 未追平上限　F-4 已追平 / 超过上限
+F-5 上限为最高档　F-6 双边最高档</td><td class="cnt">6</td><td>另附翻倍日示例 F-7。</td></tr>
+</tbody></table></div>
+
+<h2>2 判定规则与位置计算</h2>
+<div class="grid g2">
+  <div class="card"><b class="t">判定规则</b><ol class="rules">
+    <li>存款档位 = 存款达到门槛的最高一档。</li>
+    <li>流水上限 = 存款档位；流水档位 = min（流水达到的最高档，上限）。</li>
+    <li>i = 档位 → 当前档；i &lt; 档位 → 已越过；档位 &lt; i ≤ 上限 → 未达成；i &gt; 上限 → 锁定。</li>
+    <li>存款未达第 1 档时，流水卡整卡置灰并显示「未解锁」。存款卡没有锁定态。</li>
+    <li>翻倍日：礼盒上方金额保持原价，只有提示条显示翻倍后金额并划线原价。</li>
+  </ol></div>
+  <div class="card"><b class="t">位置计算（标注给开发）</b><ol class="rules">
+    <li>节点等距：N 档时，第 i 档在轨道 i/(N+1) 处。</li>
+    <li>填充分段插值：在第 i、i+1 档之间时，填充 = 第 i 档位置 + (当前值 − 门槛 i) ÷ (门槛 i+1 − 门槛 i) × 段长；未达第 1 档按「当前值 ÷ 门槛 1」填起点段；达最高档填满。</li>
+    <li>流水卡填充最多到上限节点，锁定段从上限节点到末端。</li>
+    <li>例：存款 6,000 → 第 3、4 档之间 20% 处；流水 5,000 → 第 1、2 档之间 67% 处。</li>
+  </ol></div>
+</div>
+
+<h2>3 原子组件</h2>
+<h3>节点组 4 种状态</h3>
+<div class="grid g4" id="atomCells"></div>
+<h3>轨道段</h3>
+<div class="grid g4" id="segs"></div>
+<h3>标签与色值</h3>
+<div class="grid g2">
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <div><span class="tag cap">上限 第 3 档</span>　流水卡头部</div>
+    <div><span class="tag lock" id="lockTag"></span>　流水卡，存款未达第 1 档</div>
+    <div><span class="bubble" style="position:static;transform:none;display:inline-block">当前</span>　当前档节点下方</div>
+    <div><span class="x" style="margin:0">×2</span>　翻倍日，仅出现在提示条</div>
+  </div>
+  <div class="tbl"><table id="tokens" style="min-width:0"></table></div>
+</div>
+
+<h2>4 存款卡样例</h2>
+<p class="lead">门槛 500 / 1,000 / 5,000 / 10,000 / 50,000 / 100,000，彩金 8 / 20 / 108 / 208 / 1,088 / 2,088。</p>
+<div id="depCases"></div>
+
+<h2>5 流水卡样例</h2>
+<p class="lead">门槛 3,000 / 6,000 / 30,000 / 60,000 / 300,000 / 600,000，彩金同上；可领上限 = 存款档位。</p>
+<div id="flowCases"></div>
+
+<h2>6 UI 交付清单</h2>
+<div class="grid g2">
+  <div class="card"><b class="t">切图</b><p class="pre" style="margin:0">礼盒 ×3：当前档（红金）、普通（已越过与未达成共用）、锁定（灰）
+起点装饰 ×1：圣诞老人；其余元素 CSS 绘制</p></div>
+  <div class="card"><b class="t">标注与适配</b><p class="pre" style="margin:0">节点尺寸：当前 30px / 未达成、锁定 24px / 已越过 18px
+补充 10 档宽度示例，金额字号与礼盒缩小一级
+数字统一千分位（6,000 而不是 6000）</p></div>
+</div>
+</div>
+
+<script>
+const T=[
+ {dep:500,depB:8,flow:3000,flowB:8},{dep:1000,depB:20,flow:6000,flowB:20},
+ {dep:5000,depB:108,flow:30000,flowB:108},{dep:10000,depB:208,flow:60000,flowB:208},
+ {dep:50000,depB:1088,flow:300000,flowB:1088},{dep:100000,depB:2088,flow:600000,flowB:2088}
+];
+const N=T.length;
+const fmt=n=>Number(n).toLocaleString('en-US');
+const tierOf=(v,k)=>{let r=-1;T.forEach((t,i)=>{if(v>=t[k])r=i;});return r;};
+const pos=i=>(i+1)/(N+1)*100;
+function fillPct(v,k){
+  if(v>=T[N-1][k])return 100;
+  if(v<T[0][k])return Math.max(0,v/T[0][k])*pos(0);
+  for(let i=0;i<N-1;i++) if(v>=T[i][k]&&v<T[i+1][k]) return pos(i)+(v-T[i][k])/(T[i+1][k]-T[i][k])*(pos(i+1)-pos(i));
+  return 100;
+}
+const FILL='linear-gradient(90deg,#B71C1C,#E9573F 60%,#F6B26B)';
+const ST={
+ current:{name:'当前档',label:'#B3261E',body:'#C8322B',ribbon:'#E8B64C',bg:'#C8322B',bd:'#FFF1CF',sh:'0 0 0 2px #C8322B, 0 0 0 7px rgba(200,50,43,.22)',size:30,check:true,cur:true,trackBg:FILL,trackBd:'#1E6B3A',spec:'唯一打勾：节点 30px + 光圈 + 「当前」气泡；礼盒红金，金额红色'},
+ passed:{name:'已越过',label:'#2E7D32',body:'#3E9B4F',ribbon:'#D8423A',bg:'#FFF4D6',bd:'#F2B48F',sh:'none',size:18,trackBg:FILL,trackBd:'#1E6B3A',spec:'填充已盖过但不可领：18px 米白小点，不打勾；礼盒、金额同未达成'},
+ unreached:{name:'未达成',label:'#2E7D32',body:'#3E9B4F',ribbon:'#D8423A',bg:'#FFF4D6',bd:'#1E6B3A',sh:'none',size:24,trackBg:'#7DB85F',trackBd:'#1E6B3A',spec:'24px 空心米色点 + 深绿描边；礼盒绿红，金额深绿'},
+ locked:{name:'锁定',label:'#6F6F6F',body:'#A8A8A8',ribbon:'#CFCFCF',bg:'#F4F4F4',bd:'#8C8C8C',sh:'none',size:24,lock:true,trackBg:'repeating-linear-gradient(45deg,#DADADA 0 6px,#C6C6C6 6px 12px)',trackBd:'#8C8C8C',spec:'仅流水卡：灰点 + 锁形图标；礼盒、金额全灰'}
+};
+const gift=(b,r,s=44)=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="16" width="28" height="20" rx="2" fill="${b}"/><rect x="4" y="11" width="32" height="7" rx="2" fill="${b}"/><rect x="18" y="11" width="4" height="25" fill="${r}"/><path d="M20 11 C14 2 7 5 12 11 Z M20 11 C26 2 33 5 28 11 Z" fill="${r}"/></svg>`;
+const ICON_CHECK='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 L5 9 L10 3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const lockIcon=c=>`<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="${c}"/><path d="M4 5.5 V4 a2 2 0 0 1 4 0 V5.5" fill="none" stroke="${c}" stroke-width="1.4"/></svg>`;
+const amtHtml=(b,st)=>`<div class="amt" style="color:${st.label}">${fmt(b)}<small>元</small></div>`;
+const nodeHtml=(st,left,center)=>`<div class="node" style="left:${left};top:${center-st.size/2}px;width:${st.size}px;height:${st.size}px;background:${st.bg};border-color:${st.bd};box-shadow:${st.sh}">${st.check?ICON_CHECK:''}${st.lock?lockIcon('#7A7A7A'):''}</div>`;
+
+function card(kind,dep,flow,m){
+  const isDep=kind==='dep', dT=tierOf(dep,'dep'), bk=isDep?'depB':'flowB';
+  let tier,cap,locked,fill,lockLeft;
+  if(isDep){tier=dT;cap=N-1;locked=false;fill=fillPct(dep,'dep');lockLeft=100;}
+  else{locked=dT<0;cap=dT;const fR=tierOf(flow,'flow');tier=locked?-1:Math.min(fR,cap);
+    fill=locked?0:(cap<N-1?Math.min(fillPct(flow,'flow'),pos(cap)):fillPct(flow,'flow'));
+    lockLeft=locked?0:(cap<N-1?pos(cap):100);}
+  const nodes=T.map((t,i)=>{
+    let s; if(!isDep&&(locked||i>cap))s='locked'; else if(i===tier)s='current'; else if(i<tier)s='passed'; else s='unreached';
+    const st=ST[s], L=pos(i)+'%';
+    return `<div class="grp" style="left:${L}">${amtHtml(t[bk],st)}${gift(st.body,st.ribbon)}</div>${nodeHtml(st,L,119)}${st.cur?`<div class="bubble" style="left:${L}">当前</div>`:''}`;
+  }).join('');
+  const n=v=>`<span class="n">${v}</span>`;
+  const money=b=>` ${n(fmt(b*m))}${m>1?` <s>${fmt(b)}</s>`:''} 元`;
+  const X=m>1?`<span class="x">×${m}</span>`:'，';
+  let h='',bg='linear-gradient(90deg,#C8322B,#E8743B)',col='#fff';
+  const pre=m>1&&!locked?`<span class="x" style="margin-left:0">×${m}</span>`:'';
+  if(isDep){
+    if(tier<0)h=pre+`再存款 ${n(fmt(T[0].dep-dep))} 元达第 1 档，存款彩金${money(T[0].depB)}`;
+    else if(tier<N-1)h=`第 ${tier+1} 档，彩金${money(T[tier].depB)}${X}再存款 ${n(fmt(T[tier+1].dep-dep))} 元达第 ${tier+2} 档，存款彩金${money(T[tier+1].depB)}`;
+    else h=pre+`已达最高档 第 ${N} 档，彩金${money(T[N-1].depB)}`;
+  }else if(locked){bg='#EFEFEF';col='#5E5E5E';h=`存款满 <b>${fmt(T[0].dep)}</b> 元，解锁投注彩金`;}
+  else if(tier<0)h=pre+`再投注 ${n(fmt(T[0].flow-flow))} 元达第 1 档，投注彩金${money(T[0].flowB)}`;
+  else if(tier<cap)h=`第 ${tier+1} 档，彩金${money(T[tier].flowB)}${X}再投注 ${n(fmt(T[tier+1].flow-flow))} 元达第 ${tier+2} 档，投注彩金${money(T[tier+1].flowB)}`;
+  else if(cap<N-1)h=`第 ${tier+1} 档，彩金${money(T[tier].flowB)}${X}已达当前上限，再存款 ${n(fmt(T[cap+1].dep-dep))} 元解锁第 ${cap+2} 档`;
+  else h=pre+`已达最高档 第 ${N} 档，彩金${money(T[N-1].flowB)}`;
+  const right=isDep?'<button type="button" class="btn-dep">前往存款</button>':locked?`<span class="tag lock">${lockIcon('#5E5E5E')}未解锁</span>`:`<span class="tag cap">上限 第 ${cap+1} 档</span>`;
+  return `<div class="pb">
+   <div class="pb-h"><div class="pb-t"><span class="pb-step" style="background:${locked?'#A8A8A8':isDep?'#C8322B':'#2E7D32'}">${isDep?1:2}</span><span style="color:${locked?'#6F6F6F':'#3B1F5E'}">${isDep?'先存款，定档位':'再投注，领加码'}</span></div>${right}</div>
+   <div class="pb-m">${isDep?'今日累计存款':'今日累计有效流水'}<b style="color:${locked?'#6F6F6F':'#B3261E'}">${fmt(isDep?dep:flow)}</b>元</div>
+   <div class="bar"><div class="start">起点装饰<br>（切图）</div><div class="area">
+     <div class="track" style="border-color:${locked?'#8C8C8C':'#1E6B3A'};background:${locked?'#DADADA':'#7DB85F'}"><div class="fill" style="width:${fill}%"></div><div class="lockseg" style="left:${lockLeft}%"></div></div>
+     ${nodes}</div></div>
+   <div class="hint" style="background:${bg};color:${col}">${h}</div></div>`;
+}
+
+document.getElementById('lockTag').innerHTML=lockIcon('#5E5E5E')+'未解锁';
+document.getElementById('atomCells').innerHTML=[['current',108],['passed',20],['unreached',208],['locked',1088]].map(([k,b])=>{
+  const st=ST[k];
+  return `<div class="card" style="padding:14px"><b>${st.name}</b>
+  <div class="atom"><div class="strip" style="background:${st.trackBg};border-color:${st.trackBd}"></div>
+  <div class="grp">${amtHtml(b,st)}${gift(st.body,st.ribbon,48)}</div>${nodeHtml(st,'50%',114)}${st.cur?'<div class="bubble">当前</div>':''}</div>
+  <p style="margin:0;font-size:12.5px;color:var(--sub)">${st.spec}</p></div>`;
+}).join('');
+document.getElementById('segs').innerHTML=[
+ ['未填充','#1E6B3A','#7DB85F',0,100,'浅绿底 + 深绿描边，高 22px'],
+ ['已填充','#1E6B3A','#7DB85F',58,100,'红→橙渐变，圆角端头停在插值位置'],
+ ['锁定段','#1E6B3A','#7DB85F',30,55,'上限节点到末端，灰色斜纹'],
+ ['整条锁定','#8C8C8C','#DADADA',0,0,'F-1 未解锁，描边改灰，无填充']
+].map(([n,bd,bg,f,l,s])=>`<div class="card" style="padding:14px"><b>${n}</b><div class="seg" style="border-color:${bd};background:${bg}"><div class="fill" style="width:${f}%"></div><div class="lockseg" style="left:${l}%"></div></div><p style="margin:0;font-size:12.5px;color:var(--sub)">${s}</p></div>`).join('');
+const tok=[['节点填充','#C8322B','#FFF4D6','#FFF4D6','#F4F4F4'],['节点描边','#FFF1CF','#F2B48F','#1E6B3A','#8C8C8C'],['金额文字','#B3261E','#2E7D32','#2E7D32','#6F6F6F'],['礼盒主体','#C8322B','#3E9B4F','#3E9B4F','#A8A8A8'],['礼盒丝带','#E8B64C','#D8423A','#D8423A','#CFCFCF']];
+document.getElementById('tokens').innerHTML='<thead><tr><th>元素</th><th>当前档</th><th>已越过</th><th>未达成</th><th>锁定</th></tr></thead><tbody>'+tok.map(r=>'<tr><td>'+r[0]+'</td>'+r.slice(1).map(c=>`<td><span class="sw" style="background:${c}"></span><code>${c}</code></td>`).join('')+'</tr>').join('')+'</tbody>';
+
+const caseHtml=(code,name,data,points,html)=>`<div class="case"><div><div><span class="code">${code}</span><span class="nm">${name}</span></div><div class="data">${data}</div><div class="pre" style="color:var(--sub);font-size:13.5px">${points}</div></div><div class="scroll">${html}</div></div>`;
+document.getElementById('depCases').innerHTML=[
+ ['D-1','未达第 1 档',300,1,'存款 300','· 全部未达成，没有当前档\n· 填充到第 1 档前 60% 处'],
+ ['D-2','恰好达到某档',5000,1,'存款 5,000','· 第 3 档为当前档，只领 108 元\n· 第 1、2 档为已越过\n· 填充正好停在第 3 档节点'],
+ ['D-3','处于两档之间',6000,1,'存款 6,000','· 第 3 档为当前档\n· 填充停在 3→4 段 20% 处'],
+ ['D-4','已达最高档',120000,1,'存款 120,000','· 只有第 6 档打勾，其余已越过\n· 填满，提示「已达最高档」'],
+ ['D-5','翻倍日（同 D-3）',6000,2,'12/25，存款 6,000','· 进度、档位、礼盒金额与 D-3 相同\n· 只有提示条显示 ×2 后金额并划线原价']
+].map(([c,n,d,m,data,p])=>caseHtml(c,n,data,p,card('dep',d,0,m))).join('');
+document.getElementById('flowCases').innerHTML=[
+ ['F-1','未解锁',300,8000,1,'存款 300，流水 8,000','· 整卡置灰，头部「未解锁」\n· 流水再多也不填充'],
+ ['F-2','流水未达第 1 档',6000,1000,1,'存款 6,000，流水 1,000','· 第 1~3 档未达成，4~6 档锁定\n· 填充到第 1 档前 33% 处'],
+ ['F-3','流水未追平上限',6000,5000,1,'存款 6,000，流水 5,000','· 第 1 档为当前档\n· 填充停在 1→2 段 67% 处\n· 4~6 档锁定'],
+ ['F-4','流水已追平 / 超过上限',6000,60000,1,'存款 6,000，流水 60,000','· 第 3 档为当前档\n· 填充停在第 3 档节点，不进锁定段\n· 提示引导存款解锁下一档'],
+ ['F-5','上限为最高档',120000,50000,1,'存款 120,000，流水 50,000','· 无锁定段，「上限 第 6 档」\n· 第 3 档为当前档'],
+ ['F-6','双边最高档',120000,700000,1,'存款 120,000，流水 700,000','· 只有第 6 档打勾，填满'],
+ ['F-7','翻倍日（同 F-3）',6000,5000,2,'1/1，存款 6,000，流水 5,000','· 礼盒金额保持原价\n· 只有提示条显示 ×2 后金额并划线原价']
+].map(([c,n,d,f,m,data,p])=>caseHtml(c,n,data,p,card('flow',d,f,m))).join('');
+</script>
+</body>
+</html>
