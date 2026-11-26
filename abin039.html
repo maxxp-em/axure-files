@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>直属层级积分榜 - 后台交互原型</title>
+<style>
+  :root{
+    --bar:#2f3a4f; --line:#dfe3ea; --bg:#f3f5f8; --txt:#2b3140; --sub:#767c8c;
+    --blue:#3b6ff0; --danger:#d62a2a; --ok:#1f9d55; --warn:#b7791f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:13px;color:var(--txt);background:var(--bg);}
+  button{font-family:inherit;}
+  .view-bar{position:sticky;top:0;z-index:20;background:var(--bar);color:#fff;padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .view-bar .sim-label{font-size:12px;opacity:.75;}
+  .sim-btn{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 14px;border-radius:3px;cursor:pointer;font-size:12.5px;}
+  .sim-btn.active{background:#fff;color:var(--bar);border-color:#fff;font-weight:600;}
+  .sim-btn.todo{opacity:.45;cursor:not-allowed;}
+  .topbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;}
+  .crumb{color:var(--sub);} .crumb b{color:var(--txt);}
+  .back{font-size:12px;color:var(--blue);cursor:pointer;}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 20px 30px;}
+  .section{background:#fff;border:1px solid var(--line);margin-bottom:16px;}
+  .section-head{background:#eef1f6;padding:9px 14px;font-weight:600;border-bottom:1px solid var(--line);}
+  .section-head .tag{font-weight:400;font-size:11.5px;color:var(--sub);margin-left:8px;}
+  .section-body{padding:14px 18px;}
+  .row{display:flex;padding:7px 0;align-items:flex-start;}
+  .label{width:220px;flex-shrink:0;text-align:right;padding:5px 12px 0 0;color:#40465a;}
+  .req{color:var(--danger);margin-right:2px;}
+  .field{flex:1;min-width:0;}
+  input[type=text],input[type=number],input[type=date],select{border:1px solid #c9ced8;border-radius:2px;padding:5px 7px;font-size:12.5px;color:var(--txt);background:#fff;}
+  input[readonly]{background:#f3f4f7;color:#5b6172;}
+  input.err{border-color:var(--danger)!important;background:#fff5f5;}
+  .w-s{width:110px;} .w-m{width:170px;} .w-l{width:320px;}
+  .hint{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.6;}
+  .err-msg{font-size:12px;color:var(--danger);margin-top:5px;display:none;}
+  .radio-group{display:flex;gap:16px;padding-top:4px;flex-wrap:wrap;} .radio-group label{display:flex;align-items:center;gap:4px;}
+  .checks{display:flex;flex-wrap:wrap;gap:4px 14px;padding-top:4px;line-height:1.7;}
+  .checks label{display:flex;align-items:center;gap:3px;white-space:nowrap;}
+  .dual-toggle{display:flex;gap:28px;} .tlabel{font-size:12px;color:var(--sub);margin-bottom:2px;}
+  .new-tag{display:inline-block;background:#e8f0ff;color:var(--blue);border:1px solid #bcd0fb;font-size:11px;padding:0 6px;border-radius:2px;margin-left:6px;font-weight:400;vertical-align:1px;}
+  .subhead{font-weight:600;margin:18px 0 8px;padding-left:8px;border-left:3px solid var(--blue);}
+  .subhead:first-child{margin-top:0;}
+  .subhead .tag2{font-weight:400;font-size:11.5px;color:var(--sub);margin-left:6px;}
+  .rule-table{width:100%;border-collapse:collapse;}
+  .rule-table th,.rule-table td{border:1px solid var(--line);padding:7px 8px;text-align:center;}
+  .rule-table th{background:#f6f7fa;font-weight:600;font-size:12.5px;}
+  .rule-table td input{width:100%;max-width:130px;text-align:center;}
+  .rule-table td.num{font-variant-numeric:tabular-nums;}
+  .op{color:var(--blue);cursor:pointer;font-size:12px;} .op.dis{color:#b8bcc6;cursor:not-allowed;}
+  .add-row-btn{margin-top:8px;border:1px dashed #9fb5ef;background:#f7f9ff;color:var(--blue);padding:6px 14px;cursor:pointer;border-radius:2px;font-size:12.5px;}
+  .add-row-btn:disabled{color:#b8bcc6;border-color:#d5d8df;background:#fafafa;cursor:not-allowed;}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  .grid3 .col-title{font-weight:600;font-size:12.5px;margin-bottom:6px;color:#40465a;}
+  .inline-form{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;}
+  .inline-form .it{display:flex;align-items:center;gap:6px;}
+  .summary{display:flex;flex-wrap:wrap;gap:8px 22px;background:#f8f9fb;border:1px solid var(--line);padding:9px 14px;margin-top:10px;font-size:12.5px;}
+  .summary b{font-variant-numeric:tabular-nums;color:var(--txt);}
+  .st{display:inline-block;padding:0 7px;border-radius:2px;font-size:11.5px;}
+  .st.wait{background:#f1f2f5;color:#6b7180;} .st.run{background:#e7f6ee;color:var(--ok);} .st.done{background:#eef1f6;color:#4a5263;}
+  .fixed-box{background:#f8f9fb;border:1px solid var(--line);padding:10px 14px;line-height:1.9;font-size:12.5px;}
+  .fixed-box ol{margin:0;padding-left:20px;}
+  .pending{display:inline-block;background:#fff4e0;color:#8a5a00;border:1px solid #f0cf8f;font-size:11px;padding:0 6px;border-radius:2px;margin-left:4px;}
+  .btn{padding:6px 16px;border-radius:2px;border:1px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;font-size:12.5px;}
+  .btn.ghost{background:#fff;color:var(--blue);}
+  .save-bar{display:flex;justify-content:center;gap:12px;padding:6px 0 10px;}
+  .placeholder-box{border:1px dashed #c9ced8;background:#fafbfc;color:var(--sub);padding:16px;text-align:center;line-height:1.8;font-size:12px;}
+  .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2b3140;color:#fff;padding:9px 18px;border-radius:3px;font-size:13px;z-index:50;display:none;}
+  .toast.bad{background:var(--danger);}
+  .dev-ref{margin-top:18px;border:1px dashed #8a6fd1;background:#f6f3fd;border-radius:4px;padding:10px 12px 12px;}
+  .dev-ref-head{font-weight:600;color:#4b3a8c;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .dev-tag{background:#6b52c4;color:#fff;font-size:11px;font-weight:600;padding:1px 7px;border-radius:2px;}
+  .dev-note{font-weight:400;font-size:11.5px;color:#7a6aa8;}
+  .case-scroll{overflow-x:auto;}
+  .case-table{width:100%;border-collapse:collapse;background:#fff;min-width:900px;}
+  .case-table th,.case-table td{border:1px solid #dcd3f3;padding:6px 8px;text-align:center;font-size:12px;}
+  .case-table th{background:#ebe5fa;color:#4b3a8c;font-weight:600;}
+  .case-table td{font-variant-numeric:tabular-nums;} .case-table td.b{color:#6b52c4;font-weight:600;}
+  .case-table tr.out td{color:#a3a7b3;background:#fafafa;}
+  .case-table td.why{color:var(--danger);}
+  .proto-note{background:#2f3a4f;color:#dfe5f0;margin-top:10px;}
+  .proto-note .inner{max-width:1180px;margin:0 auto;padding:16px 20px 22px;line-height:1.85;font-size:12.5px;}
+  .proto-note .tag{background:#f0b429;color:#2f3a4f;padding:1px 7px;border-radius:2px;margin-right:6px;font-weight:600;}
+  .proto-note ol{margin:6px 0 0;padding-left:20px;}
+
+  .view{display:none;} .view.on{display:block;}
+  .legacy-head{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);padding:10px 14px;gap:10px;flex-wrap:wrap;}
+  .legacy-head .t{font-weight:600;} .legacy-head .t span{font-weight:400;color:var(--sub);}
+  .legacy-filter{background:#fff;border:1px solid var(--line);border-top:0;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;}
+  .legacy-btn{padding:4px 12px;border:1px solid #c9ced8;background:#f6f7fa;border-radius:2px;cursor:pointer;font-size:12px;}
+  .legacy-btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .legacy-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .lk{color:var(--blue);cursor:pointer;text-decoration:underline;}
+  .tbl-scroll{overflow-x:auto;background:#fff;border:1px solid var(--line);border-top:0;}
+  .legacy-table{width:100%;border-collapse:collapse;background:#fff;min-width:980px;}
+  .legacy-table th,.legacy-table td{border:1px solid var(--line);padding:7px 8px;text-align:center;font-size:12.5px;}
+  .legacy-table th{background:#f6f7fa;}
+  .legacy-table td{font-variant-numeric:tabular-nums;}
+  .legacy-table td input{width:100%;max-width:150px;text-align:center;}
+  .legacy-table td input.note{max-width:220px;text-align:left;}
+  .legacy-table tr.out td{color:#a3a7b3;background:#fafafa;}
+  .legacy-table tr.diff td{background:#fffaf0;}
+  .legacy-table tr.sum td{background:#f6f7fa;font-weight:600;}
+  .info-line{background:#fff;border:1px solid var(--line);border-top:0;padding:8px 14px;font-size:12px;color:var(--sub);display:flex;gap:6px 20px;flex-wrap:wrap;}
+  .info-line b{color:var(--txt);font-variant-numeric:tabular-nums;}
+  .cmp-ok{color:var(--ok);} .cmp-warn{color:var(--warn);} .cmp-bad{color:var(--danger);}
+  .note-box{background:#fffbea;border:1px solid #f0dc9b;padding:10px 14px;line-height:1.8;font-size:12.5px;margin-top:12px;}
+  .note-box ol{margin:4px 0 0;padding-left:20px;}
+  .tip-warn{background:#fff6ea;border-left:3px solid #e8890c;color:#a35a00;padding:7px 12px;font-size:12.5px;margin:0 0 8px;}
+  .path-line{font-size:12px;color:var(--sub);margin-bottom:8px;}
+  .pay-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-top:0;padding:10px 14px;}
+  .pay-bar .stat{font-size:12.5px;color:var(--sub);display:flex;gap:18px;flex-wrap:wrap;} .pay-bar .stat b{color:var(--txt);}
+  .block-title{font-weight:600;margin:18px 0 8px;padding-left:8px;border-left:3px solid var(--blue);}
+  .modal-mask{position:fixed;inset:0;background:rgba(20,25,35,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:16px;}
+  .modal-mask.on{display:flex;}
+  .modal{background:#fff;width:min(560px,100%);border-radius:3px;box-shadow:0 8px 30px rgba(0,0,0,.2);}
+  .modal-h{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:600;}
+  .modal-b{padding:14px 16px;line-height:1.8;font-size:12.5px;max-height:60vh;overflow:auto;}
+  .modal-b table{width:100%;border-collapse:collapse;margin-top:8px;} .modal-b td,.modal-b th{border:1px solid var(--line);padding:5px 6px;text-align:center;font-size:12px;}
+  .modal-f{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+  input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+  @media (max-width:900px){ .grid3{grid-template-columns:1fr;} }
+  @media (max-width:760px){ .label{width:120px;} .w-l{width:100%;} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;} }
+</style>
+</head>
+<body>
+
+<div class="view-bar">
+  <span class="sim-label">页面切换：</span>
+  <button class="sim-btn active" data-v="cfg" onclick="showView('cfg')">活动配置页</button>
+  <button class="sim-btn" data-v="rank" onclick="showView('rank')">每期真实排名</button>
+  <button class="sim-btn" data-v="pay" onclick="showView('pay')">活动人工派奖</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="view on" id="view-cfg">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>添加直属层级积分榜活动</b></div>
+  <div class="back">返回活动列表</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ 1. 基本信息 ============ -->
+  <div class="section">
+    <div class="section-head">1.基本信息 <span class="tag">沿用现有组件，新增「参与层级」与周期枚举「半月」</span></div>
+    <div class="section-body">
+      <div class="row"><div class="label"><span class="req">*</span>活动名称：</div><div class="field"><input type="text" class="w-l" value="直属层级积分榜"></div></div>
+      <div class="row"><div class="label"><span class="req">*</span>活动分类：</div><div class="field"><select class="w-m"><option>请选择</option><option>体育优惠活动</option><option>存款优惠</option><option selected>其他</option></select></div></div>
+      <div class="row"><div class="label"><span class="req">*</span>活动展示时间：</div><div class="field"><input type="text" class="w-m" placeholder="开始"> — <input type="text" class="w-m" placeholder="结束"><div class="hint">活动展示于前台的起止时间</div></div></div>
+      <div class="row"><div class="label"><span class="req">*</span>活动起止时间：</div><div class="field">
+        <input type="date" id="actStart" value="2026-12-01"> — <input type="date" id="actEnd" value="2027-02-28">
+        <div class="hint">手动填写，须与「2.1 活动期次」覆盖的日期一致，由运营按 SOP 核对；数据只统计此区间内产生的部分</div></div></div>
+      <div class="row"><div class="label"><span class="req">*</span>参与层级：<span class="new-tag">新增</span></div><div class="field">
+        <div style="padding-top:5px;"><b>直属代理</b></div>
+        <div class="hint">模板固定，不可修改。只有直属代理层级的账号能在前台看到本活动、参与排名，其他层级前台不展示活动入口</div></div></div>
+      <div class="row"><div class="label">注册起止时间：</div><div class="field"><input type="text" class="w-m" placeholder="开始"> — <input type="text" class="w-m" placeholder="结束"></div></div>
+      <div class="row"><div class="label">是否推荐到活动公告处：</div><div class="field"><div class="radio-group"><label><input type="radio" name="promo">推荐</label><label><input type="radio" name="promo" checked>不推荐</label></div></div></div>
+      <div class="row"><div class="label">是否自我互斥：</div><div class="field"><div class="radio-group"><label><input type="radio" name="exclu">自我互斥</label><label><input type="radio" name="exclu" checked>不自我互斥</label></div></div></div>
+      <div class="row"><div class="label">是否启用VIP用户参与限制：</div><div class="field"><div class="radio-group"><label><input type="radio" name="vip">是</label><label><input type="radio" name="vip" checked>否</label></div></div></div>
+      <div class="row"><div class="label"><span class="req">*</span>活动领取方式：</div><div class="field">
+        <select class="w-m"><option>后台审核后前台手动领取</option><option>后台自动领取</option><option>前台手动领取</option><option>前台申请后手动领取</option><option>前台申请后自动发放</option><option>前台申请固定金额后自动发放</option><option selected>后台审核后自动到账</option></select><span class="new-tag">新增枚举</span>
+        <div class="hint">平台出资，人工派奖提交后转审核，审核通过后自动到账；前台无领取操作</div></div></div>
+      <div class="row"><div class="label">是否禁止同IP用户参与：</div><div class="field"><div class="radio-group"><label><input type="radio" name="ip">是</label><label><input type="radio" name="ip" checked>否</label></div></div></div>
+      <div class="row"><div class="label">是取用流水场馆设置：</div><div class="field"><div class="hint" style="margin-top:6px;">场馆多选沿用现有组件，选项以线上为准，原型不逐一列出。本活动统计不限彩票与三方游戏，默认全选</div></div></div>
+      <div class="row"><div class="label">是否开启活动分端参与：</div><div class="field"><div class="dual-toggle">
+        <div><div class="tlabel">只有登录PC客户端可参与</div><div class="radio-group"><label><input type="radio" name="pc">是</label><label><input type="radio" name="pc" checked>否</label></div></div>
+        <div><div class="tlabel">只有登录手机客户端可参与</div><div class="radio-group"><label><input type="radio" name="mb">是</label><label><input type="radio" name="mb" checked>否</label></div></div></div></div></div>
+      <div class="row"><div class="label">周期：</div><div class="field">
+        <div class="radio-group"><label><input type="radio" name="cycle">日</label><label><input type="radio" name="cycle">周</label><label><input type="radio" name="cycle">月</label><label><input type="radio" name="cycle">整周期</label><label><input type="radio" name="cycle" checked>半月<span class="new-tag">新增枚举</span></label></div>
+        <div class="hint">每期天数与期数在「2.1 活动期次」中配置</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ 2. 活动规则和派奖策略 ============ -->
+  <div class="section">
+    <div class="section-head">2.活动规则和派奖策略</div>
+    <div class="section-body">
+
+      <!-- 2.1 -->
+      <div class="subhead">2.1 活动期次</div>
+      <div class="inline-form">
+        <div class="it"><span class="req">*</span>首期开始日期：<input type="date" id="pStart" value="2026-12-01" oninput="renderAll()"></div>
+        <div class="it"><span class="req">*</span>每期天数：<input type="number" class="w-s" id="pDays" value="15" oninput="renderAll()"> 天</div>
+        <div class="it"><span class="req">*</span>期数：<input type="number" class="w-s" id="pCount" value="6" oninput="renderAll()"> 期</div>
+      </div>
+      <div class="err-msg" id="periodErr"></div>
+      <div class="hint">每期从开始日 00:00:00 到结束日 23:59:59（平台时区）。延期时增加期数即可，后续期次按顺序自动顺延；已开始的期次不可修改日期，已结束的期次不可删除。</div>
+      <table class="rule-table" style="margin-top:8px;">
+        <thead><tr><th style="width:12%;">期次</th><th>统计开始</th><th>统计结束</th><th style="width:14%;">状态</th></tr></thead>
+        <tbody id="periodBody"></tbody>
+      </table>
+
+      <!-- 2.2 -->
+      <div class="subhead">2.2 参与门槛 <span class="tag2">三项须同时满足，才进入当期排名</span></div>
+      <table class="rule-table">
+        <thead><tr><th>周期有效投注额 ≥（元）</th><th>周期总亏损 ≥（元）</th><th>周期活跃人数 ≥（人）</th></tr></thead>
+        <tbody><tr>
+          <td><input type="number" id="thBet" value="300000" oninput="renderAll()"></td>
+          <td><input type="number" id="thLoss" value="20000" oninput="renderAll()"></td>
+          <td><input type="number" id="thActive" value="3" oninput="renderAll()"></td>
+        </tr></tbody>
+      </table>
+      <div class="err-msg" id="thErr">门槛须为正整数</div>
+      <div class="hint">数据范围为直属代理名下整条下线（各级下级代理及其玩家），不限彩票与三方游戏。</div>
+
+      <!-- 2.3 -->
+      <div class="subhead">2.3 活跃会员口径 <span class="tag2">每期独立判定，同时满足以下条件的下线会员计为 1 名活跃</span></div>
+      <div class="inline-form">
+        <div class="it">① 周期内累计存款 ≥ <input type="number" class="w-s" id="acDep" value="100" oninput="renderAll()"> 元</div>
+        <div class="it">② 单日有效投注 ≥ <input type="number" class="w-s" id="acBet" value="100" oninput="renderAll()"> 元，且达成天数 ≥ <input type="number" class="w-s" id="acDays" value="3" oninput="renderAll()"> 个自然日</div>
+      </div>
+      <div class="err-msg" id="acErr"></div>
+      <div class="hint">达成天数不能超过「每期天数」。默认值仅为原型占位，以需求方最终方案为准。</div>
+
+      <!-- 2.4 -->
+      <div class="subhead">2.4 权重积分 <span class="tag2">总积分 = 亏损排名积分 + 有效投注排名积分 + 活跃人数积分</span></div>
+      <div class="grid3">
+        <div>
+          <div class="col-title">周期亏损排名</div>
+          <table class="rule-table"><thead><tr><th>名次</th><th>积分</th><th style="width:22%;">操作</th></tr></thead><tbody id="lossBody"></tbody></table>
+          <button class="add-row-btn" id="lossAdd" onclick="addRow('loss')">＋ 新增名次</button>
+        </div>
+        <div>
+          <div class="col-title">周期有效投注额排名</div>
+          <table class="rule-table"><thead><tr><th>名次</th><th>积分</th><th style="width:22%;">操作</th></tr></thead><tbody id="betBody"></tbody></table>
+          <button class="add-row-btn" id="betAdd" onclick="addRow('bet')">＋ 新增名次</button>
+        </div>
+        <div>
+          <div class="col-title">周期活跃人数</div>
+          <table class="rule-table"><thead><tr><th>活跃人数 ≥</th><th>积分</th><th style="width:22%;">操作</th></tr></thead><tbody id="actBody"></tbody></table>
+          <button class="add-row-btn" id="actAdd" onclick="addRow('act')">＋ 新增档位</button>
+        </div>
+      </div>
+      <div class="err-msg" id="scoreErr">积分表存在空值或非正整数，请检查标红单元格</div>
+      <div class="hint">排名表 1~30 名可增删，名次自动编号，未列出的名次不加分；活跃档位 1~10 档，取达到的最高一档，不累加。积分是否逐名递减由配置方自行检查，系统不做校验。</div>
+
+      <!-- 2.5 -->
+      <div class="subhead">2.5 名次奖励</div>
+      <div class="tip-warn">仅用于前台展示，不参与派奖。前台「活动规则」读取本表；实际发放金额以「人工派奖」中填写的为准。</div>
+      <table class="rule-table" style="max-width:520px;">
+        <thead><tr><th>积分名次</th><th>奖励金额（元）</th><th style="width:22%;">操作</th></tr></thead>
+        <tbody id="rewardBody"></tbody>
+      </table>
+      <button class="add-row-btn" id="rewardAdd" onclick="addRow('reward')">＋ 新增名次</button>
+      <div class="err-msg" id="rewardErr">奖励金额须为正整数</div>
+      <div class="summary" id="summary"></div>
+
+      <!-- 2.6 -->
+      <div class="subhead">2.6 排名规则 <span class="tag2">系统固定，不做后台配置</span></div>
+      <div class="fixed-box"><ol>
+        <li>每期结束后统计当期数据，先按 2.2 门槛筛出达标直属，再在达标直属中计算亏损排名、有效投注排名和活跃档位。</li>
+        <li>所有达标直属按总积分从高到低排出积分名次，人数不限。</li>
+        <li>总积分相同时，依次比较亏损积分、活跃积分、有效投注积分，高者在前；仍相同时按周期总亏损金额高者在前。</li>
+        <li>活动进行中修改配置：
+          <br>· 门槛、活跃口径、积分表（2.2～2.4）以脚本执行时读取的配置为准，不做快照；进行中的期次修改后整期按新配置计算，不分段；已生成排名的期次不重新计算。
+          <br>· 活动期次（2.1）：已开始的期次不可修改日期；延期只能增加期数，减少期数只能删除未开始的期次。
+          <br>· 名次奖励（2.5）：保存后前台活动规则即时更新，不影响已提交的派奖记录。
+          <br>· 活动起止时间为手动填写，修改期次后由运营按 SOP 同步修改。</li>
+        <li>真实排名仅供运营参考，实际派奖以「人工派奖」为准。</li>
+      </ol></div>
+
+      <div class="dev-ref">
+        <div class="dev-ref-head"><span class="dev-tag">开发参考</span>排名示例<span class="dev-note">仅供开发核对计算逻辑，不做进后台；结果按当前页面配置实时计算，示例数据为虚构</span><span class="lk" id="devToggle" style="margin-left:auto;font-weight:400;font-size:12px;" onclick="toggleDev()">展开</span></div>
+        <div class="case-scroll" id="devBody" style="display:none;"><table class="case-table">
+          <thead><tr><th>直属</th><th>有效投注</th><th>总亏损</th><th>活跃人数</th><th>是否达标</th><th>亏损名次/积分</th><th>投注名次/积分</th><th>活跃积分</th><th>总积分</th><th>积分名次</th></tr></thead>
+          <tbody id="caseBody"></tbody>
+        </table></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ 3. 其他信息 ============ -->
+  <div class="section">
+    <div class="section-head">3.其他信息 <span class="tag">沿用现有组件</span></div>
+    <div class="section-body">
+      <div class="placeholder-box">位置排序 / PC活动封面图片 / 活动图片 / H5活动图片 / H5活动详情图 / 活动详情富文本编辑器<br>—— 沿用现有后台字段结构，本次不做调整，此处省略展示 ——</div>
+    </div>
+  </div>
+
+  <div class="save-bar"><button class="btn" onclick="save()">保存</button><button class="btn ghost">取消</button></div>
+</div>
+
+<div class="proto-note"><div class="inner">
+  <span class="tag">原型说明</span>后台活动配置页，新增「直属层级积分榜」活动模板，沿用现有三段结构。
+  <ol>
+    <li>基本信息：新增「参与层级」，模板固定为「直属代理」，仅该层级可见、可参与；周期新增枚举「半月」，领取方式新增枚举「后台审核后自动到账」；活动起止时间手动填写。</li>
+    <li>活动期次：首期开始日期 + 每期天数 + 期数，自动生成期次表。延期通过增加期数实现，并同步修改活动起止时间；已开始期次日期锁定。</li>
+    <li>参与门槛、活跃会员口径、三张积分表、名次奖励表均可配置，四类数值必填且为正整数，不满足时标红、禁止保存；活跃达成天数不能超过每期天数。</li>
+    <li>名次奖励表同时供前台「活动规则」读参展示；页面实时显示单人最高积分、每期奖金合计和活动总预算，供配置时核对。</li>
+  </ol>
+</div></div>
+</div>
+
+<!-- ================= 每期真实排名 ================= -->
+<div class="view" id="view-rank">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>每期真实排名</b><span class="new-tag">新增页面</span></div>
+  <div class="back">返回活动列表</div>
+</div>
+<div class="wrap">
+  <div class="tbl-scroll" style="border-top:1px solid var(--line);">
+  <table class="legacy-table" style="min-width:760px;">
+    <thead><tr><th>活动ID</th><th>活动名称(后台)</th><th>开始日期</th><th>结束日期</th><th>进行状态</th><th>启动状态</th><th>操作</th></tr></thead>
+    <tbody><tr><td>402</td><td>直属层级积分榜</td><td>2026-12-01</td><td>2027-02-28</td><td>未开始</td><td>启用</td>
+      <td><span class="lk">分配</span> | <span class="lk">修改</span> | <span class="lk">关闭</span> | <span class="lk">黑名单</span> | <span class="lk">白名单</span> | <span class="lk" style="font-weight:600;" onclick="showView('rank')">真实排名</span><span class="new-tag">新增</span> | <span class="lk" style="font-weight:600;" onclick="showView('pay')">人工派奖</span><span class="new-tag">新增</span></td></tr></tbody>
+  </table>
+  </div>
+  <div class="note-box" style="margin:10px 0 16px;">仅「直属层级积分榜」模板的活动在操作栏显示「真实排名」「人工派奖」两个入口，进入后默认带入该活动；其余操作沿用现有。入口方式参照「USDT笔笔加赠礼」的「领取明细」。</div>
+  <div class="legacy-head"><div class="t">后台管理 - 每期真实排名 <span>（直属层级积分榜-402）</span></div><button class="legacy-btn" onclick="toast('已导出当前筛选结果（原型演示）')">Excel导出全部</button></div>
+  <div class="legacy-filter">
+    期次 <select id="rkPeriod" onchange="renderRank()"></select>
+    　用户名 <input type="text" id="rkUser" class="w-m" placeholder="直属代理用户名">
+    　是否达标 <select id="rkQual"><option value="all">全部</option><option value="y">达标</option><option value="n">未达标</option></select>
+    <button class="legacy-btn" onclick="renderRank()">搜索</button>
+  </div>
+  <div class="info-line" id="rkInfo"></div>
+  <div class="tbl-scroll">
+  <table class="legacy-table">
+    <thead><tr><th>积分名次</th><th>用户名</th><th>有效投注（元）</th><th>总亏损（元）</th><th>活跃人数</th><th>是否达标</th><th>亏损名次 / 积分</th><th>投注名次 / 积分</th><th>活跃积分</th><th>总积分</th></tr></thead>
+    <tbody id="rkBody"></tbody>
+  </table>
+  </div>
+  <div class="note-box"><b>原型说明</b><ol>
+    <li>由排名脚本在每期结束次日 12:00 前统计生成，生成后数据固定不变；进行中、未开始的期次不可查询。后台不提供重跑入口，脚本异常或数据延迟由后端开发手动处理。</li>
+    <li>展示当期全部直属代理：达标者优先展示，按积分名次排列，人数不限；未达标者排在后面，不显示名次，「是否达标」列注明原因。</li>
+    <li>各项数据、名次与积分按「2.活动规则和派奖策略」中脚本执行时的配置计算。</li>
+    <li>可按期次、用户名、是否达标筛选；「Excel导出全部」导出当前筛选结果的全部字段。</li>
+    <li>本页仅供运营参考，与「人工派奖」相互独立，不联动。原型使用演示数据。</li>
+  </ol></div>
+</div>
+</div>
+
+<!-- ================= 活动人工派奖 ================= -->
+<div class="view" id="view-pay">
+<div class="topbar">
+  <div class="crumb">管理后台 &nbsp;/&nbsp; 活动管理 &nbsp;/&nbsp; <b>活动人工派奖</b><span class="new-tag">新增页面</span></div>
+  <div class="back">返回活动列表</div>
+</div>
+<div class="wrap">
+  <div class="tbl-scroll" style="border-top:1px solid var(--line);">
+  <table class="legacy-table" style="min-width:760px;">
+    <thead><tr><th>活动ID</th><th>活动名称(后台)</th><th>开始日期</th><th>结束日期</th><th>进行状态</th><th>启动状态</th><th>操作</th></tr></thead>
+    <tbody><tr><td>402</td><td>直属层级积分榜</td><td>2026-12-01</td><td>2027-02-28</td><td>未开始</td><td>启用</td>
+      <td><span class="lk">分配</span> | <span class="lk">修改</span> | <span class="lk">关闭</span> | <span class="lk">黑名单</span> | <span class="lk">白名单</span> | <span class="lk" style="font-weight:600;" onclick="showView('rank')">真实排名</span><span class="new-tag">新增</span> | <span class="lk" style="font-weight:600;" onclick="showView('pay')">人工派奖</span><span class="new-tag">新增</span></td></tr></tbody>
+  </table>
+  </div>
+  <div class="note-box" style="margin:10px 0 16px;">仅「直属层级积分榜」模板的活动在操作栏显示「真实排名」「人工派奖」两个入口，进入后默认带入该活动；其余操作沿用现有。入口方式参照「USDT笔笔加赠礼」的「领取明细」。</div>
+  <div class="legacy-head"><div class="t">后台管理 - 活动人工派奖 <span>（直属层级积分榜-402）</span></div></div>
+  <div class="tbl-scroll">
+  <table class="legacy-table" style="min-width:860px;">
+    <thead><tr><th style="width:11%;">排名</th><th>用户名</th><th>积分</th><th>奖励金额（元）</th><th>备注</th><th style="width:8%;">操作</th></tr></thead>
+    <tbody id="pyBody"></tbody>
+  </table>
+  </div>
+  <div class="pay-bar">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <button class="add-row-btn" id="pyAdd" style="margin:0;" onclick="addPayRow()">＋ 新增一行</button>
+      <div class="stat" id="pyStat"></div>
+    </div>
+    <button class="btn" id="pyBtn" onclick="openPay()">派奖</button>
+  </div>
+  <div class="err-msg" id="pyErr"></div>
+
+  <div class="block-title">派奖记录</div>
+  <div class="tbl-scroll" style="border-top:1px solid var(--line);">
+  <table class="legacy-table" style="min-width:980px;">
+    <thead><tr><th>派奖日期</th><th>排名</th><th>用户名</th><th>积分</th><th>奖励金额（元）</th><th>备注</th><th>操作人</th><th>状态</th></tr></thead>
+    <tbody id="pyLog"></tbody>
+  </table>
+  </div>
+
+  <div class="note-box"><b>原型说明</b><ol>
+    <li>全手动填写：排名、用户名、积分、奖励金额为必填，备注选填；行数不限，可增删。其余核对由运营按 SOP 处理，系统不做校验。</li>
+    <li>点击「派奖」弹出二次确认，列出派发人数、合计金额与名单；确认后提交转审核，表单清空，审核通过后彩金自动到账，无出款流水要求，可直接提款。</li>
+    <li>派奖记录按提交批次倒序展示，每批写明派奖日期、操作人和审核状态，逐行展示名单与备注，无需另开明细。</li>
+    <li>审核通过的派奖记录，用户名脱敏后作为前台获奖名单的数据来源；展示单批还是多批，在前端设计时确定。</li>
+  </ol></div>
+</div>
+</div>
+
+<div class="modal-mask" id="pyModal"><div class="modal">
+  <div class="modal-h">确认派奖</div>
+  <div class="modal-b" id="pyModalBody"></div>
+  <div class="modal-f"><button class="btn ghost" onclick="closePay()">取消</button><button class="btn" onclick="doPay()">确认派奖</button></div>
+</div></div>
+
+<script>
+const LIM = {loss:30, bet:30, act:10, reward:20};
+const data = {
+  loss: Array.from({length:15},(_,i)=>15-i),
+  bet:  Array.from({length:15},(_,i)=>15-i),
+  act:  [[25,9],[20,7],[15,5],[10,3],[5,1]],
+  reward: [9888,8888,7888,6888,5888,4888,3888,2888,1888,888]
+};
+const cases = [
+  ['直属A',2600000,180000,22],['直属B',3100000,95000,26],['直属C',1200000,150000,12],
+  ['直属D',900000,60000,8],['直属E',1800000,40000,17],['直属F',280000,50000,6],
+  ['直属G',700000,18000,9],['直属H',500000,25000,2]
+];
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('en-US');
+const posInt = v => /^\d+$/.test(String(v).trim()) && Number(v) > 0;
+const rankName = i => '第' + (i+1) + '名';
+
+function addDays(d, n){ const x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+function renderPeriods(){
+  const s = $('pStart').value, days = $('pDays').value, cnt = $('pCount').value;
+  const err = $('periodErr'); let msg = '';
+  ['pDays','pCount'].forEach(id => $(id).classList.toggle('err', !posInt($(id).value)));
+  if(!s) msg = '请选择首期开始日期';
+  else if(!posInt(days) || !posInt(cnt)) msg = '每期天数与期数须为正整数';
+  else if(Number(cnt) > 48) msg = '期数不能超过 48 期';
+  err.textContent = msg; err.style.display = msg ? 'block' : 'none';
+  const body = $('periodBody'); body.innerHTML = '';
+  if(msg) return false;
+  const start = new Date(s + 'T12:00:00'), today = new Date(); today.setHours(12,0,0,0);
+  let end;
+  for(let i=0;i<Number(cnt);i++){
+    const a = addDays(start, i*Number(days)), b = addDays(a, Number(days)-1); end = b;
+    let st = '<span class="st wait">未开始</span>';
+    if(today >= a && today <= b) st = '<span class="st run">进行中</span>';
+    else if(today > b) st = '<span class="st done">已结束</span>';
+    body.insertAdjacentHTML('beforeend', `<tr><td>第${i+1}期</td><td class="num">${ymd(a)} 00:00:00</td><td class="num">${ymd(b)} 23:59:59</td><td>${st}</td></tr>`);
+  }
+  return true;
+}
+
+function renderTable(key){
+  const body = $(key + 'Body'); body.innerHTML = '';
+  const rows = data[key], only = rows.length <= 1;
+  rows.forEach((r, i) => {
+    const del = `<span class="op${only?' dis':''}" onclick="${only?'':`delRow('${key}',${i})`}">删除</span>`;
+    if(key === 'act'){
+      body.insertAdjacentHTML('beforeend', `<tr>
+        <td><input type="number" value="${r[0]}" class="${posInt(r[0])?'':'err'}" oninput="data.act[${i}][0]=this.value;renderAll(true)"></td>
+        <td><input type="number" value="${r[1]}" class="${posInt(r[1])?'':'err'}" oninput="data.act[${i}][1]=this.value;renderAll(true)"></td>
+        <td>${del}</td></tr>`);
+    } else {
+      body.insertAdjacentHTML('beforeend', `<tr><td>${rankName(i)}</td>
+        <td><input type="number" value="${r}" class="${posInt(r)?'':'err'}" oninput="data.${key}[${i}]=this.value;renderAll(true)"></td>
+        <td>${del}</td></tr>`);
+    }
+  });
+  $(key + 'Add').disabled = rows.length >= LIM[key];
+}
+function addRow(key){
+  if(data[key].length >= LIM[key]) return;
+  data[key].push(key === 'act' ? ['',''] : '');
+  renderAll();
+}
+function delRow(key, i){ if(data[key].length <= 1) return; data[key].splice(i,1); renderAll(); }
+
+function markErr(id){ const el=$(id); const ok=posInt(el.value); el.classList.toggle('err', !ok); return ok; }
+
+function syncErrClasses(){
+  document.querySelectorAll('#lossBody input,#betBody input,#rewardBody input,#actBody input')
+    .forEach(el => el.classList.toggle('err', !posInt(el.value)));
+}
+
+function renderSummary(){
+  const n = v => posInt(v) ? Number(v) : 0;
+  const maxLoss = Math.max(0, ...data.loss.map(n)), maxBet = Math.max(0, ...data.bet.map(n)), maxAct = Math.max(0, ...data.act.map(r => n(r[1])));
+  const per = data.reward.reduce((s,v) => s + n(v), 0), cnt = posInt($('pCount').value) ? Number($('pCount').value) : 0;
+  $('summary').innerHTML =
+    `<span>单人理论最高积分：<b>${maxLoss + maxBet + maxAct}</b> 分</span>` +
+    `<span>奖励名次：<b>${data.reward.length}</b> 名</span>` +
+    `<span>每期奖金合计：<b>${fmt(per)}</b> 元</span>` +
+    `<span>活动总预算（× ${cnt} 期）：<b>${fmt(per * cnt)}</b> 元</span>`;
+}
+
+function renderCases(){
+  const n = v => posInt(v) ? Number(v) : 0;
+  const th = {bet:n($('thBet').value), loss:n($('thLoss').value), act:n($('thActive').value)};
+  const rows = cases.map(([name,bet,loss,act]) => {
+    const why = [];
+    if(bet < th.bet) why.push('投注不足'); if(loss < th.loss) why.push('亏损不足'); if(act < th.act) why.push('活跃不足');
+    return {name,bet,loss,act,ok:!why.length,why:why.join('、')};
+  });
+  const q = rows.filter(r => r.ok);
+  [...q].sort((a,b)=>b.loss-a.loss).forEach((r,i)=>{ r.lr=i+1; r.lp=n(data.loss[i]); });
+  [...q].sort((a,b)=>b.bet-a.bet).forEach((r,i)=>{ r.br=i+1; r.bp=n(data.bet[i]); });
+  const tiers = data.act.map(t=>[n(t[0]),n(t[1])]).filter(t=>t[0]>0).sort((a,b)=>b[0]-a[0]);
+  q.forEach(r => { const t = tiers.find(t => r.act >= t[0]); r.ap = t ? t[1] : 0; r.total = r.lp + r.bp + r.ap; });
+  q.sort((a,b)=> b.total-a.total || b.lp-a.lp || b.ap-a.ap || b.bp-a.bp || b.loss-a.loss).forEach((r,i)=>{ r.fr=i+1; r.rw=n(data.reward[i]); });
+  const out = [...q, ...rows.filter(r=>!r.ok)];
+  $('caseBody').innerHTML = out.map(r => r.ok
+    ? `<tr><td>${r.name}</td><td>${fmt(r.bet)}</td><td>${fmt(r.loss)}</td><td>${r.act}</td><td>达标</td>
+       <td>第${r.lr}名 / +${r.lp}</td><td>第${r.br}名 / +${r.bp}</td><td>+${r.ap}</td><td class="b">${r.total}</td><td class="b">第${r.fr}名</td></tr>`
+    : `<tr class="out"><td>${r.name}</td><td>${fmt(r.bet)}</td><td>${fmt(r.loss)}</td><td>${r.act}</td><td class="why">${r.why}</td><td colspan="5">不参与排名</td></tr>`
+  ).join('');
+}
+
+function renderAll(keepFocus){
+  renderPeriods();
+  if(!keepFocus){ ['loss','bet','act','reward'].forEach(renderTable); }
+  else { syncErrClasses(); }
+  ['thBet','thLoss','thActive','acDep','acBet','acDays'].forEach(markErr);
+  const pd = Number($('pDays').value), ad = Number($('acDays').value);
+  const acMsg = posInt(ad) && posInt(pd) && ad > pd ? '达成天数不能超过每期天数（' + pd + ' 天）' : '';
+  $('acErr').textContent = acMsg; $('acErr').style.display = acMsg ? 'block' : 'none';
+  if(acMsg) $('acDays').classList.add('err');
+  renderSummary(); renderCases();
+}
+
+function toast(msg, bad){ const t=$('toast'); t.textContent=msg; t.className='toast'+(bad?' bad':''); t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2200); }
+
+function save(){
+  let ok = renderPeriods();
+  const thOk = ['thBet','thLoss','thActive'].map(markErr).every(Boolean);
+  $('thErr').style.display = thOk ? 'none' : 'block';
+  const acOk = ['acDep','acBet','acDays'].map(markErr).every(Boolean) && $('acErr').style.display !== 'block';
+  if(!acOk && $('acErr').style.display !== 'block'){ $('acErr').textContent='活跃口径须为正整数'; $('acErr').style.display='block'; }
+  const scoreOk = [...data.loss, ...data.bet, ...data.act.flat()].every(posInt);
+  $('scoreErr').style.display = scoreOk ? 'none' : 'block';
+  const rewardOk = data.reward.every(posInt);
+  $('rewardErr').style.display = rewardOk ? 'none' : 'block';
+  syncErrClasses();
+  if(ok && thOk && acOk && scoreOk && rewardOk) toast('已保存');
+  else toast('存在未通过校验的配置，请检查标红项', true);
+}
+
+function toggleDev(){ const b=$('devBody'), on=b.style.display==='none'; b.style.display=on?'block':'none'; $('devToggle').textContent=on?'收起':'展开'; }
+/* ===== 视图切换 ===== */
+function showView(v){
+  document.querySelectorAll('.view').forEach(el => el.classList.toggle('on', el.id === 'view-' + v));
+  document.querySelectorAll('.sim-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  if(v === 'rank') fillPeriodSelect('rkPeriod');
+  if(v === 'rank') renderRank();
+  if(v === 'pay') renderPay();
+  window.scrollTo(0,0);
+}
+
+/* ===== 期次与演示数据 ===== */
+function periodList(){
+  const s = $('pStart').value, d = Number($('pDays').value), c = Number($('pCount').value);
+  if(!s || !posInt(d) || !posInt(c)) return [];
+  const start = new Date(s + 'T12:00:00');
+  return Array.from({length:c}, (_, i) => { const a = addDays(start, i*d), b = addDays(a, d-1); return {no:i+1, a:ymd(a), b:ymd(b)}; });
+}
+function fillPeriodSelect(id){
+  const sel = $(id), cur = sel.value, ps = periodList();
+  sel.innerHTML = ps.map(p => `<option value="${p.no}">第${p.no}期（${p.a.slice(5)} ~ ${p.b.slice(5)}）</option>`).join('');
+  if(cur && ps.some(p => String(p.no) === cur)) sel.value = cur;
+}
+const agentBase = [
+  ['hj_zs8801',2600000,180000,22],['hj_zs8802',3100000,95000,26],['hj_zs8803',1200000,150000,12],
+  ['hj_zs8804',900000,60000,8],['hj_zs8805',1800000,40000,17],['hj_zs8806',280000,50000,6],
+  ['hj_zs8807',700000,18000,9],['hj_zs8808',500000,25000,2],['hj_zs8809',2100000,120000,19],
+  ['hj_zs8810',1500000,72000,14],['hj_zs8811',650000,33000,5],['hj_zs8812',1100000,88000,11],
+  ['hj_zs8813',420000,21000,4],['hj_zs8814',350000,26000,3],
+  ['hj_zs8815',1300000,65000,13],['hj_zs8816',980000,48000,9]
+];
+function periodData(p){
+  return agentBase.map((b, k) => {
+    const f = 0.72 + ((k*7 + p*5) % 8) * 0.08;
+    return [b[0], Math.round(b[1]*f/100)*100, Math.round(b[2]*f/100)*100, Math.max(1, Math.round(b[3]*f))];
+  });
+}
+/* 与「排名示例」同一套计算逻辑 */
+function calc(list){
+  const n = v => posInt(v) ? Number(v) : 0;
+  const th = {bet:n($('thBet').value), loss:n($('thLoss').value), act:n($('thActive').value)};
+  const rows = list.map(([name,bet,loss,act]) => {
+    const why = [];
+    if(bet < th.bet) why.push('投注不足'); if(loss < th.loss) why.push('亏损不足'); if(act < th.act) why.push('活跃不足');
+    return {name,bet,loss,act,ok:!why.length,why:why.join('、')};
+  });
+  const q = rows.filter(r => r.ok);
+  [...q].sort((a,b)=>b.loss-a.loss).forEach((r,i)=>{ r.lr=i+1; r.lp=n(data.loss[i]); });
+  [...q].sort((a,b)=>b.bet-a.bet).forEach((r,i)=>{ r.br=i+1; r.bp=n(data.bet[i]); });
+  const tiers = data.act.map(t=>[n(t[0]),n(t[1])]).filter(t=>t[0]>0).sort((a,b)=>b[0]-a[0]);
+  q.forEach(r => { const t = tiers.find(t => r.act >= t[0]); r.ap = t ? t[1] : 0; r.total = r.lp + r.bp + r.ap; });
+  q.sort((a,b)=> b.total-a.total || b.lp-a.lp || b.ap-a.ap || b.bp-a.bp || b.loss-a.loss).forEach((r,i)=>{ r.fr=i+1; r.rw=n(data.reward[i]); });
+  return [...q, ...rows.filter(r => !r.ok).sort((a,b)=>b.loss-a.loss)];
+}
+
+/* ===== 每期真实排名 ===== */
+function renderRank(){
+  const p = Number($('rkPeriod').value) || 1, per = periodList()[p-1];
+  const all = calc(periodData(p)), kw = $('rkUser').value.trim(), qf = $('rkQual').value;
+  const list = all.filter(r => (!kw || r.name.includes(kw)) && (qf === 'all' || (qf === 'y') === r.ok));
+  const q = all.filter(r => r.ok);
+  $('rkInfo').innerHTML = per ? `<span>统计区间：<b>${per.a} 00:00:00 ~ ${per.b} 23:59:59</b></span><span>生成时间：<b>${ymd(addDays(new Date(per.b+'T12:00:00'),1))} 12:00:00</b>（演示）</span><span>直属总数：<b>${all.length}</b></span><span>达标：<b>${q.length}</b></span>` : '请先完成期次配置';
+  $('rkBody').innerHTML = list.length ? list.map(r => r.ok
+    ? `<tr><td><b>第${r.fr}名</b></td><td>${r.name}</td><td>${fmt(r.bet)}</td><td>${fmt(r.loss)}</td><td>${r.act}</td><td class="cmp-ok">达标</td><td>第${r.lr}名 / +${r.lp}</td><td>第${r.br}名 / +${r.bp}</td><td>+${r.ap}</td><td><b>${r.total}</b></td></tr>`
+    : `<tr><td></td><td>${r.name}</td><td>${fmt(r.bet)}</td><td>${fmt(r.loss)}</td><td>${r.act}</td><td class="cmp-bad">未达标：${r.why}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`
+  ).join('') : '<tr><td colspan="10" style="color:var(--sub);">没有符合条件的记录</td></tr>';
+}
+
+/* ===== 活动人工派奖（全手动） ===== */
+const blank = () => ({rank:'',user:'',score:'',amt:'',note:''});
+let payRows = [blank()];
+const payLog = [
+  {date:'2027-01-01', op:'admin02', status:'待审核', rows:[
+    [1,'hj_zs8802',37,9888,''],[2,'hj_zs8809',35,8888,''],[3,'hj_zs8801',34,7888,''],[4,'hj_zs8803',29,6888,''],[5,'hj_zs8810',26,5888,''],
+    [6,'hj_zs8805',24,4888,''],[7,'hj_zs8812',21,3888,''],[8,'hj_zs8804',18,2888,''],[9,'hj_zs8811',15,1888,''],[10,'hj_zs8807',13,888,'']]},
+  {date:'2026-12-16', op:'admin01', status:'已到账', rows:[
+    [1,'hj_zs8801',38,9888,''],[2,'hj_zs8802',36,8888,''],[3,'hj_zs8809',33,7888,''],[4,'hj_zs8803',27,6888,''],[5,'hj_zs8810',27,5888,''],
+    [6,'hj_zs8812',23,4888,''],[7,'hj_zs8805',22,3888,''],[8,'hj_zs8804',17,2888,''],[9,'hj_zs8807',17,1888,''],[10,'hj_zs8811',14,888,'']]}
+];
+function addPayRow(){ payRows.push(blank()); renderPay(); }
+function delPayRow(i){ if(payRows.length <= 1) return; payRows.splice(i,1); renderPay(); }
+function setPay(i,k,v){ payRows[i][k] = v; renderPayStat(); }
+function renderPayStat(){
+  const amt = payRows.reduce((s,r)=>s+(posInt(r.amt)?Number(r.amt):0),0);
+  $('pyStat').innerHTML = `<span>派发人数：<b>${payRows.filter(r=>r.user.trim()).length}</b></span><span>合计金额：<b>${fmt(amt)}</b> 元</span>`;
+}
+function renderPay(){
+  const only = payRows.length <= 1, esc = s => String(s).replace(/"/g,'&quot;');
+  $('pyBody').innerHTML = payRows.map((r,i) => `<tr>
+    <td><input type="number" value="${esc(r.rank)}" placeholder="排名" oninput="setPay(${i},'rank',this.value)"></td>
+    <td><input type="text" value="${esc(r.user)}" placeholder="用户名" oninput="setPay(${i},'user',this.value)"></td>
+    <td><input type="number" value="${esc(r.score)}" placeholder="积分" oninput="setPay(${i},'score',this.value)"></td>
+    <td><input type="number" value="${esc(r.amt)}" placeholder="金额" oninput="setPay(${i},'amt',this.value)"></td>
+    <td><input type="text" class="note" value="${esc(r.note)}" placeholder="选填" oninput="setPay(${i},'note',this.value)"></td>
+    <td><span class="op${only?' dis':''}" onclick="${only?'':`delPayRow(${i})`}">删除</span></td></tr>`).join('');
+  renderPayStat();
+  $('pyErr').style.display = 'none';
+  $('pyLog').innerHTML = payLog.map(b => {
+    const n = b.rows.length, total = b.rows.reduce((s,r)=>s+r[3],0);
+    const stCls = b.status === '已到账' ? 'run' : b.status === '已驳回' ? 'done' : 'wait';
+    return b.rows.map((r,i) => `<tr>${i===0?`<td rowspan="${n+1}">${b.date}</td>`:''}
+      <td>第${r[0]}名</td><td>${r[1]}</td><td>${r[2]}</td><td>${fmt(r[3])}</td><td style="text-align:left;">${r[4]||'—'}</td>
+      ${i===0?`<td rowspan="${n}">${b.op}</td><td rowspan="${n}"><span class="st ${stCls}">${b.status}</span></td>`:''}</tr>`).join('')
+      + `<tr class="sum"><td colspan="3">本批合计 ${n} 人</td><td>${fmt(total)}</td><td colspan="3"></td></tr>`;
+  }).join('');
+}
+function openPay(){
+  document.querySelectorAll('#pyBody input').forEach(el => el.classList.remove('err'));
+  const trs = [...document.querySelectorAll('#pyBody tr')]; let bad = false;
+  payRows.forEach((r,i) => ['rank','user','score','amt'].forEach((k,j) => { if(!String(r[k]).trim()){ trs[i].querySelectorAll('input')[j].classList.add('err'); bad = true; } }));
+  if(bad){ $('pyErr').textContent = '排名、用户名、积分、奖励金额为必填'; $('pyErr').style.display = 'block'; toast('请填写标红的必填项', true); return; }
+  const rows = [...payRows].sort((a,b)=>a.rank-b.rank), amt = rows.reduce((s,r)=>s+(Number(r.amt)||0),0);
+  $('pyModalBody').innerHTML = `派发 <b>${rows.length}</b> 人，合计 <b>${fmt(amt)}</b> 元。<br>确认后提交转审核，审核通过后自动到账。` +
+    `<table><tr><th>排名</th><th>用户名</th><th>积分</th><th>金额（元）</th><th>备注</th></tr>${rows.map(r=>`<tr><td>第${r.rank}名</td><td>${r.user}</td><td>${r.score}</td><td>${fmt(r.amt)}</td><td>${r.note||'—'}</td></tr>`).join('')}</table>`;
+  $('pyModal').classList.add('on');
+}
+function closePay(){ $('pyModal').classList.remove('on'); }
+function doPay(){
+  const rows = [...payRows].sort((a,b)=>a.rank-b.rank).map(r=>[Number(r.rank), r.user.trim(), r.score, Number(r.amt)||0, r.note.trim()]);
+  payLog.unshift({date: ymd(new Date()), op:'admin01', status:'待审核', rows});
+  payRows = [blank()]; closePay(); renderPay(); toast('已提交审核');
+}
+
+renderAll();
+</script>
+</body>
+</html>

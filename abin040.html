@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>直属层级积分榜 - 前端交互原型</title>
+<style>
+  :root{
+    --wine:#8c2b45; --wine-d:#74203a; --wine-l:#f7ecef; --wine-ll:#fbf5f7;
+    --gold:#d6a03c; --silver:#9aa3b2; --bronze:#c27a4a;
+    --bg:#f5f5f7; --card:#fff; --line:#ecebee; --txt:#2a2a2e; --sub:#8a8a93; --ico:#8d8f96;
+    --bar:#2f3a4f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--txt);background:#e9eaee;font-size:14px;}
+  button{font-family:inherit;}
+  .num{font-variant-numeric:tabular-nums;}
+
+  /* 原型工具条 */
+  .sim{position:sticky;top:0;z-index:100;background:var(--bar);color:#fff;padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;}
+  .sim .lb{opacity:.7;margin-left:8px;} .sim .lb:first-child{margin-left:0;}
+  .sim button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 12px;border-radius:3px;cursor:pointer;font-size:12.5px;}
+  .sim button.on{background:#fff;color:var(--bar);border-color:#fff;font-weight:600;}
+  .sim .now{margin-left:auto;opacity:.75;}
+
+  .end{display:none;} .end.on{display:block;}
+
+  /* ============ PC ============ */
+  .pc{background:var(--bg);min-width:1180px;}
+  .pc-top{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:18px;}
+  .burger{width:18px;height:14px;border-top:2px solid #555;border-bottom:2px solid #555;position:relative;} .burger::after{content:"";position:absolute;left:0;right:4px;top:4px;border-top:2px solid #555;}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;color:var(--wine);letter-spacing:1px;}
+  .logo i{font-style:normal;width:34px;height:34px;border-radius:50%;background:var(--wine);color:#fff;display:grid;place-items:center;font-size:19px;}
+  .logo small{display:block;font-size:9px;font-weight:400;color:var(--sub);letter-spacing:3px;}
+  .pc-top .sp{flex:1;}
+  .tico{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--sub);cursor:default;position:relative;padding:0 6px;}
+  .tico svg{width:22px;height:22px;fill:var(--ico);}
+  .tico.new{color:var(--wine);cursor:pointer;}
+  .tico.new svg{fill:var(--wine);}
+  .tico.new::before{content:"";position:absolute;inset:-6px -2px;border:1.5px dashed var(--gold);border-radius:6px;}
+  .tico .flag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:#fff;font-size:10px;padding:0 5px;border-radius:8px;white-space:nowrap;}
+  .money{display:flex;border:1px solid #d9d9de;border-radius:20px;padding:6px 4px;font-size:13px;}
+  .money span{padding:0 14px;border-right:1px solid #e3e3e7;} .money span:last-child{border:0;}
+  .user{display:flex;align-items:center;gap:10px;}
+  .ava{width:38px;height:38px;border-radius:50%;background:#f1e4e8;border:2px solid #fff;box-shadow:0 0 0 1px #e8d6dc;}
+  .user b{font-weight:500;font-size:13px;} .user .bal{color:var(--wine);font-weight:600;}
+  .pc-body{display:flex;}
+  .side{width:220px;flex-shrink:0;background:#fff;min-height:calc(100vh - 110px);padding:22px 14px;border-right:1px solid var(--line);}
+  .nav-home{background:var(--wine);color:#fff;border-radius:6px;padding:10px 14px;font-weight:600;margin-bottom:12px;}
+  .nav-pill{border-radius:6px;padding:10px 14px;margin-bottom:8px;font-weight:600;font-size:15px;}
+  .nav-g{color:var(--wine);font-weight:600;padding:14px 12px 8px;border-top:1px solid var(--line);margin-top:6px;}
+  .nav-i{padding:9px 14px;color:#444;}
+  .main{flex:1;padding:22px 30px 40px;}
+  .inner{max-width:1100px;margin:0 auto;}
+  .ptitle{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;}
+  .ptitle h1{margin:0;font-size:22px;}
+  .ptitle span{color:var(--sub);font-size:13px;}
+  .card{background:var(--card);border-radius:10px;padding:22px 26px;margin-bottom:18px;box-shadow:0 1px 0 rgba(0,0,0,.03);}
+  .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .card-h h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px;}
+  .card-h h2 svg{width:20px;height:20px;fill:var(--wine);}
+  .more{color:var(--wine);cursor:pointer;font-size:13.5px;}
+
+  /* 名单 - 通用 */
+  .lst-h{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .lst-h b{font-size:16px;}
+  .lst-h span{color:var(--sub);font-size:12.5px;}
+  .calc{display:flex;align-items:center;gap:10px;background:var(--wine-ll);border:1px solid #efdbe1;color:var(--wine);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13.5px;}
+  .calc .dot{width:8px;height:8px;border-radius:50%;background:var(--wine);animation:pulse 1.4s ease-in-out infinite;flex-shrink:0;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media (prefers-reduced-motion:reduce){.calc .dot{animation:none;}}
+  .podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;align-items:end;gap:14px;margin-bottom:16px;}
+  .pd{border-radius:10px 10px 4px 4px;text-align:center;padding:16px 10px 14px;position:relative;}
+  .pd .medal{width:34px;height:34px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;}
+  .pd .nm{font-weight:600;font-size:15px;}
+  .pd .sc{color:var(--sub);font-size:12px;margin:4px 0 8px;}
+  .pd .pr{font-weight:800;font-size:22px;color:var(--wine);}
+  .pd .pr small{font-size:12px;font-weight:600;margin-right:2px;}
+  .pd.r1{background:linear-gradient(180deg,#fff6e2,#fff);border:1px solid #f1dcae;padding-top:24px;padding-bottom:22px;}
+  .pd.r1 .medal{background:var(--gold);width:40px;height:40px;font-size:18px;}
+  .pd.r2{background:linear-gradient(180deg,#f1f3f7,#fff);border:1px solid #e1e5ec;}
+  .pd.r2 .medal{background:var(--silver);}
+  .pd.r3{background:linear-gradient(180deg,#fbefe7,#fff);border:1px solid #efd9ca;}
+  .pd.r3 .medal{background:var(--bronze);}
+  .tbl{width:100%;border-collapse:collapse;}
+  .tbl th{font-weight:500;color:var(--sub);font-size:13px;background:#fafafb;padding:10px 8px;border-bottom:1px solid var(--line);}
+  .tbl td{padding:11px 8px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  .tbl td.pz{color:var(--wine);font-weight:600;}
+  .tbl tr:last-child td{border-bottom:0;}
+  .rk{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:#f2f2f4;color:#555;font-size:12.5px;font-weight:600;padding:0 6px;}
+  .rk.g{background:var(--gold);color:#fff;} .rk.s{background:var(--silver);color:#fff;} .rk.b{background:var(--bronze);color:#fff;}
+  .hero{background:linear-gradient(110deg,#7a2240,#9a3554 55%,#b0566c);color:#fff;border-radius:10px;padding:18px 26px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;}
+  .hero .hl{display:flex;flex-direction:column;gap:4px;}
+  .hero .hl b{font-size:20px;letter-spacing:.5px;}
+  .hero .hl span{font-size:13px;opacity:.8;}
+  .hero .cd{margin:0;color:rgba(255,255,255,.85);font-size:13px;}
+  .hero .cd b{background:#fff;color:var(--wine);font-size:18px;min-width:34px;padding:4px 6px;text-align:center;}
+  .hero.over{background:#6e6a70;}
+  .h5c .hero{padding:14px 16px;border-radius:12px;margin-bottom:12px;}
+  .h5c .hero .hl b{font-size:17px;}
+  .h5c .hero .cd b{font-size:15px;min-width:28px;padding:3px 4px;}
+  .more-row td{color:var(--sub);font-size:12px;letter-spacing:2px;}
+  .cd-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 12px;background:#fafafb;border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:13px;color:#555;}
+  .cd-bar .cd{margin-top:0;}
+  .cd-bar .cd b{font-size:14px;min-width:26px;padding:2px 4px;}
+  .h5c .cd-bar{flex-direction:column;align-items:flex-start;padding:9px 11px;}
+  .empty{text-align:center;padding:26px 10px 20px;}
+  .empty svg{width:86px;height:64px;}
+  .empty h3{margin:10px 0 6px;font-size:17px;}
+  .empty p{margin:0;color:var(--sub);font-size:13px;}
+  .cd{display:inline-flex;gap:6px;align-items:center;margin-top:14px;font-size:13px;color:var(--sub);}
+  .cd b{background:var(--wine);color:#fff;border-radius:4px;min-width:30px;padding:4px 5px;font-size:16px;font-variant-numeric:tabular-nums;}
+
+  /* 规则 */
+  .rule-sec{margin-bottom:22px;}
+  .rule-sec:last-child{margin-bottom:0;}
+  .rule-sec h4{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px;}
+  .rule-sec h4::before{content:"";width:4px;height:14px;background:var(--wine);border-radius:2px;}
+  .rule-sec p{margin:0 0 8px;line-height:1.75;color:#444;font-size:13.5px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1px solid var(--line);border-radius:16px;padding:4px 12px;font-size:12.5px;color:#555;background:#fff;}
+  .chip.cur{border-color:var(--wine);color:var(--wine);background:var(--wine-ll);font-weight:600;}
+  .chip.done{color:#b0b0b7;}
+  .ths{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .th-box{background:var(--wine-ll);border-radius:8px;padding:14px 16px;}
+  .th-box span{display:block;color:var(--sub);font-size:12.5px;margin-bottom:6px;}
+  .th-box b{font-size:20px;color:var(--wine);font-variant-numeric:tabular-nums;}
+  .th-box b small{font-size:12px;color:#555;font-weight:400;margin-left:3px;}
+  .formula{background:#fafafb;border:1px dashed #ddd;border-radius:8px;padding:10px 14px;font-size:13.5px;margin-bottom:12px;}
+  .formula b{color:var(--wine);}
+  .rgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;align-items:start;}
+  .stbl{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--line);}
+  .stbl th{background:#faf3f5;color:var(--wine);font-weight:600;padding:8px 6px;border:1px solid var(--line);}
+  .stbl td{padding:7px 6px;text-align:center;border:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  .stbl td.hl{color:var(--wine);font-weight:600;}
+  .cap{font-size:12.5px;color:var(--sub);margin:0 0 6px;}
+  .static{border:1px dashed #d6c3ca;background:#fdfafb;border-radius:8px;padding:14px 16px;color:var(--sub);font-size:13px;line-height:1.8;}
+
+  /* PC 弹窗 */
+  .mask{position:fixed;inset:0;background:rgba(20,16,20,.5);display:none;align-items:center;justify-content:center;z-index:120;}
+  .mask.on{display:flex;}
+  .modal{background:#fff;border-radius:12px;width:min(640px,92vw);max-height:82vh;display:flex;flex-direction:column;}
+  .modal-h{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line);font-weight:600;font-size:16px;}
+  .x{cursor:pointer;color:var(--sub);font-size:20px;line-height:1;background:none;border:0;}
+  .tabs{display:flex;gap:8px;padding:14px 22px 0;flex-wrap:wrap;}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 14px;font-size:13px;cursor:pointer;color:#555;}
+  .tab.on{background:var(--wine);border-color:var(--wine);color:#fff;}
+  .modal-b{padding:14px 22px 20px;overflow:auto;}
+
+  /* ============ H5 ============ */
+  .h5wrap{display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:30px 20px 40px;flex-wrap:wrap;}
+  .fcol{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .fcap{font-size:12.5px;color:#555;max-width:375px;text-align:center;line-height:1.6;}
+  .phone{width:375px;background:var(--bg);border-radius:36px;border:10px solid #1d1d22;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.18);}
+  .stbar{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-weight:600;font-size:15px;background:#fff;}
+  .stbar i{font-style:normal;letter-spacing:2px;font-size:12px;}
+  .h5-home-h{background:#fff;display:flex;align-items:center;padding:6px 16px 10px;gap:14px;}
+  .h5-home-h .logo{font-size:16px;} .h5-home-h .logo i{width:28px;height:28px;font-size:15px;}
+  .h5-home-h .sp{flex:1;}
+  .hico{width:26px;height:26px;fill:var(--ico);position:relative;}
+  .hico-new{position:relative;}
+  .hico-new svg{fill:var(--wine);}
+  .hico-new::before{content:"";position:absolute;inset:-6px;border:1.5px dashed var(--gold);border-radius:8px;}
+  .h5-user{background:#fff;display:flex;align-items:center;gap:10px;padding:8px 16px 14px;}
+  .h5-user .ava{width:44px;height:44px;}
+  .h5-user .bal{color:var(--wine);font-weight:600;font-size:17px;}
+  .h5-user .acts{margin-left:auto;display:flex;gap:16px;font-size:12px;color:var(--wine);text-align:center;}
+  .h5-user .acts div::before{content:"";display:block;width:22px;height:20px;margin:0 auto 3px;border-radius:4px;background:var(--wine);opacity:.85;}
+  .h5-banner{margin:14px 16px;height:130px;border-radius:12px;background:linear-gradient(120deg,#3b3036,#5c4a3e 60%,#a98552);display:flex;align-items:center;padding-left:20px;color:#f3d79a;font-weight:800;font-size:22px;letter-spacing:2px;}
+  .h5-notice{margin:0 16px 16px;background:#fff;border-radius:8px;padding:9px 12px;font-size:12.5px;color:#555;}
+  .fade{height:40px;background:linear-gradient(var(--bg),#d9d9de);}
+
+  .navb{height:48px;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line);font-weight:600;font-size:16px;}
+  .navb .bk{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-left:2px solid #333;border-bottom:2px solid #333;rotate:45deg;margin-top:-6px;}
+  .navb .his{position:absolute;right:14px;font-size:13px;font-weight:400;color:var(--wine);cursor:pointer;}
+  .seg{display:flex;background:#fff;padding:10px 16px;gap:10px;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line);}
+  .seg button{flex:1;border:1px solid #e2e2e6;background:#fff;border-radius:18px;padding:7px 0;font-size:14px;color:#555;cursor:pointer;}
+  .seg button.on{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:600;}
+  .h5scroll{height:680px;overflow:auto;}
+  .h5c{padding:14px 14px 24px;}
+  .h5c .card{padding:16px 14px;border-radius:12px;margin-bottom:12px;}
+  .h5c .podium{gap:8px;}
+  .h5c .pd{padding:12px 4px 10px;}
+  .h5c .pd.r1{padding-top:18px;padding-bottom:16px;}
+  .h5c .pd .medal{width:28px;height:28px;font-size:13px;} .h5c .pd.r1 .medal{width:32px;height:32px;font-size:15px;}
+  .h5c .pd .nm{font-size:13px;} .h5c .pd .pr{font-size:17px;} .h5c .pd .sc{font-size:11px;}
+  .h5c .tbl td,.h5c .tbl th{padding:9px 4px;font-size:13px;}
+  .h5c .lst-h b{font-size:15px;}
+  .h5c .calc{font-size:12.5px;padding:9px 11px;margin-bottom:14px;}
+  .h5c .ths{grid-template-columns:1fr;gap:8px;}
+  .h5c .th-box{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;}
+  .h5c .th-box span{margin:0;}
+  .h5c .th-box b{font-size:17px;}
+  .h5c .rgrid{grid-template-columns:1fr;gap:12px;}
+  .h5c .rule-sec h4{font-size:14px;}
+  .h5c .rule-sec p{font-size:13px;}
+  .h5c .empty h3{font-size:16px;}
+  .homebar{height:22px;display:flex;justify-content:center;align-items:center;background:var(--bg);}
+  .homebar::after{content:"";width:120px;height:4px;border-radius:2px;background:#222;}
+  .sheet-mask{position:absolute;inset:0;background:rgba(20,16,20,.45);display:none;z-index:20;}
+  .sheet-mask.on{display:block;}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;max-height:72%;display:flex;flex-direction:column;}
+  .sheet .grip{width:36px;height:4px;border-radius:2px;background:#ddd;margin:8px auto 0;}
+  .sheet-h{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px;font-weight:600;font-size:15px;}
+  .sheet .tabs{padding:6px 16px 0;flex-wrap:nowrap;overflow-x:auto;}
+  .sheet .tab{white-space:nowrap;}
+  .sheet-b{padding:10px 16px 20px;overflow:auto;}
+  .sheet-b .tbl td,.sheet-b .tbl th{padding:9px 4px;font-size:13px;}
+
+  .ph{border-bottom:2px dashed #c9a3af;padding-bottom:1px;}
+  .his-sel{display:flex;align-items:center;gap:10px;padding:14px 22px 0;font-size:13px;color:var(--sub);}
+  .his-sel select{flex:1;max-width:360px;border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13.5px;color:var(--txt);background:#fff;font-family:inherit;}
+  .sheet .his-sel{padding:6px 16px 0;} .sheet .his-sel select{max-width:none;}
+  .phone.full{height:832px;display:flex;flex-direction:column;}
+  .phone.full .pbody{flex:1;overflow:hidden;position:relative;}
+  .home-scroll{height:100%;overflow:auto;padding-bottom:70px;}
+  .sec-t{display:flex;justify-content:space-between;align-items:center;margin:4px 16px 10px;font-weight:600;font-size:16px;}
+  .sec-t span{font-weight:400;font-size:13px;color:var(--sub);}
+  .hrow{display:flex;gap:10px;padding:0 16px 16px;overflow:hidden;}
+  .lot{flex:0 0 140px;background:#fff;border-radius:10px;padding:12px 8px;text-align:center;font-size:13px;}
+  .lot .ic{width:56px;height:56px;border-radius:14px;margin:8px auto;background:linear-gradient(135deg,#f2b24a,#c8582d);}
+  .lot .ic.p{background:linear-gradient(135deg,#8b5cf6,#4c2fb0);}
+  .lot .balls{display:flex;gap:3px;justify-content:center;margin:4px 0;}
+  .lot .balls i{width:18px;height:18px;border-radius:50%;background:var(--wine);color:#fff;font-style:normal;font-size:10px;display:grid;place-items:center;}
+  .lot .t{color:var(--wine);font-size:12.5px;}
+  .fav{flex:0 0 104px;background:#fff;border-radius:10px;overflow:hidden;font-size:13px;text-align:center;}
+  .fav .img{height:96px;background:linear-gradient(135deg,#f6c86a,#e58a2e);}
+  .fav .img.b{background:linear-gradient(135deg,#4aa3e8,#1f5fb8);} .fav .img.c{background:linear-gradient(135deg,#f28aa0,#b8326a);}
+  .fav div:last-child{padding:8px 0;}
+  .hall{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px;}
+  .hall div{background:#fff;border-radius:10px;padding:12px;font-size:14px;display:flex;align-items:center;gap:10px;}
+  .hall div::before{content:"";width:34px;height:34px;border-radius:8px;background:#e9dde1;flex-shrink:0;}
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:62px;background:#fff;border-top:1px solid var(--line);display:flex;}
+  .tabbar div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11.5px;color:#9a9aa2;}
+  .tabbar svg{width:24px;height:24px;fill:#b3b3ba;}
+  .tabbar .on{color:var(--wine);} .tabbar .on svg{fill:var(--wine);}
+  .h5c .sec-card-h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;margin-bottom:12px;}
+  .h5c .sec-card-h svg{width:18px;height:18px;fill:var(--wine);}
+
+  /* 原型说明 */
+  .note{background:var(--bar);color:#dfe5f0;}
+  .note .in{max-width:1180px;margin:0 auto;padding:16px 20px 22px;line-height:1.85;font-size:12.5px;}
+  .note .tag{background:#f0b429;color:var(--bar);padding:1px 7px;border-radius:2px;margin-right:6px;font-weight:600;}
+  .note ol{margin:6px 0 0;padding-left:20px;}
+  button:focus-visible,.more:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<!-- 原型工具条 -->
+<div class="sim">
+  <span class="lb">端：</span>
+  <button data-end="pc" class="on" onclick="setEnd('pc')">PC</button>
+  <button data-end="h5" onclick="setEnd('h5')">H5</button>
+  <span class="lb">名单状态：</span>
+  <button data-sc="A" onclick="setSc('A')">第1期进行中</button>
+  <button data-sc="B" onclick="setSc('B')">第2期结束·待公布</button>
+  <button data-sc="C" class="on" onclick="setSc('C')">第2期已公布</button>
+  <span class="now" id="simNow"></span>
+</div>
+
+<!-- 领奖台图标 -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="rankico" viewBox="0 0 24 24"><rect x="2.5" y="15" width="5" height="7" rx="1.2"/><rect x="9.5" y="11.5" width="5" height="10.5" rx="1.2"/><rect x="16.5" y="9" width="5" height="13" rx="1.2"/><path d="M15.6 7.4L15 2.6l2.4 1.9L19 1.8l1.6 2.7L23 2.6l-.6 4.8z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5l10 8.2V21a1 1 0 01-1 1h-6v-6.5H9V22H3a1 1 0 01-1-1V10.7z"/></symbol>
+  <symbol id="i-lot" viewBox="0 0 24 24"><path d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 4.2a2.6 2.6 0 00-1.6 4.7 3 3 0 101.6-.1v0a2.6 2.6 0 000-4.6zm0 1.6a1 1 0 110 2 1 1 0 010-2zm0 4.6a1.4 1.4 0 110 2.8 1.4 1.4 0 010-2.8z"/></symbol>
+  <symbol id="i-game" viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 011 1v9H3V5a1 1 0 011-1zm-1 12h18v2.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5zM7 7v4h2V7zm4 0v4h2V7zm4 0v4h2V7z"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24"><path d="M3 13h4v8H3zm7-6h4v14h-4zm7-4h4v18h-4z"/></symbol>
+  <symbol id="i-team" viewBox="0 0 24 24"><path d="M9 4a4 4 0 110 8 4 4 0 010-8zm8 1a3 3 0 110 6 3 3 0 010-6zM1.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6zm16-5.6c2.8.3 5 2 5 4.6v1h-4.4c0-2.2-.2-4-.6-5.6z"/></symbol>
+  <symbol id="i-me" viewBox="0 0 24 24"><path d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 4a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm0 9c-2.6 0-4.8 1.1-5.8 2.8a8 8 0 0011.6 0C16.8 16.1 14.6 15 12 15z"/></symbol>
+  <symbol id="wifi" viewBox="0 0 24 24"><path d="M12 18.5a1.8 1.8 0 110 3.6 1.8 1.8 0 010-3.6zM5.2 13.2a9.6 9.6 0 0113.6 0l-1.6 1.6a7.4 7.4 0 00-10.4 0zM1.8 9.8a14.4 14.4 0 0120.4 0l-1.6 1.6a12.2 12.2 0 00-17.2 0zM8.6 16.6a4.8 4.8 0 016.8 0L13.8 18.2a2.6 2.6 0 00-3.6 0z"/></symbol>
+  <symbol id="app" viewBox="0 0 24 24"><path d="M7 1.5h10a1.5 1.5 0 011.5 1.5v18a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 21V3A1.5 1.5 0 017 1.5zm3 18v1h4v-1z"/></symbol>
+  <symbol id="mail" viewBox="0 0 24 24"><path d="M2 5h20v14H2zm2 2v.6l8 5.2 8-5.2V7z"/></symbol>
+  <symbol id="shirt" viewBox="0 0 24 24"><path d="M8.5 3L2 6.5l2.2 4.5 2.3-1V21h11V10l2.3 1L22 6.5 15.5 3a3.5 3.5 0 01-7 0z"/></symbol>
+  <symbol id="head" viewBox="0 0 24 24"><path d="M12 3a8 8 0 00-8 8v6a2 2 0 002 2h2v-7H6v-1a6 6 0 0112 0v1h-2v7h2a2 2 0 002-2v-6a8 8 0 00-8-8z"/></symbol>
+  <symbol id="trophy" viewBox="0 0 24 24"><path d="M7 3h10v2h3v3a4 4 0 01-4 4h-.3A5 5 0 0113 14.9V18h3v3H8v-3h3v-3.1A5 5 0 018.3 12H8a4 4 0 01-4-4V5h3zm-1 4v1a2 2 0 002 2V7zm12 0v3a2 2 0 002-2V7z"/></symbol>
+  <symbol id="book" viewBox="0 0 24 24"><path d="M4 3h7a3 3 0 013 3v15a2 2 0 00-2-2H4zm16 0h-4a3 3 0 00-1 .2V21a2 2 0 012-2h3z"/></symbol>
+</svg>
+
+<!-- ======================= PC ======================= -->
+<div class="end pc on" id="end-pc">
+  <div class="pc-top">
+    <div class="burger"></div>
+    <div class="logo"><i>9</i><div>九耀娱乐<small>九星连珠 耀世辉煌</small></div></div>
+    <div class="sp"></div>
+    <div class="tico new" tabindex="0"><span class="flag">新增</span><svg><use href="#rankico"/></svg>积分榜</div>
+    <div class="tico"><svg><use href="#wifi"/></svg>网络</div>
+    <div class="tico"><svg><use href="#app"/></svg>APP</div>
+    <div class="tico"><svg><use href="#mail"/></svg>消息</div>
+    <div class="tico"><svg><use href="#shirt"/></svg>换肤</div>
+    <div class="money"><span>充值</span><span>转账</span><span>提现</span></div>
+    <div class="user"><div class="ava"></div><div><b>Squall</b><div class="bal num">$123,456,789.99</div></div></div>
+  </div>
+  <div class="pc-body">
+    <div class="side">
+      <div class="nav-home">首页</div>
+      <div class="nav-pill" style="background:#fbf0dc;color:#7a4b0a;">托管</div>
+      <div class="nav-pill" style="background:#ece6fb;color:#4a3a8c;">多彩</div>
+      <div class="nav-pill" style="background:#fde6ec;color:var(--wine);">活动</div>
+      <div class="nav-g">彩票</div>
+      <div class="nav-g">娱乐</div>
+      <div class="nav-i">体育</div><div class="nav-i">真人</div><div class="nav-i">电子</div><div class="nav-i">棋牌</div><div class="nav-i">电竞</div><div class="nav-i">捕鱼</div>
+      <div class="nav-g" style="color:#444;font-weight:400;">报表</div><div class="nav-i">团队</div>
+      <div class="nav-g" style="color:#444;font-weight:400;">下载中心</div><div class="nav-i">在线客服</div>
+    </div>
+    <div class="main"><div class="inner">
+      <div class="ptitle"><h1><span class="ph">活动标题</span></h1><span>标题文案由需求方与美术确定</span></div>
+      <div id="pcStatus"></div>
+      <section class="card">
+        <div class="card-h"><h2><svg><use href="#trophy"/></svg>中奖名单</h2><span class="more" tabindex="0" onclick="openHis()">历史名单 ›</span></div>
+        <div id="pcList"></div>
+      </section>
+      <section class="card">
+        <div class="card-h"><h2><svg><use href="#book"/></svg>活动规则</h2></div>
+        <div id="pcRules"></div>
+      </section>
+    </div></div>
+  </div>
+</div>
+
+<div class="mask" id="pcModal" onclick="if(event.target===this)closeHis()">
+  <div class="modal" role="dialog" aria-label="历史名单">
+    <div class="modal-h">历史名单<button class="x" onclick="closeHis()" aria-label="关闭">×</button></div>
+    <div class="his-sel"><span>期次</span><select id="pcHisSel" onchange="hisIdx=+this.value;renderHis()"></select></div>
+    <div class="modal-b" id="pcHisBody"></div>
+  </div>
+</div>
+
+<!-- ======================= H5 ======================= -->
+<div class="end" id="end-h5">
+  <div class="h5wrap">
+    <div class="fcol">
+      <div class="phone full">
+        <div class="stbar">9:41<i>▮▮▮ ◠ ▭</i></div>
+        <div class="pbody">
+          <div class="home-scroll">
+            <div class="h5-home-h">
+              <div class="logo"><i>9</i>九耀娱乐</div><div class="sp"></div>
+              <span class="hico-new" title="积分榜入口"><svg class="hico"><use href="#rankico"/></svg></span>
+              <svg class="hico"><use href="#wifi"/></svg>
+              <svg class="hico"><use href="#head"/></svg>
+              <svg class="hico"><use href="#mail"/></svg>
+              <svg class="hico"><use href="#shirt"/></svg>
+            </div>
+            <div class="h5-user"><div class="ava"></div><div><div style="font-size:15px;">Squall</div><div class="bal num">$123,456,789.99</div></div>
+              <div class="acts"><div>充值</div><div>转账</div><div>提现</div></div></div>
+            <div class="h5-banner">耀世辉煌<br>九星连珠</div>
+            <div class="h5-notice">【通知】11/10 全新彩种《哈希分分彩》震撼！ 更多 ›</div>
+            <div class="sec-t">热门彩票<span>更多 ›</span></div>
+            <div class="hrow">
+              <div class="lot">重庆时时彩<div class="ic"></div><div style="color:var(--sub);font-size:11.5px;">上期开奖号</div><div class="balls"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><div class="t">23:59:59</div></div>
+              <div class="lot">福彩3D<div class="ic p"></div><div style="color:var(--sub);font-size:11.5px;">上期开奖号</div><div class="balls"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><div class="t">23:59:59</div></div>
+              <div class="lot">黑龙江11选5<div class="ic"></div></div>
+            </div>
+            <div class="sec-t">我的收藏<span>更多 ›</span></div>
+            <div class="hrow">
+              <div class="fav"><div class="img c"></div><div>波场分分彩</div></div>
+              <div class="fav"><div class="img b"></div><div>哈希分分彩</div></div>
+              <div class="fav"><div class="img"></div><div>哈希5分彩</div></div>
+            </div>
+            <div class="sec-t">娱乐大厅</div>
+            <div class="hall"><div>体育</div><div>真人</div><div>电竞</div><div>电子</div></div>
+          </div>
+          <div class="tabbar">
+            <div class="on"><svg><use href="#i-home"/></svg>首页</div>
+            <div><svg><use href="#i-lot"/></svg>彩票</div>
+            <div><svg><use href="#i-game"/></svg>娱乐</div>
+            <div><svg><use href="#i-bar"/></svg>报表</div>
+            <div><svg><use href="#i-team"/></svg>团队</div>
+            <div><svg><use href="#i-me"/></svg>我的</div>
+          </div>
+        </div>
+        <div class="homebar" style="background:#fff;"></div>
+      </div>
+      <div class="fcap">首页入口：顶部 Wi-Fi 图标左侧新增积分榜图标（虚线框处），仅直属代理登录后显示，点击进入二级页</div>
+    </div>
+
+    <div class="fcol">
+      <div class="phone full">
+        <div class="stbar">9:41<i>▮▮▮ ◠ ▭</i></div>
+        <div class="navb"><span class="bk"></span><span class="ph">活动标题</span><span class="his" onclick="openSheet()">历史名单</span></div>
+        <div class="pbody">
+          <div class="h5scroll" style="height:100%;">
+            <div class="h5c">
+              <div id="h5Status"></div>
+              <div class="card"><div class="sec-card-h"><svg><use href="#trophy"/></svg>中奖名单</div><div id="h5List"></div></div>
+              <div class="card"><div class="sec-card-h"><svg><use href="#book"/></svg>活动规则</div><div id="h5Rules"></div></div>
+            </div>
+          </div>
+          <div class="sheet-mask" id="sheet" onclick="if(event.target===this)closeSheet()">
+            <div class="sheet" role="dialog" aria-label="历史名单">
+              <div class="grip"></div>
+              <div class="sheet-h">历史名单<button class="x" onclick="closeSheet()" aria-label="关闭">×</button></div>
+              <div class="his-sel"><span>期次</span><select id="h5HisSel" onchange="hisIdx=+this.value;renderHis()"></select></div>
+              <div class="sheet-b" id="h5HisBody"></div>
+            </div>
+          </div>
+        </div>
+        <div class="homebar"></div>
+      </div>
+      <div class="fcap">二级页：参考「我的收藏」，无底部导航；中奖名单与活动规则上下排列，一屏下滑浏览；「历史名单」从底部弹出，下拉选择期次</div>
+    </div>
+  </div>
+</div>
+
+<div class="note"><div class="in">
+  <span class="tag">原型说明</span>聚焦入口、名单状态与规则数据来源，视觉为中保真，美术方案由 UI 另行设计。顶部工具条为原型辅助功能，非正式页面内容。
+  <ol>
+    <li>入口：PC 顶部「网络」左侧、H5 顶部 Wi-Fi 图标左侧，新增领奖台图标「积分榜」；仅直属代理登录后显示，活动展示时间结束后隐藏。PC 保留顶部与左侧导航；H5 为二级页，无底部导航。入口图标为「积分柱 + 皇冠」，表达积分排名与奖励，最终以美术出图为准；页面标题文案由需求方与美术确定。</li>
+    <li>中奖名单数据来源为审核通过的派奖记录，用户名脱敏（保留前 2 位与后 2 位）。按派奖日期反推所属期次：取派奖日期之前最近结束的一期，标题显示「第N期获奖名单（MM/DD 公布）」。SOP 约定每期只提交一批，补发走人工上分补偿。</li>
+    <li>页面结构：顶部状态条 → 中奖名单 → 活动规则。状态条只负责时间进度，显示「第N期 进行中」、统计周期与本期结束倒计时，每期都显示；最后一期结束后改为「活动已结束」。中奖名单只负责结果，始终展示最新一期已公布的名单，标题写明期次与公布日期，前三名以领奖台展示，其余列表展示。</li>
+    <li>每期结束到派奖审核通过之间，名单继续展示上一期，不单独提示；审核通过后直接更新为新一期。首期公布前，名单区显示「暂无获奖名单」空状态。</li>
+    <li>历史名单：PC 居中弹窗、H5 底部抽屉，通过「期次」下拉选择，选项按派奖时间倒序，默认最新一期；无记录时显示「暂无历史名单」。</li>
+    <li>H5 二级页同样按状态条、中奖名单、活动规则上下排列，一屏下滑浏览；H5 表格在原型中只示意前几行。活动规则：活动期次、参与门槛、活跃会员口径、积分表、名次奖励读取后台 2.1～2.5 配置渲染；排名与发放说明为固定文案；「规则说明」为需求方提供的静态文案。</li>
+    <li>页面进入时请求一次接口，不轮询；倒计时由前端按期次结束时间计算。</li>
+  </ol>
+</div></div>
+
+<script>
+/* ===== 模拟配置（对应后台 2.1～2.5） ===== */
+const CFG = {
+  start:'2026-12-01', days:15, count:6,
+  th:{bet:300000, loss:20000, act:3},
+  active:{dep:100, bet:100, days:3},
+  loss:[15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+  bet:[15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+  act:[[25,9],[20,7],[15,5],[10,3],[5,1]],
+  reward:[9888,8888,7888,6888,5888,4888,3888,2888,1888,888]
+};
+/* ===== 模拟派奖记录（审核通过） ===== */
+const B1 = {date:'2026-12-16', rows:[['hj_zs8801',38,9888],['hj_zs8802',36,8888],['hj_zs8809',33,7888],['hj_zs8803',27,6888],['hj_zs8810',27,5888],['hj_zs8812',23,4888],['hj_zs8805',22,3888],['hj_zs8804',17,2888],['hj_zs8807',17,1888],['hj_zs8811',14,888]]};
+const B2 = {date:'2027-01-01', rows:[['hj_zs8802',37,9888],['hj_zs8809',35,8888],['hj_zs8801',34,7888],['hj_zs8815',29,6888],['hj_zs8810',26,5888],['hj_zs8805',24,4888],['hj_zs8812',21,3888],['hj_zs8816',18,2888],['hj_zs8811',15,1888],['hj_zs8807',13,888]]};
+const SC = {
+  A:{now:'2026-12-08T11:27:38', batches:[]},
+  B:{now:'2026-12-31T10:15:00', batches:[B1]},
+  C:{now:'2027-01-02T09:00:00', batches:[B2,B1]}
+};
+let sc = 'C', end = 'pc', seg = 'L', simNow = null, timer = null;
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('en-US');
+const pad = n => String(n).padStart(2,'0');
+const md = d => pad(d.getMonth()+1) + '/' + pad(d.getDate());
+const mask = s => s.length > 4 ? s.slice(0,2) + '****' + s.slice(-2) : s[0] + '***';
+function periods(){
+  const s = new Date(CFG.start + 'T00:00:00');
+  return Array.from({length:CFG.count}, (_,i) => {
+    const a = new Date(s); a.setDate(a.getDate() + i*CFG.days);
+    const b = new Date(a); b.setDate(b.getDate() + CFG.days - 1); b.setHours(23,59,59);
+    return {no:i+1, a, b};
+  });
+}
+/* 派奖日期反推期次：派奖日期之前最近结束的一期 */
+function periodOf(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const ended = periods().filter(p => p.b < d);
+  return ended.length ? ended[ended.length-1] : null;
+}
+function curPeriod(now){ return periods().find(p => now >= p.a && now <= p.b) || null; }
+function lastEnded(now){ const e = periods().filter(p => p.b < now); return e.length ? e[e.length-1] : null; }
+
+/* ===== 名单区块 ===== */
+function podium(rows){
+  const top = [rows[1], rows[0], rows[2]], cls = ['r2','r1','r3'], no = [2,1,3];
+  return `<div class="podium">${top.map((r,i) => r ? `<div class="pd ${cls[i]}"><div class="medal">${no[i]}</div><div class="nm">${mask(r[0])}</div><div class="sc">${r[1]} 积分</div><div class="pr"><small>¥</small>${fmt(r[2])}</div></div>` : '<div></div>').join('')}</div>`;
+}
+function table(rows, from, limit){
+  const all = rows.slice(from), list = limit ? all.slice(0, limit) : all;
+  if(!list.length) return '';
+  const more = limit && all.length > limit ? `<tr class="more-row"><td colspan="4">······ 原型示意，正式展示全部 ${rows.length} 名</td></tr>` : '';
+  return `<table class="tbl"><thead><tr><th>排名</th><th>用户名</th><th>积分</th><th>奖金（元）</th></tr></thead><tbody>${list.map((r,i) => {
+    const n = i + from + 1, c = n===1?'g':n===2?'s':n===3?'b':'';
+    return `<tr><td><span class="rk ${c}">${n}</span></td><td>${mask(r[0])}</td><td>${r[1]}</td><td class="pz">${fmt(r[2])}</td></tr>`;}).join('')}${more}</tbody></table>`;
+}
+function batchHead(b){
+  const p = periodOf(b.date), pd = new Date(b.date + 'T00:00:00');
+  return `<div class="lst-h"><b>第${p.no}期获奖名单</b><span>统计周期 ${md(p.a)}–${md(p.b)}　${md(pd)} 公布</span></div>`;
+}
+/* 顶部状态条：只负责「当前期次 + 倒计时」 */
+function statusBlock(){
+  const cur = curPeriod(simNow), ps = periods();
+  if(cur) return `<div class="hero"><div class="hl"><b>第${cur.no}期 进行中</b><span>统计周期 ${md(cur.a)}–${md(cur.b)}，共 ${ps.length} 期</span></div><div class="cd"></div></div>`;
+  if(simNow > ps[ps.length-1].b) return `<div class="hero over"><div class="hl"><b>活动已结束</b><span>感谢参与，可在「历史名单」查看各期结果</span></div></div>`;
+  return '';
+}
+/* 中奖名单：只负责「最新一期已公布的结果」 */
+function listBlock(h5){
+  const latest = SC[sc].batches[0];
+  if(!latest){
+    const p1 = periods()[0];
+    return `<div class="empty">
+      <svg viewBox="0 0 86 64"><rect x="30" y="18" width="26" height="44" rx="3" fill="#8c2b45"/><rect x="2" y="32" width="26" height="30" rx="3" fill="#c98a9c"/><rect x="58" y="40" width="26" height="22" rx="3" fill="#e3bcc7"/><path d="M43 2l3 6 6.6.9-4.8 4.6 1.2 6.5L43 16.9 37 20l1.2-6.5-4.8-4.6L40 8z" fill="#d6a03c"/><text x="43" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text></svg>
+      <h3>暂无获奖名单</h3>
+      <p>首期名单将在第1期（${md(p1.a)}–${md(p1.b)}）结束后公布，敬请期待</p></div>`;
+  }
+  return batchHead(latest) + podium(latest.rows) + table(latest.rows, 3, h5 ? 2 : 0);
+}
+function tickCountdown(){
+  const els = document.querySelectorAll('.cd'); if(!els.length) return;
+  const p = curPeriod(simNow); if(!p){ els.forEach(el => el.innerHTML = ''); return; }
+  let s = Math.max(0, Math.floor((p.b - simNow)/1000));
+  const d = Math.floor(s/86400); s %= 86400;
+  els.forEach(el => el.innerHTML = `距本期结束 <b>${pad(d)}</b>天 <b>${pad(Math.floor(s/3600))}</b>:<b>${pad(Math.floor(s%3600/60))}</b>:<b>${pad(s%60)}</b>`);
+}
+
+/* ===== 规则区块 ===== */
+function rulesBlock(h5){
+  const cut = (arr, n) => h5 ? arr.slice(0, n) : arr;
+  const dots = (len, n, cols) => h5 && len > n ? `<tr class="more-row"><td colspan="${cols}">······</td></tr>` : '';
+  const ps = periods(), cur = curPeriod(simNow);
+  const first = ps[0], lastP = ps[ps.length-1];
+  const ymd = d => d.getFullYear() + '/' + md(d);
+  const rows = Math.max(CFG.loss.length, CFG.bet.length);
+  return `
+  <div class="rule-sec"><h4>活动时间</h4>
+    <p>${ymd(first.a)} 00:00:00 – ${ymd(lastP.b)} 23:59:59，每 ${CFG.days} 天为一期，共 ${CFG.count} 期。</p>
+    <div class="chips">${ps.map(p => `<span class="chip ${cur && cur.no===p.no ? 'cur' : p.b < simNow ? 'done' : ''}">第${p.no}期 ${md(p.a)}–${md(p.b)}${cur && cur.no===p.no ? ' · 进行中' : ''}</span>`).join('')}</div></div>
+  <div class="rule-sec"><h4>参与条件</h4>
+    <p>当期同时满足以下三项，方可参与当期排名。数据统计范围为名下全部下级代理及会员，不限彩票与三方游戏。</p>
+    <div class="ths">
+      <div class="th-box"><span>周期有效投注额</span><b>≥ ${fmt(CFG.th.bet)}<small>元</small></b></div>
+      <div class="th-box"><span>周期总亏损</span><b>≥ ${fmt(CFG.th.loss)}<small>元</small></b></div>
+      <div class="th-box"><span>周期活跃人数</span><b>≥ ${CFG.th.act}<small>人</small></b></div>
+    </div></div>
+  <div class="rule-sec"><h4>活跃会员</h4>
+    <p>当期内同时满足以下条件的下线会员，计为 1 名活跃会员：累计存款 ≥ ${fmt(CFG.active.dep)} 元；单日有效投注 ≥ ${fmt(CFG.active.bet)} 元的天数 ≥ ${CFG.active.days} 天。</p></div>
+  <div class="rule-sec"><h4>积分计算</h4>
+    <div class="formula">总积分 = <b>周期亏损排名积分</b> + <b>周期有效投注额排名积分</b> + <b>周期活跃人数积分</b></div>
+    <div class="rgrid">
+      <div><p class="cap">亏损 / 有效投注额排名积分（在达标直属中排名）</p>
+        <table class="stbl"><thead><tr><th>排名</th><th>亏损排名积分</th><th>投注排名积分</th></tr></thead><tbody>
+        ${cut(Array.from({length:rows},(_,i)=>i),3).map(i=>`<tr><td>第${i+1}名</td><td class="hl">${CFG.loss[i]!=null?'+'+CFG.loss[i]:'—'}</td><td class="hl">${CFG.bet[i]!=null?'+'+CFG.bet[i]:'—'}</td></tr>`).join('')}${dots(rows,3,3)}
+        </tbody></table></div>
+      <div><p class="cap">活跃人数积分（取达到的最高一档）</p>
+        <table class="stbl"><thead><tr><th>活跃人数</th><th>积分</th></tr></thead><tbody>
+        ${cut(CFG.act,3).map(t=>`<tr><td>≥ ${t[0]} 人</td><td class="hl">+${t[1]}</td></tr>`).join('')}${dots(CFG.act.length,3,2)}
+        </tbody></table></div>
+      <div><p class="cap">名次奖励</p>
+        <table class="stbl"><thead><tr><th>积分名次</th><th>奖金（元）</th></tr></thead><tbody>
+        ${cut(CFG.reward,3).map((v,i)=>`<tr><td>第${i+1}名</td><td class="hl">${fmt(v)}</td></tr>`).join('')}${dots(CFG.reward.length,3,2)}
+        </tbody></table></div>
+    </div></div>
+  <div class="rule-sec"><h4>排名与发放</h4>
+    <p>总积分相同时，依次比较亏损排名积分、活跃人数积分、有效投注额排名积分，高者在前。</p>
+    <p>每期结束后统计排名，奖金经平台审核后发放至账户余额，无流水要求，可直接提款。</p></div>
+  <div class="rule-sec"><h4>规则说明</h4>
+    <div class="static">规则说明文案由需求方提供（静态内容），例如活动解释权、违规处理等条款，此处为占位。</div></div>`;
+}
+
+/* ===== 历史名单 ===== */
+let hisIdx = 0;
+function hisOpts(){ const bs = SC[sc].batches; return bs.length ? bs.map((b,i) => { const p = periodOf(b.date); return `<option value="${i}" ${i===hisIdx?'selected':''}>第${p.no}期（${md(p.a)}–${md(p.b)}）· ${md(new Date(b.date+'T00:00:00'))} 公布</option>`; }).join('') : '<option>暂无</option>'; }
+function hisBody(h5){ const b = SC[sc].batches[hisIdx]; return b ? batchHead(b) + table(b.rows, 0, h5 ? 5 : 0) : '<div class="empty"><p>暂无历史名单</p></div>'; }
+function renderHis(){
+  ['pcHisSel','h5HisSel'].forEach(id => { $(id).innerHTML = hisOpts(); $(id).disabled = !SC[sc].batches.length; });
+  $('pcHisBody').innerHTML = hisBody(); $('h5HisBody').innerHTML = hisBody(true);
+}
+function openHis(){ hisIdx = 0; renderHis(); $('pcModal').classList.add('on'); }
+function closeHis(){ $('pcModal').classList.remove('on'); }
+function openSheet(){ hisIdx = 0; renderHis(); $('sheet').classList.add('on'); }
+function closeSheet(){ $('sheet').classList.remove('on'); }
+
+/* ===== 渲染与切换 ===== */
+function render(){
+  $('pcStatus').innerHTML = statusBlock();
+  $('pcList').innerHTML = listBlock();
+  $('pcRules').innerHTML = rulesBlock();
+  $('h5Status').innerHTML = statusBlock();
+  $('h5List').innerHTML = listBlock(true);
+  $('h5Rules').innerHTML = rulesBlock(true);
+  tickCountdown();
+  const n = simNow;
+  $('simNow').textContent = `模拟当前时间：${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+}
+function setSc(s){
+  sc = s; simNow = new Date(SC[s].now);
+  document.querySelectorAll('[data-sc]').forEach(b => b.classList.toggle('on', b.dataset.sc === s));
+  closeHis(); closeSheet(); render();
+}
+function setEnd(e){
+  end = e;
+  document.querySelectorAll('[data-end]').forEach(b => b.classList.toggle('on', b.dataset.end === e));
+  $('end-pc').classList.toggle('on', e === 'pc'); $('end-h5').classList.toggle('on', e === 'h5');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeHis(); closeSheet(); } });
+setInterval(() => { simNow = new Date(simNow.getTime() + 1000); tickCountdown(); }, 1000);
+setSc('C');
+</script>
+</body>
+</html>
